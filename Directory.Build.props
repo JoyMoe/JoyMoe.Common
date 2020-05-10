@@ -1,0 +1,26 @@
+<Project>
+  <!-- Package configuration -->
+  <PropertyGroup>
+    <Company>JoyMoe Interactive Entertainment Limited</Company>
+    <Copyright>Copyright 2019 © JoyMoe Interactive Entertainment Limited</Copyright>
+
+    <Version>0.1.0</Version>
+    <PackageVersion>0.1.0</PackageVersion>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>git://github.com/JoyMoe/JoyMoe.Common</RepositoryUrl>
+
+    <PackageLicense>LICENSE</PackageLicense>
+    <PackageProjectUrl>https://github.com/JoyMoe/JoyMoe.Common</PackageProjectUrl>
+    <PackageIcon>joymoe.jpg</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)joymoe.jpg" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
