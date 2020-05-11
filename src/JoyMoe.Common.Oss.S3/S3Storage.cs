@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.Runtime.Internal.Auth;
-using Amazon.Runtime.SharedInterfaces;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 
 namespace JoyMoe.Common.Oss.S3
@@ -18,24 +18,31 @@ namespace JoyMoe.Common.Oss.S3
     /// </summary>
     public class S3Storage : IOssStorage
     {
-        private readonly ICoreAmazonS3 _s3Client;
+        private readonly RegionEndpoint _endpoint;
+        private readonly AmazonS3Client _s3Client;
+
+        private readonly string _protocol;
 
         public S3Storage(IOptions<S3StorageOptions> optionsAccessor)
         {
             Options = optionsAccessor.Value;
 
+            _endpoint = RegionEndpoint.GetBySystemName(Options.Region);
+
             _s3Client = new AmazonS3Client(Options.AccessKey, Options.SecretKey, new AmazonS3Config
             {
-                RegionEndpoint = RegionEndpoint.GetBySystemName(Options.Region),
-                UseHttp = true
+                RegionEndpoint = _endpoint,
+                UseHttp = Options.UseHttps
             });
+
+            _protocol = Options.UseHttps ? "https" : "http";
         }
 
         public S3StorageOptions Options { get; }
 
         public async Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default)
         {
-            await _s3Client.UploadObjectFromStreamAsync(Options.BucketName, path, data, new Dictionary<string, object>
+            await ((IAmazonS3) _s3Client).UploadObjectFromStreamAsync(Options.BucketName, path, data, new Dictionary<string, object>
             {
                 ["ContentType"] = mime,
                 ["CannedACL"] = everyone ? S3CannedACL.PublicRead : S3CannedACL.Private
@@ -80,19 +87,39 @@ namespace JoyMoe.Common.Oss.S3
 
         public async Task DeleteAsync(string path, CancellationToken ct = default)
         {
-            await _s3Client.DeleteAsync(Options.BucketName, path, null, ct);
+            await _s3Client.DeleteObjectAsync(Options.BucketName, path, ct);
         }
 
         public Task<string> GetUrlAsync(string path, CancellationToken ct = default)
         {
-            return Task.FromResult($"https://{Options.BucketName}/{path}");
+            return Task.FromResult(Options.UseCname
+                ? $"{_protocol}://{Options.BucketName}/{path}"
+                : $"{_protocol}://{Options.BucketName}.{_endpoint.GetEndpointForService("s3")}/{path}");
         }
 
         public Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default)
         {
             var expiration = DateTimeOffset.Now.AddSeconds(3600);
 
-            var url = _s3Client.GeneratePreSignedURL(Options.BucketName, path, expiration.UtcDateTime, null);
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = Options.BucketName,
+                Key = path,
+                Expires = expiration.UtcDateTime,
+                Protocol = Options.UseHttps ? Protocol.HTTPS : Protocol.HTTP
+            };
+
+            if (Options.UseCname)
+            {
+                request.Headers["Host"] = Options.BucketName;
+            }
+
+            var url = _s3Client.GetPreSignedURL(request);
+
+            if (Options.UseCname)
+            {
+                url = url.Replace($"{Options.BucketName}.{_endpoint.GetEndpointForService("s3")}", Options.BucketName);
+            }
 
             return Task.FromResult(url);
         }
