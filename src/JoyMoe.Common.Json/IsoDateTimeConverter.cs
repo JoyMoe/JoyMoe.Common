@@ -20,7 +20,7 @@ namespace JoyMoe.Common.Json
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToUniversalTime().ToString("O"));
+            writer.WriteStringValue(value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
         }
     }
 }
