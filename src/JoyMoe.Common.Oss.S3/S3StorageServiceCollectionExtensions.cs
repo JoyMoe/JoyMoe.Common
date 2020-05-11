@@ -1,0 +1,26 @@
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace JoyMoe.Common.Oss.S3
+{
+    public static class S3StorageServiceCollectionExtensions
+    {
+        /// <summary>
+        /// Add a scoped <see cref="S3Storage"/>.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddS3Storage(this IServiceCollection services)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddScoped<IOssStorage, S3Storage>();
+
+            return services;
+        }
+    }
+}
