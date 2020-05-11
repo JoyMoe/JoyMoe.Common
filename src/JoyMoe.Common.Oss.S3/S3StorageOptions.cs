@@ -9,5 +9,9 @@ namespace JoyMoe.Common.Oss.S3
         public string Region { get; set; }
 
         public string BucketName { get; set; }
+
+        public bool UseCname { get; set; }
+
+        public bool UseHttps { get; set; }
     }
 }
