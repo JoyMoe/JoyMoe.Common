@@ -16,7 +16,7 @@ namespace JoyMoe.Common.Json
             Debug.Assert(typeToConvert == typeof(DateTimeOffset));
             return DateTimeOffset.Parse(reader.GetString());
         }
-        
+
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
