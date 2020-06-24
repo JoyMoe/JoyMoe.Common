@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Authors>Chino Chang</Authors>
+    <Description>JoyMoe.Common Object Storage Service client for Asp.Net Core MVC</Description>
+    <PackageTags>joymoe</PackageTags>
+
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Library</OutputType>
 
