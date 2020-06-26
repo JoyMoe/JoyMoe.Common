@@ -4,12 +4,13 @@
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Object Storage Service client for Asp.Net Core MVC</Description>
     <PackageTags>joymoe</PackageTags>
+
+    <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
 
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
 </Project>

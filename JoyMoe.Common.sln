@@ -14,11 +14,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Session", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Oss", "src\JoyMoe.Common.Oss\JoyMoe.Common.Oss.csproj", "{6745F33A-7E62-4BEA-987A-9E4F31354CD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Oss.S3", "src\JoyMoe.Common.Oss.S3\JoyMoe.Common.Oss.S3.csproj", "{0EB02EB4-83A9-4042-9AF6-AA9AEA267EC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Oss.S3", "src\JoyMoe.Common.Oss.S3\JoyMoe.Common.Oss.S3.csproj", "{0EB02EB4-83A9-4042-9AF6-AA9AEA267EC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.EntityFrameworkCore", "src\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj", "{401C6BCA-95ED-41D6-A04E-D3CCE75F7387}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.EntityFrameworkCore", "src\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj", "{401C6BCA-95ED-41D6-A04E-D3CCE75F7387}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Mvc.Api", "src\JoyMoe.Common.Mvc.Api\JoyMoe.Common.Mvc.Api.csproj", "{EB39537A-1FC4-4F19-98B2-2421F485B805}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Mvc.Api", "src\JoyMoe.Common.Mvc.Api\JoyMoe.Common.Mvc.Api.csproj", "{EB39537A-1FC4-4F19-98B2-2421F485B805}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.EntityFrameworkCore.Identity", "src\JoyMoe.Common.EntityFrameworkCore.Identity\JoyMoe.Common.EntityFrameworkCore.Identity.csproj", "{11F4D885-7DBD-4E24-A320-8E125A717DEC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +60,10 @@ Global
 		{EB39537A-1FC4-4F19-98B2-2421F485B805}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB39537A-1FC4-4F19-98B2-2421F485B805}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB39537A-1FC4-4F19-98B2-2421F485B805}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,6 +77,7 @@ Global
 		{0EB02EB4-83A9-4042-9AF6-AA9AEA267EC3} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{401C6BCA-95ED-41D6-A04E-D3CCE75F7387} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{EB39537A-1FC4-4F19-98B2-2421F485B805} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
+		{11F4D885-7DBD-4E24-A320-8E125A717DEC} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8047892F-B408-4203-B8F7-C7B05E740890}
