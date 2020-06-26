@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="System.Text.Json" Version="4.7.0" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
 </Project>
