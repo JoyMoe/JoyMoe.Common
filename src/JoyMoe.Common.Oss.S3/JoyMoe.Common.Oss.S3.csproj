@@ -18,11 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\JoyMoe.Common.Oss\JoyMoe.Common.Oss.csproj" />
+    <PackageReference Include="AWSSDK.S3" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" />
+    <ProjectReference Include="..\JoyMoe.Common.Oss\JoyMoe.Common.Oss.csproj" />
   </ItemGroup>
 
 </Project>
