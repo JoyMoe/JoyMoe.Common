@@ -22,6 +22,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Mvc.Api", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.EntityFrameworkCore.Identity", "src\JoyMoe.Common.EntityFrameworkCore.Identity\JoyMoe.Common.EntityFrameworkCore.Identity.csproj", "{11F4D885-7DBD-4E24-A320-8E125A717DEC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CDA5D56F-9052-40BC-98F1-48F04980EAD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Json.Tests", "tests\JoyMoe.Common.Json.Tests\JoyMoe.Common.Json.Tests.csproj", "{5AF28767-E9FA-411A-9B14-CEA09961DEAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +68,10 @@ Global
 		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11F4D885-7DBD-4E24-A320-8E125A717DEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AF28767-E9FA-411A-9B14-CEA09961DEAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AF28767-E9FA-411A-9B14-CEA09961DEAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AF28767-E9FA-411A-9B14-CEA09961DEAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AF28767-E9FA-411A-9B14-CEA09961DEAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -78,6 +86,7 @@ Global
 		{401C6BCA-95ED-41D6-A04E-D3CCE75F7387} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{EB39537A-1FC4-4F19-98B2-2421F485B805} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{11F4D885-7DBD-4E24-A320-8E125A717DEC} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
+		{5AF28767-E9FA-411A-9B14-CEA09961DEAB} = {CDA5D56F-9052-40BC-98F1-48F04980EAD2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8047892F-B408-4203-B8F7-C7B05E740890}
