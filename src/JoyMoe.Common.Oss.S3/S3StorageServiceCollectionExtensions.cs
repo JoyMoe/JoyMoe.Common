@@ -7,7 +7,7 @@ namespace JoyMoe.Common.Oss.S3
     public static class S3StorageServiceCollectionExtensions
     {
         /// <summary>
-        /// Add a scoped <see cref="S3Storage"/>.
+        /// Add a scoped <see cref="S3Storage" />.
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
@@ -24,7 +24,7 @@ namespace JoyMoe.Common.Oss.S3
         }
 
         /// <summary>
-        /// Add a scoped <see cref="S3Storage"/>.
+        /// Add a scoped <see cref="S3Storage" />.
         /// </summary>
         /// <param name="services"></param>
         /// <param name="configure"></param>

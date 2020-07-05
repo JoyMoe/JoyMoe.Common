@@ -11,11 +11,13 @@ namespace JoyMoe.Common.Json
         /// <inheritdoc/>
         public override string ConvertName(string name)
         {
+#pragma warning disable CA1308 // Normalize strings to uppercase
             return string.Concat(name.Select((character, index) =>
                     index > 0 && char.IsUpper(character)
                         ? "_" + character
                         : character.ToString()))
-                .ToLower();
+                .ToLowerInvariant();
+#pragma warning restore CA1308 // Normalize strings to uppercase
         }
     }
 }

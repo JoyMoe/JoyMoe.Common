@@ -1,16 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Attributes for Asp.Net Core MVC</Description>
     <PackageTags>joymoe</PackageTags>
-
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputType>Library</OutputType>
-
-    <IsPackable>true</IsPackable>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>

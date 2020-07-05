@@ -2,7 +2,7 @@
 
 Common Extensions & Services for Asp.Net Core from JoyMoe.
 
-![joymoe](joymoe.jpg)
+![joymoe](joymoe.png)
 
 ## License
 

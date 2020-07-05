@@ -1,6 +1,6 @@
 
-# Created by https://www.gitignore.io/api/csharp,visualstudio,jetbrains+all,visualstudiocode
-# Edit at https://www.gitignore.io/?templates=csharp,visualstudio,jetbrains+all,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/csharp,jetbrains+all,visualstudio,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=csharp,jetbrains+all,visualstudio,visualstudiocode
 
 ### Csharp ###
 ## Ignore Visual Studio temporary files, build results, and
@@ -34,6 +34,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -131,9 +132,6 @@ _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 
-# JustCode is a .NET coding add-in
-.JustCode
-
 # TeamCity is a build add-in
 _TeamCity*
 
@@ -143,6 +141,9 @@ _TeamCity*
 # AxoCover is a Code Coverage Tool
 .axoCover/*
 !.axoCover/settings.json
+
+# Coverlet is a free, cross platform Code Coverage Tool
+coverage*[.json, .xml, .info]
 
 # Visual Studio code coverage results
 *.coverage
@@ -353,8 +354,11 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# Ionide (cross platform F# VS Code tools) working folder
+.ionide/
+
 ### JetBrains+all ###
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
@@ -384,6 +388,9 @@ MigrationBackup/
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
+# .idea/artifacts
+# .idea/compiler.xml
+# .idea/jarRepositories.xml
 # .idea/modules.xml
 # .idea/*.iml
 # .idea/modules
@@ -445,6 +452,7 @@ modules.xml
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+*.code-workspace
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
@@ -493,13 +501,13 @@ modules.xml
 
 # ReSharper is a .NET coding add-in
 
-# JustCode is a .NET coding add-in
-
 # TeamCity is a build add-in
 
 # DotCover is a Code Coverage Tool
 
 # AxoCover is a Code Coverage Tool
+
+# Coverlet is a free, cross platform Code Coverage Tool
 
 # Visual Studio code coverage results
 
@@ -606,4 +614,6 @@ modules.xml
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 
-# End of https://www.gitignore.io/api/csharp,visualstudio,jetbrains+all,visualstudiocode
+# Ionide (cross platform F# VS Code tools) working folder
+
+# End of https://www.toptal.com/developers/gitignore/api/csharp,jetbrains+all,visualstudio,visualstudiocode

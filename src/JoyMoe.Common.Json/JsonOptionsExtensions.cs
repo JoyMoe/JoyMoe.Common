@@ -6,7 +6,7 @@ namespace JoyMoe.Common.Json
     public static class JsonOptionsExtensions
     {
         /// <summary>
-        /// Configure <see cref="JsonOptions"/> to use <see cref="SnakeCaseNamingPolicy"/>
+        /// Configure <see cref="JsonOptions" /> to use <see cref="SnakeCaseNamingPolicy" />
         /// </summary>
         /// <param name="option"></param>
         /// <returns></returns>
@@ -23,7 +23,7 @@ namespace JoyMoe.Common.Json
         }
 
         /// <summary>
-        /// Configure <see cref="JsonOptions"/> to use <see cref="Int64StringConverter"/>
+        /// Configure <see cref="JsonOptions" /> to use <see cref="Int64StringConverter" />
         /// </summary>
         /// <param name="option"></param>
         /// <returns></returns>
@@ -40,7 +40,7 @@ namespace JoyMoe.Common.Json
         }
 
         /// <summary>
-        /// Configure <see cref="JsonOptions"/> to use <see cref="IsoDateTimeConverter"/>
+        /// Configure <see cref="JsonOptions" /> to use <see cref="IsoDateTimeConverter" />
         /// </summary>
         /// <param name="option"></param>
         /// <returns></returns>

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -10,6 +11,11 @@ namespace JoyMoe.Common.Validation
     {
         protected override ValidationResult IsValid(object value, ValidationContext ctx)
         {
+            if (ctx == null)
+            {
+                throw new ArgumentNullException(nameof(ctx));
+            }
+
             var properties = ctx.ObjectType.GetProperties()
                 .Where(p => p.CustomAttributes.Any(a => a.AttributeType == typeof(OneOfAttribute)))
                 .Count(p => p.GetValue(ctx.ObjectInstance) is string stringValue && stringValue.Trim().Length != 0);

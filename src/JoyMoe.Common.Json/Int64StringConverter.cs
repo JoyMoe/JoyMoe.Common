@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Buffers.Text;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -28,7 +29,12 @@ namespace JoyMoe.Common.Json
 
         public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString());
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

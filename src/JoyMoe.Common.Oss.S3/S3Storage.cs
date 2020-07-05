@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -16,8 +17,10 @@ namespace JoyMoe.Common.Oss.S3
     /// <summary>
     /// Aws S3 Storage
     /// </summary>
-    public class S3Storage : IOssStorage
+    public class S3Storage : IOssStorage, IDisposable
     {
+        private bool _disposed = false;
+
         private readonly RegionEndpoint _endpoint;
         private readonly AmazonS3Client _s3Client;
 
@@ -25,6 +28,11 @@ namespace JoyMoe.Common.Oss.S3
 
         public S3Storage(IOptions<S3StorageOptions> optionsAccessor)
         {
+            if (optionsAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(optionsAccessor));
+            }
+
             Options = optionsAccessor.Value;
 
             _endpoint = RegionEndpoint.GetBySystemName(Options.Region);
@@ -42,11 +50,11 @@ namespace JoyMoe.Common.Oss.S3
 
         public async Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default)
         {
-            await ((IAmazonS3) _s3Client).UploadObjectFromStreamAsync(Options.BucketName, path, data, new Dictionary<string, object>
+            await ((IAmazonS3)_s3Client).UploadObjectFromStreamAsync(Options.BucketName, path, data, new Dictionary<string, object>
             {
                 ["ContentType"] = mime,
                 ["CannedACL"] = everyone ? S3CannedACL.PublicRead : S3CannedACL.Private
-            }, ct);
+            }, ct).ConfigureAwait(false);
         }
 
         public Task<Dictionary<string, string>> GetUploadFormAsync(string path, bool everyone = false, CancellationToken ct = default)
@@ -80,14 +88,16 @@ namespace JoyMoe.Common.Oss.S3
             var key = AWS4Signer.ComposeSigningKey(Options.SecretKey, Options.Region, $"{date:yyyyMMdd}", "s3");
             var signature = AWS4Signer.ComputeKeyedHash(SigningAlgorithm.HmacSHA256, key, vm["policy"]);
 
-            vm["x-amz-signature"] = BitConverter.ToString(signature).Replace("-", string.Empty).ToLower();
+#pragma warning disable CA1308 // Normalize strings to uppercase
+            vm["x-amz-signature"] = BitConverter.ToString(signature).Replace("-", string.Empty, StringComparison.InvariantCulture).ToLowerInvariant();
+#pragma warning restore CA1308 // Normalize strings to uppercase
 
             return Task.FromResult(vm);
         }
 
         public async Task DeleteAsync(string path, CancellationToken ct = default)
         {
-            await _s3Client.DeleteObjectAsync(Options.BucketName, path, ct);
+            await _s3Client.DeleteObjectAsync(Options.BucketName, path, ct).ConfigureAwait(false);
         }
 
         public Task<string> GetUrlAsync(string path, CancellationToken ct = default)
@@ -118,10 +128,31 @@ namespace JoyMoe.Common.Oss.S3
 
             if (Options.UseCname)
             {
-                url = url.Replace($"{Options.BucketName}.{_endpoint.GetEndpointForService("s3")}", Options.BucketName);
+                url = url.Replace($"{Options.BucketName}.{_endpoint.GetEndpointForService("s3")}", Options.BucketName, StringComparison.InvariantCulture);
             }
 
             return Task.FromResult(url);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _s3Client?.Dispose();
+            }
+
+            _disposed = true;
         }
     }
 }
