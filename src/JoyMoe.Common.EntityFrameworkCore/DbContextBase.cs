@@ -22,8 +22,8 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await AddTimestampsAsync();
-            return await base.SaveChangesAsync(cancellationToken);
+            await AddTimestampsAsync().ConfigureAwait(false);
+            return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private async Task AddTimestampsAsync()
@@ -39,11 +39,11 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
                 if (entity.State == EntityState.Added)
                 {
-                    await OnCreateEntity(data);
+                    await OnCreateEntity(data).ConfigureAwait(false);
                     data.CreatedAt = now;
                 }
 
-                await OnUpdateEntity(data);
+                await OnUpdateEntity(data).ConfigureAwait(false);
                 data.UpdatedAt = now;
             }
         }

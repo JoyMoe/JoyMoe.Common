@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 namespace JoyMoe.Common.Session
 {
     /// <summary>
-    /// This provides an storage mechanic to preserve identity information on the <see cref="IDistributedCache"/> while only sending a simple identifier key to the client.
+    /// This provides an storage mechanic to preserve identity information on the <see cref="IDistributedCache" /> while only sending a simple identifier key to the client.
     /// </summary>
     public class CachedTicketStore : ITicketStore
     {
@@ -23,12 +23,17 @@ namespace JoyMoe.Common.Session
         {
             var guid = Guid.NewGuid();
             var key = KeyPrefix + guid;
-            await RenewAsync(key, ticket);
+            await RenewAsync(key, ticket).ConfigureAwait(false);
             return key;
         }
 
         public Task RenewAsync(string key, AuthenticationTicket ticket)
         {
+            if (ticket == null)
+            {
+                throw new ArgumentNullException(nameof(ticket));
+            }
+
             var options = new DistributedCacheEntryOptions();
             var expiresUtc = ticket.Properties.ExpiresUtc;
             if (expiresUtc.HasValue)
@@ -40,7 +45,7 @@ namespace JoyMoe.Common.Session
             return Task.FromResult(0);
         }
 
-        public Task<AuthenticationTicket> RetrieveAsync(string key)
+        public Task<AuthenticationTicket?> RetrieveAsync(string key)
         {
             var bytes = _cache.Get(key);
             var ticket = DeserializeFromBytes(bytes);
@@ -58,7 +63,7 @@ namespace JoyMoe.Common.Session
             return TicketSerializer.Default.Serialize(source);
         }
 
-        private static AuthenticationTicket DeserializeFromBytes(byte[] source)
+        private static AuthenticationTicket? DeserializeFromBytes(byte[] source)
         {
             return source == null ? null : TicketSerializer.Default.Deserialize(source);
         }

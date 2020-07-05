@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace JoyMoe.Common.Attributes
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+#pragma warning disable CA1710 // Identifiers should have correct suffix
     public class DomainPrefixFilter : Attribute, IResourceFilter
+#pragma warning restore CA1710 // Identifiers should have correct suffix
     {
         private readonly string _prefix;
 
@@ -20,7 +23,12 @@ namespace JoyMoe.Common.Attributes
 
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
-            if (!context.HttpContext.Request.Host.Host.StartsWith(_prefix))
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (!context.HttpContext.Request.Host.Host.StartsWith(_prefix, StringComparison.InvariantCulture))
             {
                 context.Result = new NotFoundResult();
             }

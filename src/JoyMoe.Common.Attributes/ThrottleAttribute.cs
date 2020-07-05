@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -16,7 +17,7 @@ namespace JoyMoe.Common.Attributes
         /// <summary>
         /// Throttle Pool
         /// </summary>
-        public string Pool { get; set; }
+        public string Pool { get; set; } = null!;
 
         /// <summary>
         /// Throttle Times
@@ -29,27 +30,35 @@ namespace JoyMoe.Common.Attributes
         public int Seconds { get; set; }
 
         /// <inheritdoc />
-        public override void OnActionExecuting(ActionExecutingContext c)
+        public override void OnActionExecuting(ActionExecutingContext ctx)
         {
-            var cache = c.HttpContext.RequestServices.GetService<IDistributedCache>();
+            if (ctx == null)
+            {
+                throw new ArgumentNullException(nameof(ctx));
+            }
 
-            var key = $"Throttle-{Pool}-{c.HttpContext.Request.HttpContext.Connection.RemoteIpAddress}";
+            var cache = ctx.HttpContext.RequestServices.GetService<IDistributedCache>();
+
+            var key = $"Throttle-{Pool}-{ctx.HttpContext.Request.HttpContext.Connection.RemoteIpAddress}";
 
             var resetKey = $"{key}-reset";
             var timesKey = $"{key}-times";
 
-            int.TryParse(cache.GetString(timesKey), out var times);
+            if (!int.TryParse(cache.GetString(timesKey), out var times))
+            {
+                times = 0;
+            }
 
             times++;
 
             var reset = cache.GetString(resetKey);
             var resetAt = string.IsNullOrWhiteSpace(reset)
                 ? DateTimeOffset.Now
-                : DateTimeOffset.Parse(reset);
+                : DateTimeOffset.Parse(reset, CultureInfo.InvariantCulture);
 
-            c.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString());
-            c.HttpContext.Response.Headers.Add("X-RateLimit-Reset", resetAt.ToUnixTimeSeconds().ToString());
-            c.HttpContext.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString());
+            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
+            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Reset", resetAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
+            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString(CultureInfo.InvariantCulture));
 
             if (times < Times)
             {
@@ -62,22 +71,22 @@ namespace JoyMoe.Common.Attributes
                         AbsoluteExpiration = expiration
                     });
 
-                    cache.SetString(resetKey, expiration.ToString(), new DistributedCacheEntryOptions
+                    cache.SetString(resetKey, expiration.ToString(CultureInfo.InvariantCulture), new DistributedCacheEntryOptions
                     {
                         AbsoluteExpiration = expiration
                     });
                 }
                 else
                 {
-                    cache.SetString(timesKey, times.ToString());
+                    cache.SetString(timesKey, times.ToString(CultureInfo.InvariantCulture));
                 }
             }
             else
             {
-                c.Result = new StatusCodeResult((int)HttpStatusCode.TooManyRequests);
+                ctx.Result = new StatusCodeResult((int)HttpStatusCode.TooManyRequests);
             }
 
-            base.OnActionExecuting(c);
+            base.OnActionExecuting(ctx);
         }
     }
 }

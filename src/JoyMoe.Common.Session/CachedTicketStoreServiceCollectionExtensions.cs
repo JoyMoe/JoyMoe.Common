@@ -9,7 +9,7 @@ namespace JoyMoe.Common.Session
     public static class CachedTicketStoreServiceCollectionExtensions
     {
         /// <summary>
-        /// Add a <see cref="CachedTicketStore"/> to preserve identity information
+        /// Add a <see cref="CachedTicketStore" /> to preserve identity information
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>

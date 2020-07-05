@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using JoyMoe.Common.EntityFrameworkCore.Model;
@@ -13,25 +14,26 @@ namespace JoyMoe.Common.Mvc.Api.ViewModels
 
         public long? Last { get; set; }
 
-        public T[] Data { get; set; }
+        public IList<T>? Data { get; }
 
-        public static PaginationResponse<T> Create(T[] data, long? before = null)
+        public PaginationResponse(IList<T>? data, long? before = null)
         {
-            return new PaginationResponse<T>
-            {
-                Before = before,
-                Size = data.Length,
-                Last = data.LastOrDefault()?.Id,
-                Data = data
-            };
+            Before = before;
+            Size = data?.Count ?? 0;
+            Last = data?.LastOrDefault()?.Id;
+            Data = data;
         }
 
-        public static PaginationResponse<T> Create<TEntity>(
-            IQueryable<TEntity> query,
+        public PaginationResponse(
+            IQueryable<T> query,
             PaginationRequest request,
-            Expression<Func<TEntity, int, T>> expression)
-            where TEntity : IIdentifier
+            Expression<Func<T, int, T>> expression)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             if (request.Before.HasValue)
             {
                 query = query.Where(a => a.Id < request.Before);
@@ -42,9 +44,12 @@ namespace JoyMoe.Common.Mvc.Api.ViewModels
             var data = query
                 .Take(request.Size)
                 .Select(expression)
-                .ToArray();
+                .ToList();
 
-            return Create(data, request.Before);
+            Before = request.Before;
+            Size = data?.Count ?? 0;
+            Last = data?.LastOrDefault()?.Id;
+            Data = data;
         }
     }
 }

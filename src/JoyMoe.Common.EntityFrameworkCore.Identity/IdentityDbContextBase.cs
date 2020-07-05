@@ -6,7 +6,6 @@ using JoyMoe.Common.EntityFrameworkCore.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace JoyMoe.Common.EntityFrameworkCore.Identity
 {
@@ -52,8 +51,8 @@ namespace JoyMoe.Common.EntityFrameworkCore.Identity
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await AddTimestampsAsync();
-            return await base.SaveChangesAsync(cancellationToken);
+            await AddTimestampsAsync().ConfigureAwait(false);
+            return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private async Task AddTimestampsAsync()
@@ -69,11 +68,11 @@ namespace JoyMoe.Common.EntityFrameworkCore.Identity
 
                 if (entity.State == EntityState.Added)
                 {
-                    await OnCreateEntity(data);
+                    await OnCreateEntity(data).ConfigureAwait(false);
                     data.CreatedAt = now;
                 }
 
-                await OnUpdateEntity(data);
+                await OnUpdateEntity(data).ConfigureAwait(false);
                 data.UpdatedAt = now;
             }
         }
