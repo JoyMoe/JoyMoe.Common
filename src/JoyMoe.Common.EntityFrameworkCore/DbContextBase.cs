@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JoyMoe.Common.EntityFrameworkCore.Model;
+using JoyMoe.Common.EntityFrameworkCore.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JoyMoe.Common.EntityFrameworkCore

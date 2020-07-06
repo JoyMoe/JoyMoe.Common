@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using JoyMoe.Common.EntityFrameworkCore.Model;
+using JoyMoe.Common.EntityFrameworkCore.Models;
 
 namespace JoyMoe.Common.Mvc.Api.ViewModels
 {
