@@ -1,6 +1,6 @@
 using System;
 
-namespace JoyMoe.Common.EntityFrameworkCore.Model
+namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
     public interface IDataEntity : IIdentifier
     {

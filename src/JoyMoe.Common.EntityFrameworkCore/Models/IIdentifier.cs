@@ -1,4 +1,4 @@
-namespace JoyMoe.Common.EntityFrameworkCore.Model
+namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
     public interface IIdentifier
     {
