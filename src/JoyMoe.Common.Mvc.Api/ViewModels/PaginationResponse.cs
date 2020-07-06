@@ -23,33 +23,5 @@ namespace JoyMoe.Common.Mvc.Api.ViewModels
             Last = data?.LastOrDefault()?.Id;
             Data = data;
         }
-
-        public PaginationResponse(
-            IQueryable<T> query,
-            PaginationRequest request,
-            Expression<Func<T, int, T>> expression)
-        {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            if (request.Before.HasValue)
-            {
-                query = query.Where(a => a.Id < request.Before);
-            }
-
-            query = query.OrderByDescending(a => a.Id);
-
-            var data = query
-                .Take(request.Size)
-                .Select(expression)
-                .ToList();
-
-            Before = request.Before;
-            Size = data?.Count ?? 0;
-            Last = data?.LastOrDefault()?.Id;
-            Data = data;
-        }
     }
 }
