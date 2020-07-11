@@ -12,9 +12,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Validation", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Session", "src\JoyMoe.Common.Session\JoyMoe.Common.Session.csproj", "{F4FB76DF-2D0B-4A0C-B926-90E93B829BCB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Oss", "src\JoyMoe.Common.Oss\JoyMoe.Common.Oss.csproj", "{6745F33A-7E62-4BEA-987A-9E4F31354CD6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Storage", "src\JoyMoe.Common.Storage\JoyMoe.Common.Storage.csproj", "{6745F33A-7E62-4BEA-987A-9E4F31354CD6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Oss.S3", "src\JoyMoe.Common.Oss.S3\JoyMoe.Common.Oss.S3.csproj", "{0EB02EB4-83A9-4042-9AF6-AA9AEA267EC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Storage.S3", "src\JoyMoe.Common.Storage.S3\JoyMoe.Common.Storage.S3.csproj", "{0EB02EB4-83A9-4042-9AF6-AA9AEA267EC3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.EntityFrameworkCore", "src\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj", "{401C6BCA-95ED-41D6-A04E-D3CCE75F7387}"
 EndProject

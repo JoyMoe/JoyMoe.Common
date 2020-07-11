@@ -1,4 +1,4 @@
-namespace JoyMoe.Common.Oss.S3
+namespace JoyMoe.Common.Storage.S3
 {
     public class S3StorageOptions
     {

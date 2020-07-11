@@ -1,8 +1,9 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
+using JoyMoe.Common.Storage;
+using JoyMoe.Common.Storage.S3;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace JoyMoe.Common.Oss.S3
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class S3StorageServiceCollectionExtensions
     {
@@ -18,7 +19,7 @@ namespace JoyMoe.Common.Oss.S3
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.TryAddScoped<IOssStorage, S3Storage>();
+            services.TryAddScoped<IObjectStorage, S3Storage>();
 
             return services;
         }
