@@ -1,11 +1,20 @@
 <Project>
+
   <ItemGroup>
     <PackageVersion Include="Automatonymous" Version="5.0.0" />
     <PackageVersion Include="AWSSDK.S3" Version="3.3.111.18" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.5" />
     <PackageVersion Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="3.1.5" />
     <PackageVersion Include="Microsoft.NetCore.Analyzers" Version="3.0.0" />
     <PackageVersion Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'netstandard2.1' ">
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0-preview.6.20312.15" />
+  </ItemGroup>
+
 </Project>
