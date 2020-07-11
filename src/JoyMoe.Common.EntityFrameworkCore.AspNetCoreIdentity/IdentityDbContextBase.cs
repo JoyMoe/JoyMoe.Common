@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace JoyMoe.Common.EntityFrameworkCore.Identity
+namespace JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity
 {
     public class IdentityDbContextBase : IdentityDbContextBase<IdentityUser, IdentityRole, string>
     {
