@@ -11,12 +11,12 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 
-namespace JoyMoe.Common.Oss.S3
+namespace JoyMoe.Common.Storage.S3
 {
     /// <summary>
     /// Aws S3 Storage
     /// </summary>
-    public class S3Storage : IOssStorage, IDisposable
+    public class S3Storage : IObjectStorage
     {
         private bool _disposed = false;
 

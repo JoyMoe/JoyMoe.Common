@@ -1,14 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JoyMoe.Common.Oss
+namespace JoyMoe.Common.Storage
 {
     /// <summary>
     /// Object Storage Service client
     /// </summary>
-    public interface IOssStorage
+    public interface IObjectStorage : IDisposable
     {
         Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default);
 

@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common AWS S3 OSS client for Asp.Net Core MVC</Description>
+    <Description>JoyMoe.Common AWS S3 client</Description>
     <PackageTags>joymoe</PackageTags>
   </PropertyGroup>
 
@@ -15,11 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\JoyMoe.Common.Oss\JoyMoe.Common.Oss.csproj" />
+    <ProjectReference Include="..\JoyMoe.Common.Storage\JoyMoe.Common.Storage.csproj" />
   </ItemGroup>
 
 </Project>
