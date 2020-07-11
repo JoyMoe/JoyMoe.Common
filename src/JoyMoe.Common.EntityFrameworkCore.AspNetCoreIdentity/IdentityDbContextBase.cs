@@ -49,7 +49,7 @@ namespace JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity
             return base.SaveChanges();
         }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             await AddTimestampsAsync().ConfigureAwait(false);
             return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
