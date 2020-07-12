@@ -10,8 +10,10 @@ namespace JoyMoe.Common.Storage.S3
 
         public string BucketName { get; set; } = null!;
 
-        public bool UseCname { get; set; } = false;
+        public string Endpoint { get; set; } = "s3.amazonaws.com";
 
-        public bool UseHttps { get; set; } = false;
+        public bool UseCName { get; set; } = false;
+
+        public bool UseHttps { get; set; } = true;
     }
 }
