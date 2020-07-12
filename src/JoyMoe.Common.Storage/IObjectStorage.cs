@@ -13,11 +13,11 @@ namespace JoyMoe.Common.Storage
     {
         Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default);
 
-        Task<Dictionary<string, string>> GetUploadFormAsync(string path, bool everyone = false, CancellationToken ct = default);
+        Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default);
 
         Task DeleteAsync(string path, CancellationToken ct = default);
 
-        Task<string> GetUrlAsync(string path, CancellationToken ct = default);
+        Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default);
 
         Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default);
     }
