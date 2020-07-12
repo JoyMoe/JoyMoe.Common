@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Json.Tests", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Workflow", "src\JoyMoe.Common.Workflow\JoyMoe.Common.Workflow.csproj", "{FB4ED184-C60B-4AB5-A94B-0EF5447DFB33}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Storage.S3.Tests", "tests\JoyMoe.Common.Storage.S3.Tests\JoyMoe.Common.Storage.S3.Tests.csproj", "{48FB664C-9786-4074-9B71-7B4364E0D796}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +80,10 @@ Global
 		{FB4ED184-C60B-4AB5-A94B-0EF5447DFB33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB4ED184-C60B-4AB5-A94B-0EF5447DFB33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB4ED184-C60B-4AB5-A94B-0EF5447DFB33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48FB664C-9786-4074-9B71-7B4364E0D796}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48FB664C-9786-4074-9B71-7B4364E0D796}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48FB664C-9786-4074-9B71-7B4364E0D796}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48FB664C-9786-4074-9B71-7B4364E0D796}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +100,7 @@ Global
 		{11F4D885-7DBD-4E24-A320-8E125A717DEC} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{5AF28767-E9FA-411A-9B14-CEA09961DEAB} = {CDA5D56F-9052-40BC-98F1-48F04980EAD2}
 		{FB4ED184-C60B-4AB5-A94B-0EF5447DFB33} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
+		{48FB664C-9786-4074-9B71-7B4364E0D796} = {CDA5D56F-9052-40BC-98F1-48F04980EAD2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8047892F-B408-4203-B8F7-C7B05E740890}

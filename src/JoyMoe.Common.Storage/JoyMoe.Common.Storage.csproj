@@ -10,8 +10,4 @@
     <PackageTags>joymoe</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" />
-  </ItemGroup>
-
 </Project>
