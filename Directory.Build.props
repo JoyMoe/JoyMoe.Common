@@ -11,8 +11,6 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/JoyMoe/JoyMoe.Common</PackageProjectUrl>
     <PackageIconFullPath>$(MSBuildThisFileDirectory)joymoe.png</PackageIconFullPath>
-
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup>
