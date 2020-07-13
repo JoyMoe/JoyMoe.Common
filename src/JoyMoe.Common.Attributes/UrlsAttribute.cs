@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
-namespace JoyMoe.Common.Validation
+namespace JoyMoe.Common.Attributes
 {
     /// <summary>
     /// Provides URL validation for an array.

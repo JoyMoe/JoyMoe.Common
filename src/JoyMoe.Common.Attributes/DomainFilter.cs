@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -6,14 +7,14 @@ namespace JoyMoe.Common.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 #pragma warning disable CA1710 // Identifiers should have correct suffix
-    public class DomainPrefixFilter : Attribute, IResourceFilter
+    public class DomainFilter : Attribute, IResourceFilter
 #pragma warning restore CA1710 // Identifiers should have correct suffix
     {
-        private readonly string _prefix;
+        private readonly Regex _regex;
 
-        public DomainPrefixFilter(string prefix)
+        public DomainFilter(string regex)
         {
-            _prefix = prefix;
+            _regex = new Regex(regex);
         }
 
         public void OnResourceExecuted(ResourceExecutedContext context)
@@ -28,7 +29,7 @@ namespace JoyMoe.Common.Attributes
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (!context.HttpContext.Request.Host.Host.StartsWith(_prefix, StringComparison.InvariantCulture))
+            if (!_regex.IsMatch(context.HttpContext.Request.Host.Host))
             {
                 context.Result = new NotFoundResult();
             }

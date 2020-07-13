@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Attributes for Asp.Net Core MVC</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>domain;routing;throttle;validation;form;value</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

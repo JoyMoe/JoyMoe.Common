@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Converter and Naming Policy for System.Text.Json</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>int64;iso8601;json;long;snake;case</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

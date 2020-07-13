@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Workflow Engine based on State Machine</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>workflow;state;machine</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common AWS S3 client</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>amazon;aws;s3;object;storage;oss</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
