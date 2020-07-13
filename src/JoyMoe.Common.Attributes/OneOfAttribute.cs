@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
-namespace JoyMoe.Common.Validation
+namespace JoyMoe.Common.Attributes
 {
     /// <summary>
     /// Specifies at least one data field value is provided.

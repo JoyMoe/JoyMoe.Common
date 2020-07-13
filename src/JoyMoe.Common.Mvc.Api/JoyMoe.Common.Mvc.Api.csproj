@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common API stubs for Asp.Net Core MVC</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>api;pagination;mvc</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

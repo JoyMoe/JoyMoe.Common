@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common Cached Ticket Store for Asp.Net Core MVC</Description>
-    <PackageTags>joymoe</PackageTags>
+    <PackageTags>session;store;ticket</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
