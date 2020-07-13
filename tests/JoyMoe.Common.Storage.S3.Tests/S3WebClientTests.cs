@@ -127,7 +127,7 @@ namespace JoyMoe.Common.Storage.S3.Tests
             var response = new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
-                Content = new StringContent("Hello World!"),
+                Content = new StringContent("Hello World!")
             };
 #pragma warning restore CA2000 // Dispose objects before losing scope
 

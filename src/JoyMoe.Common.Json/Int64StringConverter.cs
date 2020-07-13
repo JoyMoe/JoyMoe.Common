@@ -14,17 +14,13 @@ namespace JoyMoe.Common.Json
     {
         public override long Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var span = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
-                if (Utf8Parser.TryParse(span, out long number, out int bytesConsumed) && span.Length == bytesConsumed)
-                    return number;
+            if (reader.TokenType != JsonTokenType.String) return reader.GetInt64();
 
-                if (long.TryParse(reader.GetString(), out number))
-                    return number;
-            }
+            var span = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
+            if (Utf8Parser.TryParse(span, out long number, out var bytesConsumed) && span.Length == bytesConsumed)
+                return number;
 
-            return reader.GetInt64();
+            return long.TryParse(reader.GetString(), out number) ? number : reader.GetInt64();
         }
 
         public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)

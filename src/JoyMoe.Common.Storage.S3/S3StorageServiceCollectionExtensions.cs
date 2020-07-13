@@ -3,6 +3,7 @@ using JoyMoe.Common.Storage;
 using JoyMoe.Common.Storage.S3;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class S3StorageServiceCollectionExtensions

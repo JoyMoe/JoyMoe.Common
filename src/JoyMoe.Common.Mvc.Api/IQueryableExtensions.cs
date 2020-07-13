@@ -4,6 +4,7 @@ using JoyMoe.Common.EntityFrameworkCore.Models;
 using JoyMoe.Common.Mvc.Api.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable once CheckNamespace
 namespace System.Linq
 {
     public static class PaginationResponseIQueryableExtensions

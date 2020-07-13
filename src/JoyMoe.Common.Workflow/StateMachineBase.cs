@@ -7,7 +7,7 @@ namespace JoyMoe.Common.Workflow
 {
     public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDisposable where TI : class, IStateful
     {
-        private bool _disposed = false;
+        private bool _disposed;
 
         private readonly IDisposable? _eventObserver;
         private readonly IDisposable? _stateObserver;
