@@ -2,20 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace JoyMoe.Common.Storage.S3
+namespace JoyMoe.Common.Storage.QCloud
 {
-    public class S3WebClient : IDisposable
+    public class QCloudWebClient : IDisposable
     {
-        private readonly S3StorageOptions _options;
+        private readonly QCloudStorageOptions _options;
 
         private HttpClient _client;
         private bool _disposed;
 
-        public S3WebClient(S3StorageOptions options)
+        public QCloudWebClient(QCloudStorageOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
@@ -23,7 +22,7 @@ namespace JoyMoe.Common.Storage.S3
 
             var version = GetType().Assembly.GetName().Version;
 
-            _client.DefaultRequestHeaders.Add("UserAgent", $"JoyMoe.Common.Storage.S3/{version}");
+            _client.DefaultRequestHeaders.Add("UserAgent", $"JoyMoe.Common.Storage.QCloud/{version}");
         }
 
         public void SetHttpClient(HttpClient client)
@@ -72,7 +71,7 @@ namespace JoyMoe.Common.Storage.S3
             return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
-        public async Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null)
+        public Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null)
         {
             if (message == null)
             {
@@ -87,106 +86,86 @@ namespace JoyMoe.Common.Storage.S3
             message.Headers.Host = message.RequestUri.Host;
 
             time ??= DateTimeOffset.UtcNow;
-            var timestamp = $"{time:yyyyMMddTHHmmssZ}";
-            var date = $"{time:yyyyMMdd}";
+            var keyTime = $"{time.Value.ToUnixTimeSeconds()};{time.Value.AddSeconds(7200).ToUnixTimeSeconds()}";
 
-            const string algorithm = "AWS4-HMAC-SHA256";
+            var uri = Uri.UnescapeDataString(message.RequestUri!.AbsolutePath);
 
-            var hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-            if (!header)
-            {
-                hash = "UNSIGNED-PAYLOAD";
-            }
-            else if (message.Content != null)
-            {
-                var payload = await message.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-                hash = payload.Sha256().ToHex();
-            }
+#pragma warning disable CA1308 // Normalize strings to uppercase
+            var parameters = QueryHelpers.ParseQuery(message.RequestUri!.Query)
+                .OrderBy(q => q.Key)
+                .ToDictionary(q => Uri.EscapeDataString(q.Key.ToLowerInvariant()), q => Uri.EscapeDataString(q.Value));
+#pragma warning restore CA1308 // Normalize strings to uppercase
 
-            var scope = $"{date}/{_options.Region}/s3/aws4_request";
-            var credential = $"{_options.AccessKey}/{scope}";
-
-            if (header)
-            {
-                message.Headers.Add("x-amz-date", timestamp);
-                message.Headers.Add("x-amz-content-sha256", hash);
-            }
+            var list = string.Join(';', parameters
+                .Select(q => q.Key));
+            var query = string.Join('&', parameters
+                .Select(q => $"{q.Key}={q.Value}"));
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
             var hd = new SortedDictionary<string, string>();
 
             foreach (var (key, value) in message.Headers)
             {
-                hd[key.ToLowerInvariant()] = value.First().Trim();
+                hd[Uri.EscapeDataString(key.ToLowerInvariant())] = Uri.EscapeDataString(value.First().Trim());
             }
 
             if (message.Content?.Headers != null)
             {
                 foreach (var (key, value) in message.Content.Headers)
                 {
-                    hd[key.ToLowerInvariant()] = value.First().Trim();
+                    hd[Uri.EscapeDataString(key.ToLowerInvariant())] = Uri.EscapeDataString(value.First().Trim());
                 }
             }
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
             var signed = string.Join(';', hd
                 .Select(h => h.Key));
-            var headers = string.Join("", hd
-                .Select(h => $"{h.Key}:{h.Value}\n"));
+            var headers = string.Join("&", hd
+                .Select(h => $"{h.Key}={h.Value}"));
 
-            if (!header)
-            {
-                message.RequestUri = new Uri(QueryHelpers.AddQueryString(message.RequestUri.ToString(),
-                    new Dictionary<string, string>
-                    {
-                        ["X-Amz-Algorithm"] = algorithm,
-                        ["X-Amz-Credential"] = credential,
-                        ["X-Amz-Date"] = timestamp,
-                        ["X-Amz-Expires"] = "86400",
-                        ["X-Amz-SignedHeaders"] = signed
-                    }));
-            }
+#pragma warning disable CA1308 // Normalize strings to uppercase
+            var canonical = $"{message.Method.ToString().ToLowerInvariant()}\n{uri}\n{query}\n{headers}\n";
+#pragma warning restore CA1308 // Normalize strings to uppercase
 
-            var uri = Uri.EscapeDataString(message.RequestUri!.AbsolutePath).Replace("%2F", "/", StringComparison.InvariantCulture);
-            var query = string.Join('&', QueryHelpers.ParseQuery(message.RequestUri!.Query)
-                .OrderBy(q => q.Key)
-                .Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
+            var hash = canonical.Sha1().ToHex();
 
-            var canonical = $"{message.Method}\n{uri}\n{query}\n{headers}\n{signed}\n{hash}";
+            var @string = $"sha1\n{keyTime}\n{hash}\n";
 
-            var request = canonical.Sha256().ToHex();
-
-            var @string = $"AWS4-HMAC-SHA256\n{timestamp}\n{scope}\n{request}";
-
-            var signature = CalculateSignature(@string, date);
+            var signature = CalculateSignature(@string, keyTime);
 
             if (header)
             {
-                var authorization = $"Credential={credential},SignedHeaders={string.Join(';', signed)},Signature={signature}";
-                message.Headers.Authorization = new AuthenticationHeaderValue("AWS4-HMAC-SHA256", authorization);
+                var authorization = $"q-sign-algorithm=sha1&q-ak={_options.SecretId}&q-sign-time={keyTime}&q-key-time={keyTime}&q-header-list={signed}&q-url-param-list={list}&q-signature={signature}";
+                message.Headers.Remove("Authorization");
+                message.Headers.TryAddWithoutValidation("Authorization", authorization);
             }
             else
             {
                 message.RequestUri = new Uri(QueryHelpers.AddQueryString(message.RequestUri.ToString(),
                     new Dictionary<string, string>
                     {
-                        ["X-Amz-Signature"] = signature
+                        ["q-sign-algorithm"] = "sha1",
+                        ["q-ak"] = _options.SecretId,
+                        ["q-sign-time"] = keyTime,
+                        ["q-key-time"] = keyTime,
+                        ["q-header-list"] = signed,
+                        ["q-url-param-list"] = list,
+                        ["q-signature"] = signature
                     }));
             }
+
+            return Task.CompletedTask;
         }
 
-        public string CalculateSignature(string cipher, string date)
+        public string CalculateSignature(string cipher, string keyTime)
         {
-            var key = DeriveKeys(date);
-            return cipher.HmacSha256(key).ToHex();
+            var key = DeriveKeys(keyTime);
+            return cipher.HmacSha1(key).ToHex();
         }
 
-        public byte[] DeriveKeys(string date)
+        public string DeriveKeys(string keyTime)
         {
-            var dateKey = date.HmacSha256($"AWS4{_options.SecretKey}");
-            var regionKey = _options.Region.HmacSha256(dateKey);
-            var serviceKey = "s3".HmacSha256(regionKey);
-            return "aws4_request".HmacSha256(serviceKey);
+            return keyTime.HmacSha1(_options.SecretKey).ToHex();
         }
 
         public void Dispose()

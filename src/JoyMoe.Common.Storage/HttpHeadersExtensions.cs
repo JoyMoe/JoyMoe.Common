@@ -1,7 +1,7 @@
 using System.Linq;
-using System.Net.Http.Headers;
 
-namespace JoyMoe.Common.Storage.S3.Tests
+// ReSharper disable once CheckNamespace
+namespace System.Net.Http.Headers
 {
     public static class HttpHeadersExtensions
     {
