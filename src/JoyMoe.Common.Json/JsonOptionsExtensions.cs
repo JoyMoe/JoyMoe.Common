@@ -1,7 +1,9 @@
 using System;
+using JoyMoe.Common.Json;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JoyMoe.Common.Json
+// ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class JsonOptionsExtensions
     {
