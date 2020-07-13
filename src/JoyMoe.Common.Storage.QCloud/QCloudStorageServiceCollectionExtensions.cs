@@ -3,6 +3,7 @@ using JoyMoe.Common.Storage;
 using JoyMoe.Common.Storage.QCloud;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class QCloudStorageServiceCollectionExtensions

@@ -1,10 +1,11 @@
 using System;
+using JoyMoe.Common.Session;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-namespace JoyMoe.Common.Session
+// ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class CachedTicketStoreServiceCollectionExtensions
     {
