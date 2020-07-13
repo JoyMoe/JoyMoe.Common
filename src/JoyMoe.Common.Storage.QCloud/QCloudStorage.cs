@@ -8,18 +8,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
-namespace JoyMoe.Common.Storage.S3
+namespace JoyMoe.Common.Storage.QCloud
 {
     /// <summary>
-    /// Aws S3 Storage
+    /// Tencent Cloud Object Storage
     /// </summary>
-    public class S3Storage : IObjectStorage
+    public class QCloudStorage : IObjectStorage
     {
-        private readonly S3WebClient _client;
+        private readonly QCloudWebClient _client;
 
         private bool _disposed;
 
-        public S3Storage(IOptions<S3StorageOptions> optionsAccessor)
+        public QCloudStorage(IOptions<QCloudStorageOptions> optionsAccessor)
         {
             if (optionsAccessor == null)
             {
@@ -28,10 +28,10 @@ namespace JoyMoe.Common.Storage.S3
 
             Options = optionsAccessor.Value;
 
-            _client = new S3WebClient(Options);
+            _client = new QCloudWebClient(Options);
         }
 
-        public S3StorageOptions Options { get; }
+        public QCloudStorageOptions Options { get; }
 
         public async Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default)
         {
@@ -43,18 +43,22 @@ namespace JoyMoe.Common.Storage.S3
             var url = await GetUrlAsync(path, false, ct).ConfigureAwait(false);
 
             using var content = new StreamContent(data);
+            content.Headers.ContentLength = data.Length;
             content.Headers.ContentType = new MediaTypeHeaderValue(mime);
+            content.Headers.ContentMD5 = data.Md5();
+            data.Seek(0, SeekOrigin.Begin);
 
             await _client.PutAsync(new Uri(url), content, new Dictionary<string, string>
             {
-                ["x-amz-acl"] = everyone ? "public-read" : "private"
+                ["x-cos-acl"] = everyone ? "public-read" : "private"
             }).ConfigureAwait(false);
         }
 
         public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default)
         {
             var now = DateTimeOffset.UtcNow;
-            var date = $"{now:yyyyMMdd}";
+            var expiration = now.AddSeconds(1800);
+            var keyTime = $"{now.ToUnixTimeSeconds()};{expiration.ToUnixTimeSeconds()}";
 
             var uri = await GetUrlAsync(path, true, ct).ConfigureAwait(false);
 
@@ -65,27 +69,28 @@ namespace JoyMoe.Common.Storage.S3
                 {
                     ["key"] = path,
                     ["acl"] = everyone ? "public-read" : "private",
-                    ["x-amz-algorithm"] = "AWS4-HMAC-SHA256",
-                    ["x-amz-credential"] = $"{Options.AccessKey}/{date}/{Options.Region}/s3/aws4_request",
-                    ["x-amz-date"] = date
+                    ["q-sign-algorithm"] = "sha1",
+                    ["q-ak"] = Options.SecretId,
+                    ["q-key-time"] = keyTime,
                 }
             };
 
-            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(@$"{{
-  ""expiration"": ""{now.AddMinutes(30):yyyyMMddTHHmmssZ}"",
+            arguments.Data["policy"] = @$"{{
+  ""expiration"": ""{expiration:yyyyMMddTHHmmssZ}"",
   ""conditions"": [
     {{""acl"": ""{arguments.Data["acl"]}""}},
     {{""bucket"": ""{Options.BucketName}""}},
     [""content-length-range"", 4096, 1048576],
     [""starts-with"", ""$Content-Type"", ""image/""],
     {{""key"": ""{arguments.Data["key"]}""}},
-    {{""x-amz-algorithm"": ""{arguments.Data["x-amz-algorithm"]}""}},
-    {{""x-amz-credential"": ""{arguments.Data["x-amz-credential"]}""}},
-    {{""x-amz-date"": ""{arguments.Data["x-amz-date"]}""}}
+    {{""q-ak"": ""{arguments.Data["q-ak"]}""}},
+    {{""q-sign-algorithm"": ""{arguments.Data["q-sign-algorithm"]}""}},
+    {{""q-sign-time"": ""{arguments.Data["q-key-time"]}""}}
   ]
-}}"));
+}}";
 
-            arguments.Data["x-amz-signature"] = _client.CalculateSignature(arguments.Data["policy"], date);
+            arguments.Data["q-signature"] = _client.CalculateSignature(arguments.Data["policy"], keyTime);
+            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(arguments.Data["q-signature"]));
 
             return arguments;
         }
@@ -105,9 +110,9 @@ namespace JoyMoe.Common.Storage.S3
 
             var protocol = Options.UseHttps ? "https" : "http";
 
-            var prefix = Options.UseCName && cname
-                ? $"{protocol}://{Options.BucketName}"
-                : $"{protocol}://{Options.Endpoint}/{Options.BucketName}";
+            var prefix = !string.IsNullOrWhiteSpace(Options.CanonicalName) && cname
+                ? $"{protocol}://{Options.CanonicalName}"
+                : $"{protocol}://{Options.Endpoint}";
 
             return Task.FromResult($"{prefix}/{path.TrimStart('/')}");
         }
