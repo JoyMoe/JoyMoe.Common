@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -15,7 +13,7 @@ namespace JoyMoe.Common.Storage.S3
         private readonly S3StorageOptions _options;
 
         private HttpClient _client;
-        private bool _disposed = false;
+        private bool _disposed;
 
         public S3WebClient(S3StorageOptions options)
         {

@@ -1,5 +1,6 @@
 using System;
 
+// ReSharper disable once CheckNamespace
 namespace Automatonymous
 {
     public static class EventExtensions

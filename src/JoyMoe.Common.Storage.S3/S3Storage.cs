@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 
 namespace JoyMoe.Common.Storage.S3
@@ -18,7 +16,7 @@ namespace JoyMoe.Common.Storage.S3
     {
         private readonly S3WebClient _client;
 
-        private bool _disposed = false;
+        private bool _disposed;
 
         public S3Storage(IOptions<S3StorageOptions> optionsAccessor)
         {
@@ -61,7 +59,7 @@ namespace JoyMoe.Common.Storage.S3
                     ["acl"] = everyone ? "public-read" : "private",
                     ["x-amz-algorithm"] = "AWS4-HMAC-SHA256",
                     ["x-amz-credential"] = $"{Options.AccessKey}/{date}/{Options.Region}/s3/aws4_request",
-                    ["x-amz-date"] = date,
+                    ["x-amz-date"] = date
                 }
             };
 
