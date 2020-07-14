@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace JoyMoe.Common.Storage.S3
 {
@@ -59,9 +58,9 @@ namespace JoyMoe.Common.Storage.S3
 
             if (headers != null)
             {
-                foreach (var (key, value) in headers)
+                foreach (var h in headers)
                 {
-                    message.Headers.Add(key, value);
+                    message.Headers.Add(h.Key, h.Value);
                 }
             }
 
@@ -115,28 +114,28 @@ namespace JoyMoe.Common.Storage.S3
 #pragma warning disable CA1308 // Normalize strings to uppercase
             var hd = new SortedDictionary<string, string>();
 
-            foreach (var (key, value) in message.Headers)
+            foreach (var h in message.Headers)
             {
-                hd[key.ToLowerInvariant()] = value.First().Trim();
+                hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
             }
 
             if (message.Content?.Headers != null)
             {
-                foreach (var (key, value) in message.Content.Headers)
+                foreach (var h in message.Content.Headers)
                 {
-                    hd[key.ToLowerInvariant()] = value.First().Trim();
+                    hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
                 }
             }
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
-            var signed = string.Join(';', hd
+            var signed = string.Join(";", hd
                 .Select(h => h.Key));
             var headers = string.Join("", hd
                 .Select(h => $"{h.Key}:{h.Value}\n"));
 
             if (!header)
             {
-                message.RequestUri = new Uri(QueryHelpers.AddQueryString(message.RequestUri.ToString(),
+                message.RequestUri = message.RequestUri.AddQueryParameters(
                     new Dictionary<string, string>
                     {
                         ["X-Amz-Algorithm"] = algorithm,
@@ -144,11 +143,12 @@ namespace JoyMoe.Common.Storage.S3
                         ["X-Amz-Date"] = timestamp,
                         ["X-Amz-Expires"] = "86400",
                         ["X-Amz-SignedHeaders"] = signed
-                    }));
+                    });
             }
 
-            var uri = Uri.EscapeDataString(message.RequestUri!.AbsolutePath).Replace("%2F", "/", StringComparison.InvariantCulture);
-            var query = string.Join('&', QueryHelpers.ParseQuery(message.RequestUri!.Query)
+            var uri = Uri.EscapeDataString(message.RequestUri!.AbsolutePath).Replace("%2F", "/");
+            var query = string.Join("&", message.RequestUri!
+                .ToQueryKeyValuePairs()
                 .OrderBy(q => q.Key)
                 .Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
 
@@ -162,16 +162,12 @@ namespace JoyMoe.Common.Storage.S3
 
             if (header)
             {
-                var authorization = $"Credential={credential},SignedHeaders={string.Join(';', signed)},Signature={signature}";
+                var authorization = $"Credential={credential},SignedHeaders={string.Join(";", signed)},Signature={signature}";
                 message.Headers.Authorization = new AuthenticationHeaderValue("AWS4-HMAC-SHA256", authorization);
             }
             else
             {
-                message.RequestUri = new Uri(QueryHelpers.AddQueryString(message.RequestUri.ToString(),
-                    new Dictionary<string, string>
-                    {
-                        ["X-Amz-Signature"] = signature
-                    }));
+                message.RequestUri = message.RequestUri.AddQueryParameter("X-Amz-Signature", signature);
             }
         }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace JoyMoe.Common.Storage.QCloud
 {
@@ -58,9 +57,9 @@ namespace JoyMoe.Common.Storage.QCloud
 
             if (headers != null)
             {
-                foreach (var (key, value) in headers)
+                foreach (var h in headers)
                 {
-                    message.Headers.Add(key, value);
+                    message.Headers.Add(h.Key, h.Value);
                 }
             }
 
@@ -91,34 +90,36 @@ namespace JoyMoe.Common.Storage.QCloud
             var uri = Uri.UnescapeDataString(message.RequestUri!.AbsolutePath);
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
-            var parameters = QueryHelpers.ParseQuery(message.RequestUri!.Query)
+            var parameters = message.RequestUri!
+                .ToQueryKeyValuePairs()
                 .OrderBy(q => q.Key)
-                .ToDictionary(q => Uri.EscapeDataString(q.Key.ToLowerInvariant()), q => Uri.EscapeDataString(q.Value));
+                .Select(q => new KeyValuePair<string, string>(Uri.EscapeDataString(q.Key.ToLowerInvariant()), Uri.EscapeDataString(q.Value)))
+                .ToList();
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
-            var list = string.Join(';', parameters
+            var list = string.Join(";", parameters
                 .Select(q => q.Key));
-            var query = string.Join('&', parameters
+            var query = string.Join("&", parameters
                 .Select(q => $"{q.Key}={q.Value}"));
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
             var hd = new SortedDictionary<string, string>();
 
-            foreach (var (key, value) in message.Headers)
+            foreach (var h in message.Headers)
             {
-                hd[Uri.EscapeDataString(key.ToLowerInvariant())] = Uri.EscapeDataString(value.First().Trim());
+                hd[Uri.EscapeDataString(h.Key.ToLowerInvariant())] = Uri.EscapeDataString(h.Value.First().Trim());
             }
 
             if (message.Content?.Headers != null)
             {
-                foreach (var (key, value) in message.Content.Headers)
+                foreach (var h in message.Content.Headers)
                 {
-                    hd[Uri.EscapeDataString(key.ToLowerInvariant())] = Uri.EscapeDataString(value.First().Trim());
+                    hd[Uri.EscapeDataString(h.Key.ToLowerInvariant())] = Uri.EscapeDataString(h.Value.First().Trim());
                 }
             }
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
-            var signed = string.Join(';', hd
+            var signed = string.Join(";", hd
                 .Select(h => h.Key));
             var headers = string.Join("&", hd
                 .Select(h => $"{h.Key}={h.Value}"));
@@ -141,7 +142,7 @@ namespace JoyMoe.Common.Storage.QCloud
             }
             else
             {
-                message.RequestUri = new Uri(QueryHelpers.AddQueryString(message.RequestUri.ToString(),
+                message.RequestUri = message.RequestUri.AddQueryParameters(
                     new Dictionary<string, string>
                     {
                         ["q-sign-algorithm"] = "sha1",
@@ -151,7 +152,7 @@ namespace JoyMoe.Common.Storage.QCloud
                         ["q-header-list"] = signed,
                         ["q-url-param-list"] = list,
                         ["q-signature"] = signature
-                    }));
+                    });
             }
 
             return Task.CompletedTask;
