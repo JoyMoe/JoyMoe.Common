@@ -10,14 +10,16 @@ namespace JoyMoe.Common.Storage
     /// </summary>
     public interface IObjectStorage : IDisposable
     {
-        Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default);
-
-        Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default);
+        Task<string> DownloadAsync(string path, CancellationToken ct = default);
 
         Task DeleteAsync(string path, CancellationToken ct = default);
 
-        Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default);
+        Task UploadAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default);
 
         Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default);
+
+        Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default);
+
+        Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default);
     }
 }

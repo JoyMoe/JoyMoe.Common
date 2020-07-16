@@ -51,7 +51,7 @@ namespace JoyMoe.Common.Storage.QCloud.Tests
             {
                 ["Date"] = "Thu, 16 May 2019 06:55:53 GMT"
             }, time).ConfigureAwait(false);
-            Assert.Equal("Hello World!", result);
+            Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 
             mock.Protected().Verify(
                 "SendAsync",
@@ -87,7 +87,7 @@ namespace JoyMoe.Common.Storage.QCloud.Tests
                 ["x-cos-grant-read"] = "uin=\"100000000011\"",
                 ["Date"] = "Thu, 16 May 2019 06:45:51 GMT"
             }, time).ConfigureAwait(false);
-            Assert.Equal("Hello World!", result);
+            Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 
             mock.Protected().Verify(
                 "SendAsync",
