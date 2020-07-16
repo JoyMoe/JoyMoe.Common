@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -30,19 +31,19 @@ namespace JoyMoe.Common.Storage.S3
             _client = client;
         }
 
-        public async Task<string> GetAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
+        public async Task<HttpResponseMessage> GetAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
             => await SendAsync(url, headers, time).ConfigureAwait(false);
 
-        public async Task<string> PostAsync(Uri url, HttpContent content, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
+        public async Task<HttpResponseMessage> PostAsync(Uri url, HttpContent content, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
             => await SendAsync(url, headers, time, HttpMethod.Post, content).ConfigureAwait(false);
 
-        public async Task<string> PutAsync(Uri url, HttpContent content, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
+        public async Task<HttpResponseMessage> PutAsync(Uri url, HttpContent content, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
             => await SendAsync(url, headers, time, HttpMethod.Put, content).ConfigureAwait(false);
 
-        public async Task<string> DeleteAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
+        public async Task<HttpResponseMessage> DeleteAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null)
             => await SendAsync(url, headers, time, HttpMethod.Delete).ConfigureAwait(false);
 
-        private async Task<string> SendAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null, HttpMethod? method = null, HttpContent? content = null)
+        private async Task<HttpResponseMessage> SendAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null, HttpMethod? method = null, HttpContent? content = null)
         {
             if (method == null)
             {
@@ -66,9 +67,7 @@ namespace JoyMoe.Common.Storage.S3
 
             await PrepareRequestAsync(message, true, time).ConfigureAwait(false);
 
-            var response = await _client.SendAsync(message).ConfigureAwait(false);
-
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return await _client.SendAsync(message).ConfigureAwait(false);
         }
 
         public async Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null)

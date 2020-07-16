@@ -63,7 +63,7 @@ namespace JoyMoe.Common.Storage.S3.Tests
             {
                 ["Range"] = "bytes=0-9"
             }, _time).ConfigureAwait(false);
-            Assert.Equal("Hello World!", result);
+            Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 
             mock.Protected().Verify(
                 "SendAsync",
@@ -93,7 +93,7 @@ namespace JoyMoe.Common.Storage.S3.Tests
                 ["x-amz-storage-class"] = "REDUCED_REDUNDANCY",
                 ["Date"] = "Fri, 24 May 2013 00:00:00 GMT"
             }, _time).ConfigureAwait(false);
-            Assert.Equal("Hello World!", result);
+            Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 
             mock.Protected().Verify(
                 "SendAsync",

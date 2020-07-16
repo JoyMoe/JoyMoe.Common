@@ -33,7 +33,31 @@ namespace JoyMoe.Common.Storage.S3
 
         public S3StorageOptions Options { get; }
 
-        public async Task WriteStreamAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default)
+        public async Task<string> DownloadAsync(string path, CancellationToken ct = default)
+        {
+            var url = await GetUrlAsync(path, false, ct).ConfigureAwait(false);
+            var response = await _client.GetAsync(new Uri(url)).ConfigureAwait(false);
+
+            var target = Path.GetTempFileName();
+
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                throw new IOException();
+            }
+
+            using var file = File.OpenWrite(target);
+            await response.Content.CopyToAsync(file).ConfigureAwait(false);
+
+            return target;
+        }
+
+        public async Task DeleteAsync(string path, CancellationToken ct = default)
+        {
+            var url = await GetUrlAsync(path, false, ct).ConfigureAwait(false);
+            await _client.DeleteAsync(new Uri(url)).ConfigureAwait(false);
+        }
+
+        public async Task UploadAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default)
         {
             if (data == null)
             {
@@ -49,6 +73,20 @@ namespace JoyMoe.Common.Storage.S3
             {
                 ["x-amz-acl"] = everyone ? "public-read" : "private"
             }).ConfigureAwait(false);
+        }
+
+        public async Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default)
+        {
+            var url = await GetUrlAsync(path, true, ct).ConfigureAwait(false);
+
+            using var request = new HttpRequestMessage
+            {
+                RequestUri = new Uri(url)
+            };
+
+            await _client.PrepareRequestAsync(request, false).ConfigureAwait(false);
+
+            return request.RequestUri.ToString();
         }
 
         public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default)
@@ -90,12 +128,6 @@ namespace JoyMoe.Common.Storage.S3
             return arguments;
         }
 
-        public async Task DeleteAsync(string path, CancellationToken ct = default)
-        {
-            var url = await GetUrlAsync(path, false, ct).ConfigureAwait(false);
-            await _client.DeleteAsync(new Uri(url)).ConfigureAwait(false);
-        }
-
         public Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -110,20 +142,6 @@ namespace JoyMoe.Common.Storage.S3
                 : $"{protocol}://{Options.Endpoint}/{Options.BucketName}";
 
             return Task.FromResult($"{prefix}/{path.TrimStart('/')}");
-        }
-
-        public async Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default)
-        {
-            var url = await GetUrlAsync(path, true, ct).ConfigureAwait(false);
-
-            using var request = new HttpRequestMessage
-            {
-                RequestUri = new Uri(url)
-            };
-
-            await _client.PrepareRequestAsync(request, false).ConfigureAwait(false);
-
-            return request.RequestUri.ToString();
         }
 
         public void Dispose()
