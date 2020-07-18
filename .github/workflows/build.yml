@@ -70,10 +70,6 @@ jobs:
           name: testresults-${{ matrix.os_name }}
           path: ./artifacts/TestResults/Release
 
-      - name: Push NuGet packages to MyGet
-        run: dotnet nuget push "artifacts\packages\Release\Shipping\*.nupkg" --api-key ${{ secrets.MYGET_API_KEY }} --skip-duplicate --source https://www.myget.org/F/joymoe/ --symbol-source https://www.myget.org/F/joymoe/
-        if: ${{ github.repository_owner == 'JoyMoe' && (github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/tags/')) && runner.os == 'Windows' }}
-
       - name: Push NuGet packages to NuGet.org
         run: dotnet nuget push "artifacts\packages\Release\Shipping\*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --source https://api.nuget.org/v3/index.json
-        if: ${{ github.repository_owner == 'JoyMoe' && startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows' }}
+        if: ${{ github.repository_owner == 'JoyMoe' && (github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/tags/')) && runner.os == 'Windows' }}
