@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Crypto\JoyMoe.Common.Crypto.csproj" />
     <ProjectReference Include="..\JoyMoe.Common.Storage\JoyMoe.Common.Storage.csproj" />
   </ItemGroup>
 
