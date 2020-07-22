@@ -28,32 +28,42 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
         private async Task AddTimestampsAsync()
         {
-            var entities = ChangeTracker.Entries()
+            var entries = ChangeTracker.Entries()
                 .Where(x => x.Entity is IDataEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
-            foreach (var entity in entities)
+            foreach (var entry in entries)
             {
-                if (!(entity.Entity is IDataEntity data)) continue;
-
                 var now = DateTimeOffset.Now;
+                var entity = entry.Entity;
 
-                if (entity.State == EntityState.Added)
+                if (entry.State == EntityState.Added)
                 {
-                    await OnCreateEntity(data).ConfigureAwait(false);
-                    data.CreatedAt = now;
-                }
+                    await OnCreateEntity(entity).ConfigureAwait(false);
 
-                await OnUpdateEntity(data).ConfigureAwait(false);
-                data.UpdatedAt = now;
+                    if (entity is IDataEntity data)
+                    {
+                        data.CreatedAt = now;
+                        data.UpdatedAt = now;
+                    }
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    await OnUpdateEntity(entity).ConfigureAwait(false);
+
+                    if (entity is IDataEntity data)
+                    {
+                        data.UpdatedAt = now;
+                    }
+                }
             }
         }
 
-        protected virtual Task OnCreateEntity(IDataEntity entity)
+        protected virtual Task OnCreateEntity(object entity)
         {
             return Task.CompletedTask;
         }
 
-        protected virtual Task OnUpdateEntity(IDataEntity entity)
+        protected virtual Task OnUpdateEntity(object entity)
         {
             return Task.CompletedTask;
         }
