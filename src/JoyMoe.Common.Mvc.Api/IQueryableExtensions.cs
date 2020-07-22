@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using JoyMoe.Common.EntityFrameworkCore.Models;
 using JoyMoe.Common.Mvc.Api.ViewModels;
@@ -9,8 +8,8 @@ namespace System.Linq
 {
     public static class PaginationResponseIQueryableExtensions
     {
-        public async static Task<PaginationResponse<T>> ToPaginationResponseAsync<T, TEntity>(
-            this IQueryable<IDataEntity> query,
+        public static async Task<PaginationResponse<T>> ToPaginationResponseAsync<T, TEntity>(
+            this IQueryable<IIdentifier> query,
             PaginationRequest request,
             Func<TEntity, int, T> expression)
             where T : IIdentifier
@@ -42,7 +41,7 @@ namespace System.Linq
         }
 
         public static PaginationResponse<T> ToPaginationResponse<T, TEntity>(
-            this IQueryable<IDataEntity> query,
+            this IQueryable<IIdentifier> query,
             PaginationRequest request,
             Func<TEntity, int, T> expression)
             where T : IIdentifier
