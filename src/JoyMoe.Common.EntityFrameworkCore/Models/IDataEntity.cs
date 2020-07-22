@@ -2,7 +2,7 @@ using System;
 
 namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
-    public interface IDataEntity : IIdentifier
+    public interface IDataEntity
     {
         DateTimeOffset CreatedAt { get; set; }
 
