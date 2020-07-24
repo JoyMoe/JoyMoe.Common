@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JoyMoe.Common.EntityFrameworkCore.Models;
@@ -11,6 +12,18 @@ namespace JoyMoe.Common.EntityFrameworkCore
         public DbContextBase(DbContextOptions options)
             : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            SetGlobalQueryFilterForSoftDelete(builder);
+
+            base.OnModelCreating(builder);
         }
 
         public override int SaveChanges()
@@ -28,6 +41,26 @@ namespace JoyMoe.Common.EntityFrameworkCore
         private async Task OnBeforeSaving()
         {
             await OnBeforeSaving(this).ConfigureAwait(false);
+        }
+
+        public static void SetGlobalQueryFilterForSoftDelete(ModelBuilder builder)
+        {
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            foreach (var type in builder.Model.GetEntityTypes())
+            {
+                if (type == null) continue;
+                if (!typeof(ISoftDelete).IsAssignableFrom(type.ClrType)) continue;
+
+                var parameter = Expression.Parameter(type.ClrType, "s");
+                var @null = Expression.Constant(null, typeof(object));
+                var notNull = Expression.NotEqual(Expression.Property(parameter, nameof(ISoftDelete.DeletedAt)), @null);
+                var filter = Expression.Lambda(notNull, parameter);
+                type.AddQueryFilter(filter);
+            }
         }
 
         public static async Task OnBeforeSaving<T>(T context) where T : DbContext, IDbContextHandler
@@ -80,6 +113,7 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
                         if (entity is ISoftDelete soft)
                         {
+                            entry.State = EntityState.Unchanged;
                             soft.DeletedAt = now;
                         }
 
@@ -105,3 +139,4 @@ namespace JoyMoe.Common.EntityFrameworkCore
         }
     }
 }
+

@@ -41,6 +41,18 @@ namespace JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            DbContextBase.SetGlobalQueryFilterForSoftDelete(builder);
+
+            base.OnModelCreating(builder);
+        }
+
         public override int SaveChanges()
         {
             OnBeforeSaving().GetAwaiter().GetResult();
