@@ -57,8 +57,8 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
                 var parameter = Expression.Parameter(type.ClrType, "s");
                 var @null = Expression.Constant(null, typeof(object));
-                var notNull = Expression.NotEqual(Expression.Property(parameter, nameof(ISoftDelete.DeletedAt)), @null);
-                var filter = Expression.Lambda(notNull, parameter);
+                var equal = Expression.Equal(Expression.Property(parameter, nameof(ISoftDelete.DeletedAt)), @null);
+                var filter = Expression.Lambda(equal, parameter);
                 type.AddQueryFilter(filter);
             }
         }
