@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JoyMoe.Common.EntityFrameworkCore.Models;
@@ -7,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JoyMoe.Common.EntityFrameworkCore
 {
-    public class DbContextBase : DbContext
+    public class DbContextBase : DbContext, IDbContextHandler
     {
         public DbContextBase(DbContextOptions options)
             : base(options)
@@ -16,54 +15,91 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
         public override int SaveChanges()
         {
-            AddTimestampsAsync().GetAwaiter().GetResult();
+            OnBeforeSaving().GetAwaiter().GetResult();
             return base.SaveChanges();
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            await AddTimestampsAsync().ConfigureAwait(false);
+            await OnBeforeSaving().ConfigureAwait(false);
             return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task AddTimestampsAsync()
+        private async Task OnBeforeSaving()
         {
-            var entries = ChangeTracker.Entries()
-                .Where(x => x.Entity is IDataEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
+            await OnBeforeSaving(this).ConfigureAwait(false);
+        }
+
+        public static async Task OnBeforeSaving<T>(T context) where T : DbContext, IDbContextHandler
+        {
+            if (context == null)
+            {
+                return;
+            }
+
+            var entries = context.ChangeTracker.Entries();
 
             foreach (var entry in entries)
             {
                 var now = DateTimeOffset.Now;
                 var entity = entry.Entity;
 
-                if (entry.State == EntityState.Added)
+                switch (entry.State)
                 {
-                    await OnCreateEntity(entity).ConfigureAwait(false);
-
-                    if (entity is IDataEntity data)
+                    case EntityState.Added:
                     {
-                        data.CreatedAt = now;
-                        data.UpdatedAt = now;
+                        await context.OnCreateEntity(entity).ConfigureAwait(false);
+
+                        if (entity is ISoftDelete soft)
+                        {
+                            soft.DeletedAt = null;
+                        }
+
+                        if (entity is IDataEntity data)
+                        {
+                            data.CreatedAt = now;
+                            data.UpdatedAt = now;
+                        }
+
+                        break;
                     }
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    await OnUpdateEntity(entity).ConfigureAwait(false);
-
-                    if (entity is IDataEntity data)
+                    case EntityState.Modified:
                     {
-                        data.UpdatedAt = now;
+                        await context.OnUpdateEntity(entity).ConfigureAwait(false);
+
+                        if (entity is IDataEntity data)
+                        {
+                            data.UpdatedAt = now;
+                        }
+
+                        break;
+                    }
+                    case EntityState.Deleted:
+                    {
+                        await context.OnDeleteEntity(entity).ConfigureAwait(false);
+
+                        if (entity is ISoftDelete soft)
+                        {
+                            soft.DeletedAt = now;
+                        }
+
+                        break;
                     }
                 }
             }
         }
 
-        protected virtual Task OnCreateEntity(object entity)
+        public virtual Task OnCreateEntity(object entity)
         {
             return Task.CompletedTask;
         }
 
-        protected virtual Task OnUpdateEntity(object entity)
+        public virtual Task OnDeleteEntity(object entity)
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual Task OnUpdateEntity(object entity)
         {
             return Task.CompletedTask;
         }

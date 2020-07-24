@@ -1,7 +1,6 @@
 namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
-    public interface IIdentifier
+    public interface IIdDataEntity : IDataEntity, IIdentifier
     {
-        long Id { get; set; }
     }
 }
