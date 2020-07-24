@@ -77,12 +77,12 @@ namespace JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity
             }
         }
 
-        protected virtual Task OnCreateEntity(IDataEntity entity)
+        protected virtual Task OnCreateEntity(object entity)
         {
             return Task.CompletedTask;
         }
 
-        protected virtual Task OnUpdateEntity(IDataEntity entity)
+        protected virtual Task OnUpdateEntity(object entity)
         {
             return Task.CompletedTask;
         }
