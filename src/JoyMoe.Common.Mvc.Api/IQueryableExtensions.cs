@@ -9,11 +9,11 @@ namespace System.Linq
     public static class PaginationResponseIQueryableExtensions
     {
         public static async Task<PaginationResponse<T>> ToPaginationResponseAsync<T, TEntity>(
-            this IQueryable<IIdentifier> query,
+            this IQueryable<IDataEntity> query,
             PaginationRequest request,
             Func<TEntity, int, T> expression)
-            where T : IIdentifier
-            where TEntity : IIdentifier
+            where T : IDataEntity
+            where TEntity : IDataEntity
         {
             if (!(query is IQueryable<TEntity>))
             {
@@ -41,11 +41,11 @@ namespace System.Linq
         }
 
         public static PaginationResponse<T> ToPaginationResponse<T, TEntity>(
-            this IQueryable<IIdentifier> query,
+            this IQueryable<IDataEntity> query,
             PaginationRequest request,
             Func<TEntity, int, T> expression)
-            where T : IIdentifier
-            where TEntity : IIdentifier
+            where T : IDataEntity
+            where TEntity : IDataEntity
         {
             return query.ToPaginationResponseAsync<T, TEntity>(request, expression)
                 .ConfigureAwait(false)

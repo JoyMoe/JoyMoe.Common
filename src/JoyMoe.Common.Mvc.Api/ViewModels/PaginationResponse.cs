@@ -4,7 +4,7 @@ using JoyMoe.Common.EntityFrameworkCore.Models;
 
 namespace JoyMoe.Common.Mvc.Api.ViewModels
 {
-    public class PaginationResponse<T> where T : IIdentifier
+    public class PaginationResponse<T> where T : IDataEntity
     {
         public long? Before { get; }
 
