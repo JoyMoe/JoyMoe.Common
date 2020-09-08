@@ -12,7 +12,7 @@ namespace JoyMoe.Common.Storage.S3
 
         public string Endpoint { get; set; } = "s3.amazonaws.com";
 
-        public bool UseCName { get; set; } = false;
+        public bool UseCName { get; set; }
 
         public bool UseHttps { get; set; } = true;
     }
