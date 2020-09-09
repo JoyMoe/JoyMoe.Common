@@ -17,34 +17,14 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             Context = context;
         }
 
+        public IQueryable<TEntity> AsQueryable()
+        {
+            return Context.Set<TEntity>().AsQueryable();
+        }
+
         public ValueTask<TEntity> GetByIdAsync(long id)
         {
             return Context.Set<TEntity>().FindAsync(id);
-        }
-
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
-        {
-            return  await Context.Set<TEntity>().ToListAsync().ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<TEntity>> PaginateAsync(int size = 10, long? before = null)
-        {
-            var query = Context.Set<TEntity>().AsQueryable();
-
-            if (before != null)
-            {
-                query = query.Where(a => a.Id < before);
-            }
-
-            return await query.OrderByDescending(a => a.Id)
-                .Take(size)
-                .ToListAsync()
-                .ConfigureAwait(false);
-        }
-
-        public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
-        {
-            return Context.Set<TEntity>().Where(predicate);
         }
 
         public Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
