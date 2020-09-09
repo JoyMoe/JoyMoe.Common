@@ -10,7 +10,7 @@ namespace System.Linq
     {
         public static async Task<IEnumerable<TEntity>> PaginateAsync<TEntity>(
             this IQueryable<TEntity> query,
-            int size = 10, long? before = null)
+            long? before = null, int size = 10)
             where TEntity : IDataEntity
         {
             if (query == null)
@@ -31,7 +31,7 @@ namespace System.Linq
 
         public static IEnumerable<TEntity> Paginate<TEntity>(
             this IQueryable<TEntity> query,
-            int size = 10, long? before = null)
+            long? before = null, int size = 10)
             where TEntity : IDataEntity
         {
             if (query == null)

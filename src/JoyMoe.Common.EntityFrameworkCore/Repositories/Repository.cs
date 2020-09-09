@@ -10,21 +10,33 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IDataEntity
     {
-        protected DbContextBase Context { get; }
+        protected DbContext Context { get; }
 
-        public Repository(DbContextBase context)
+        public Repository(DbContext context)
         {
             Context = context;
-        }
-
-        public IQueryable<TEntity> AsQueryable()
-        {
-            return Context.Set<TEntity>().AsQueryable();
         }
 
         public ValueTask<TEntity> GetByIdAsync(long id)
         {
             return Context.Set<TEntity>().FindAsync(id);
+        }
+
+        public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate)
+        {
+            var query = Context.Set<TEntity>().AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            return query;
+        }
+
+        public Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
+        {
+            return Find(predicate).PaginateAsync(before, size);
         }
 
         public Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
