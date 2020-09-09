@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using JoyMoe.Common.EntityFrameworkCore.Models;
 using JoyMoe.Common.EntityFrameworkCore.Repositories;
@@ -5,12 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JoyMoe.Common.Mvc.Api
 {
+    [ApiController]
     [GenericController]
     [Route("api/[controller]")]
-    [Produces("application/json")]
-    public class GenericController<T> : Controller where T : class, IDataEntity
+    public class GenericController<T> : ControllerBase where T : class, IDataEntity
     {
-        private IRepository<T> _repository;
+        private readonly IRepository<T> _repository;
 
         public GenericController(IRepository<T> repository)
         {
@@ -22,10 +23,14 @@ namespace JoyMoe.Common.Mvc.Api
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return UnprocessableEntity(ModelState);
             }
 
-            return Ok(await _repository.PaginateAsync(size, before).ConfigureAwait(false));
+            var data = await _repository.AsQueryable()
+                .PaginateAsync(size, before)
+                .ConfigureAwait(false);
+
+            return Ok(data);
         }
 
         [HttpGet("{id}")]
@@ -33,7 +38,7 @@ namespace JoyMoe.Common.Mvc.Api
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return UnprocessableEntity(ModelState);
             }
 
             var record = await _repository.GetByIdAsync(id).ConfigureAwait(false);
@@ -56,14 +61,16 @@ namespace JoyMoe.Common.Mvc.Api
 
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return UnprocessableEntity(ModelState);
             }
+
+            record.Id = default;
 
             await _repository.AddAsync(record).ConfigureAwait(false);
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {
-                return BadRequest();
+                return Problem();
             }
 
             return CreatedAtAction("Find", new { id = record.Id }, record);
@@ -79,7 +86,7 @@ namespace JoyMoe.Common.Mvc.Api
 
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return UnprocessableEntity(ModelState);
             }
 
             if (id != record.Id)
@@ -91,10 +98,10 @@ namespace JoyMoe.Common.Mvc.Api
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {
-                return BadRequest();
+                return Problem();
             }
 
-            return Ok(record);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
@@ -102,7 +109,7 @@ namespace JoyMoe.Common.Mvc.Api
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return UnprocessableEntity(ModelState);
             }
 
             var record = await _repository.GetByIdAsync(id).ConfigureAwait(false);
@@ -116,7 +123,7 @@ namespace JoyMoe.Common.Mvc.Api
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {
-                return BadRequest();
+                return Problem();
             }
 
             return NoContent();
