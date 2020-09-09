@@ -32,8 +32,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Storage.QClou
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Storage.QCloud.Tests", "tests\JoyMoe.Common.Storage.QCloud.Tests\JoyMoe.Common.Storage.QCloud.Tests.csproj", "{EC6A1F21-1ABE-4931-A632-2D58EA4A4A5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoyMoe.Common.Crypto", "src\JoyMoe.Common.Crypto\JoyMoe.Common.Crypto.csproj", "{3737EB5E-7D6A-4B18-849B-A65FFC2E126C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,10 +90,6 @@ Global
 		{EC6A1F21-1ABE-4931-A632-2D58EA4A4A5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC6A1F21-1ABE-4931-A632-2D58EA4A4A5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC6A1F21-1ABE-4931-A632-2D58EA4A4A5F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3737EB5E-7D6A-4B18-849B-A65FFC2E126C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3737EB5E-7D6A-4B18-849B-A65FFC2E126C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3737EB5E-7D6A-4B18-849B-A65FFC2E126C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3737EB5E-7D6A-4B18-849B-A65FFC2E126C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -114,7 +108,6 @@ Global
 		{48FB664C-9786-4074-9B71-7B4364E0D796} = {CDA5D56F-9052-40BC-98F1-48F04980EAD2}
 		{1CBF8178-142D-4C95-8453-374F8DA5ADFF} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{EC6A1F21-1ABE-4931-A632-2D58EA4A4A5F} = {CDA5D56F-9052-40BC-98F1-48F04980EAD2}
-		{3737EB5E-7D6A-4B18-849B-A65FFC2E126C} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8047892F-B408-4203-B8F7-C7B05E740890}
