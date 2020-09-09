@@ -18,7 +18,9 @@ namespace JoyMoe.Common.Json
 
             var span = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
             if (Utf8Parser.TryParse(span, out long number, out var bytesConsumed) && span.Length == bytesConsumed)
+            {
                 return number;
+            }
 
             return long.TryParse(reader.GetString(), out number) ? number : reader.GetInt64();
         }

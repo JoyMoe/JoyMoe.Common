@@ -14,7 +14,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static JsonOptions UseSnakeCaseNamingPolicy(this JsonOptions option)
         {
-            if (option?.JsonSerializerOptions == null)
+            if (option == null)
+            {
+                throw new ArgumentNullException(nameof(option));
+            }
+
+            if (option.JsonSerializerOptions == null)
             {
                 throw new ArgumentNullException(nameof(option));
             }
@@ -31,7 +36,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static JsonOptions UseInt64StringConverter(this JsonOptions option)
         {
-            if (option?.JsonSerializerOptions == null)
+            if (option == null)
+            {
+                throw new ArgumentNullException(nameof(option));
+            }
+
+            if (option.JsonSerializerOptions == null)
             {
                 throw new ArgumentNullException(nameof(option));
             }
@@ -48,7 +58,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static JsonOptions UseIsoDateTimeConverter(this JsonOptions option)
         {
-            if (option?.JsonSerializerOptions == null)
+            if (option == null)
+            {
+                throw new ArgumentNullException(nameof(option));
+            }
+
+            if (option.JsonSerializerOptions == null)
             {
                 throw new ArgumentNullException(nameof(option));
             }

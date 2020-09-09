@@ -159,7 +159,7 @@ namespace JoyMoe.Common.Storage.S3
 
             if (disposing)
             {
-                _client?.Dispose();
+                _client.Dispose();
             }
 
             _disposed = true;

@@ -63,7 +63,7 @@ namespace JoyMoe.Common.EntityFrameworkCore
             }
         }
 
-        public static async Task OnBeforeSaving<T>(T context) where T : DbContext, IDbContextHandler
+        public static async Task OnBeforeSaving<T>(T? context) where T : DbContext, IDbContextHandler
         {
             if (context == null)
             {

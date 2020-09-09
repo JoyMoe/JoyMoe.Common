@@ -9,6 +9,11 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IMvcBuilder AddGenericControllers(this IMvcBuilder mvcBuilder, Action<List<Type>> entities)
         {
+            if (mvcBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(mvcBuilder));
+            }
+
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
@@ -26,5 +31,4 @@ namespace Microsoft.Extensions.DependencyInjection
             return mvcBuilder;
         }
     }
-
 }
