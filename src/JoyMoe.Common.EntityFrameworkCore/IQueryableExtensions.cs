@@ -13,6 +13,11 @@ namespace System.Linq
             int size = 10, long? before = null)
             where TEntity : IDataEntity
         {
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
             if (before != null)
             {
                 query = query.Where(a => a.Id < before);
@@ -29,6 +34,11 @@ namespace System.Linq
             int size = 10, long? before = null)
             where TEntity : IDataEntity
         {
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
             if (before != null)
             {
                 query = query.Where(a => a.Id < before);

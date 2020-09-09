@@ -63,7 +63,7 @@ namespace JoyMoe.Common.Session
             return TicketSerializer.Default.Serialize(source);
         }
 
-        private static AuthenticationTicket? DeserializeFromBytes(byte[] source)
+        private static AuthenticationTicket? DeserializeFromBytes(byte[]? source)
         {
             return source == null ? null : TicketSerializer.Default.Deserialize(source);
         }

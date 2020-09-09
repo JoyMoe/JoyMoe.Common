@@ -182,7 +182,7 @@ namespace JoyMoe.Common.Storage.QCloud
 
             if (disposing)
             {
-                _client?.Dispose();
+                _client.Dispose();
             }
 
             _disposed = true;
