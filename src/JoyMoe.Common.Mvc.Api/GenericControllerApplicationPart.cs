@@ -9,9 +9,9 @@ namespace JoyMoe.Common.Mvc.Api
 {
     public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
-        public Dictionary<Type, (Type, Type)> Types { get; }
+        public List<GenericControllerType> Types { get; }
 
-        public GenericControllerFeatureProvider(Dictionary<Type, (Type, Type)> types)
+        public GenericControllerFeatureProvider(List<GenericControllerType> types)
         {
             Types = types;
         }
@@ -24,15 +24,19 @@ namespace JoyMoe.Common.Mvc.Api
             }
 
             // Get the list of entities that we want to support for the generic controller
-            foreach (var (entity, (req, res)) in Types)
+            foreach (var type in Types)
             {
-                var typeName = entity.Name.Pluralize() + "Controller";
+                var typeName = type.EntityType.Name.Pluralize() + "Controller";
 
                 // Check to see if there is a "real" controller for this class
                 if (feature.Controllers.Any(t => t.Name == typeName)) continue;
 
                 // Create a generic controller for this type
-                var controllerType = typeof(GenericController<,,>).MakeGenericType(entity, req, res).GetTypeInfo();
+                var controllerType = typeof(GenericController<,,>).MakeGenericType(
+                    type.EntityType,
+                    type.RequestType!,
+                    type.ResponseType!
+                ).GetTypeInfo();
                 feature.Controllers.Add(controllerType);
             }
         }
