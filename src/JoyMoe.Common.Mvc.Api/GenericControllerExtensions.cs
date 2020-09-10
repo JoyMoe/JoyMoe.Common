@@ -1,40 +1,65 @@
 using System;
-using System.Collections.Generic;
 using AutoMapper;
 using JoyMoe.Common.EntityFrameworkCore.Repositories;
 using JoyMoe.Common.Mvc.Api;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class GenericControllerExtensions
     {
-        public static IMvcBuilder AddGenericControllers(this IMvcBuilder mvcBuilder, Type mapper, Action<Dictionary<Type, (Type, Type)>> entities)
+        public static IMvcBuilder AddGenericControllers(this IMvcBuilder builder, Action<GenericControllerOptions> configure)
         {
-            if (mvcBuilder == null)
+            if (builder == null)
             {
-                throw new ArgumentNullException(nameof(mvcBuilder));
+                throw new ArgumentNullException(nameof(builder));
             }
 
-            if (entities == null)
+            if (configure == null)
             {
-                throw new ArgumentNullException(nameof(entities));
+                throw new ArgumentNullException(nameof(configure));
             }
 
-            var types = new Dictionary<Type, (Type, Type)>();
+            var options = new GenericControllerOptions();
 
-            entities(types);
+            configure(options);
 
-            mvcBuilder.ConfigureApplicationPartManager(manager =>
+            foreach (var type in options.Types)
             {
-                manager.FeatureProviders.Add(new GenericControllerFeatureProvider(types));
+                type.RequestType ??= type.EntityType;
+
+                type.ResponseType ??= type.RequestType;
+            }
+
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                if (options.Profiles.Count != 0)
+                {
+                    mc.AddProfiles(options.Profiles);
+
+                    return;
+                }
+
+                foreach (var type in options.Types)
+                {
+                    if (type.RequestType != type.EntityType) mc.CreateMap(type.RequestType, type.EntityType);
+
+                    if (type.ResponseType != type.EntityType)  mc.CreateMap(type.EntityType, type.ResponseType);
+                }
             });
 
-            mvcBuilder.Services.AddAutoMapper(mapper);
-            mvcBuilder.Services.AddScoped(typeof(IInterceptor<>), typeof(Interceptor<>));
-            mvcBuilder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            var mapper = mapperConfig.CreateMapper();
+            builder.Services.TryAddSingleton<IMapper>(mapper);
+            builder.Services.TryAddScoped(typeof(IGenericControllerInterceptor<>), typeof(GenericControllerInterceptor<>));
+            builder.Services.TryAddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-            return mvcBuilder;
+            builder.ConfigureApplicationPartManager(manager =>
+            {
+                manager.FeatureProviders.Add(new GenericControllerFeatureProvider(options.Types));
+            });
+
+            return builder;
         }
     }
 }

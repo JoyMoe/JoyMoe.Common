@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JoyMoe.Common.Mvc.Api
 {
-    public interface IInterceptor<TEntity>
+    public interface IGenericControllerInterceptor<TEntity>
         where TEntity : class, IDataEntity
     {
         Task<IActionResult> Query(HttpContext context, ClaimsPrincipal user, Func<Expression<Func<TEntity, bool>>?, Task<IActionResult>> query);

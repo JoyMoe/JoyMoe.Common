@@ -19,10 +19,10 @@ namespace JoyMoe.Common.Mvc.Api
         where TResponse : class, IDataEntity
     {
         private readonly IRepository<TEntity> _repository;
-        private readonly IInterceptor<TEntity> _interceptor;
+        private readonly IGenericControllerInterceptor<TEntity> _interceptor;
         private readonly IMapper _mapper;
 
-        public GenericController(IRepository<TEntity> repository, IInterceptor<TEntity> interceptor, IMapper mapper)
+        public GenericController(IRepository<TEntity> repository, IGenericControllerInterceptor<TEntity> interceptor, IMapper mapper)
         {
             _repository = repository;
             _interceptor = interceptor;
@@ -179,7 +179,14 @@ namespace JoyMoe.Common.Mvc.Api
 
         private TEntity _mapRequest(TRequest model)
         {
-            return _mapper.Map<TEntity>(model);
+            if (typeof(TRequest) != typeof(TEntity)) return _mapper.Map<TEntity>(model);
+
+            if (model is TEntity entity)
+            {
+                return entity;
+            }
+
+            throw new NotSupportedException();
         }
 
         private IActionResult _mapResponse(IActionResult result)
@@ -188,6 +195,7 @@ namespace JoyMoe.Common.Mvc.Api
 
             or.Value = or.Value switch
             {
+                TResponse => or.Value,
                 TEntity entity => _mapper.Map<TResponse>(entity),
                 IEnumerable<TEntity> entities => entities.Select(entity => _mapper.Map<TResponse>(entity)),
                 _ => or.Value
