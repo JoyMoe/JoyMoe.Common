@@ -26,7 +26,7 @@ namespace JoyMoe.Common.Mvc.Api
             // Get the list of entities that we want to support for the generic controller
             foreach (var (entity, (req, res)) in Types)
             {
-                var typeName = entityType.Name + "Controller";
+                var typeName = entity.Name.Pluralize() + "Controller";
 
                 // Check to see if there is a "real" controller for this class
                 if (feature.Controllers.Any(t => t.Name == typeName)) continue;
