@@ -10,9 +10,9 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IDataEntity
     {
-        protected DbContext Context { get; }
+        protected DbContextBase Context { get; }
 
-        public Repository(DbContext context)
+        public Repository(DbContextBase context)
         {
             Context = context;
         }

@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
