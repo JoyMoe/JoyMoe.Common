@@ -1,18 +1,20 @@
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using JoyMoe.Common.EntityFrameworkCore.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JoyMoe.Common.Mvc.Api
 {
-    public interface IInterceptor<T> where T : class, IDataEntity
+    public interface IInterceptor<TEntity>
+        where TEntity : class, IDataEntity
     {
-        Task<ActionResult<IEnumerable<T>>> Query(GenericController<T> controller, Func<Expression<Func<T, bool>>?, Task<ActionResult<IEnumerable<T>>>> action);
-        Task<ActionResult<T>> Find(GenericController<T> controller, Func<Task<ActionResult<T>>> action);
-        Task<ActionResult<T>> Create(GenericController<T> controller, T entity, Func<T, Task<ActionResult<T>>> action);
-        Task<ActionResult<T>> Update(GenericController<T> controller, T entity, Func<T, Task<ActionResult<T>>> action);
-        Task<IActionResult> Delete(GenericController<T> controller, T entity, Func<T, Task<IActionResult>> action);
+        Task<IActionResult> Query(HttpContext context, ClaimsPrincipal user, Func<Expression<Func<TEntity, bool>>?, Task<IActionResult>> query);
+        Task<IActionResult> Find(HttpContext context, ClaimsPrincipal user, Func<Task<IActionResult>> find);
+        Task<IActionResult> Create(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> create);
+        Task<IActionResult> Update(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> update);
+        Task<IActionResult> Delete(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> delete);
     }
 }
