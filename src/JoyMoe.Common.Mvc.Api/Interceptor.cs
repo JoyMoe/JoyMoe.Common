@@ -55,15 +55,15 @@ namespace JoyMoe.Common.Mvc.Api
             return update(entity);
         }
 
-        public virtual Task<IActionResult> Delete(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<IActionResult>> delete)
+        public virtual Task<IActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<IActionResult>> remove)
         {
-            if (delete == null)
+            if (remove == null)
             {
-                throw new ArgumentNullException(nameof(delete));
+                throw new ArgumentNullException(nameof(remove));
             }
 
-            return delete(entity);
+            return remove(entity);
         }
     }
 }

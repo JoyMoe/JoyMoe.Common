@@ -148,7 +148,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Remove(long id)
         {
             if (!ModelState.IsValid)
             {
@@ -162,10 +162,10 @@ namespace JoyMoe.Common.Mvc.Api
                 return NotFound();
             }
 
-            return await _interceptor.Delete(HttpContext, User, entity, _delete).ConfigureAwait(false);
+            return await _interceptor.Remove(HttpContext, User, entity, _remove).ConfigureAwait(false);
         }
 
-        private async Task<IActionResult> _delete(TEntity entity)
+        private async Task<IActionResult> _remove(TEntity entity)
         {
             _repository.Remove(entity);
 
