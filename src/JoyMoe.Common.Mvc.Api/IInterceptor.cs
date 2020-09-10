@@ -15,6 +15,6 @@ namespace JoyMoe.Common.Mvc.Api
         Task<IActionResult> Find(HttpContext context, ClaimsPrincipal user, Func<Task<IActionResult>> find);
         Task<IActionResult> Create(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> create);
         Task<IActionResult> Update(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> update);
-        Task<IActionResult> Delete(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> delete);
+        Task<IActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> remove);
     }
 }
