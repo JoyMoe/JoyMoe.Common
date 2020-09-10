@@ -17,32 +17,32 @@ namespace JoyMoe.Common.Attributes
             _name = name;
         }
 
-        public override bool IsValidForRequest(RouteContext context, ActionDescriptor action)
+        public override bool IsValidForRequest(RouteContext routeContext, ActionDescriptor action)
         {
-            if (context == null)
+            if (routeContext == null)
             {
-                throw new ArgumentNullException(nameof(context));
+                throw new ArgumentNullException(nameof(routeContext));
             }
 
-            if (string.Equals(context.HttpContext.Request.Method, "GET", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(context.HttpContext.Request.Method, "HEAD", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(context.HttpContext.Request.Method, "DELETE", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(context.HttpContext.Request.Method, "TRACE", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(context.HttpContext.Request.ContentType))
+            if (string.Equals(routeContext.HttpContext.Request.Method, "GET", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "HEAD", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "DELETE", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "TRACE", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            if (!context.HttpContext.Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(routeContext.HttpContext.Request.ContentType))
             {
                 return false;
             }
 
-            return !string.IsNullOrEmpty(context.HttpContext.Request.Form[_name]);
+            if (!routeContext.HttpContext.Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return !string.IsNullOrEmpty(routeContext.HttpContext.Request.Form[_name]);
         }
     }
 }
