@@ -30,16 +30,16 @@ namespace JoyMoe.Common.Attributes
         public int Seconds { get; set; }
 
         /// <inheritdoc />
-        public override void OnActionExecuting(ActionExecutingContext ctx)
+        public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (ctx == null)
+            if (context == null)
             {
-                throw new ArgumentNullException(nameof(ctx));
+                throw new ArgumentNullException(nameof(context));
             }
 
-            var cache = ctx.HttpContext.RequestServices.GetService<IDistributedCache>();
+            var cache = context.HttpContext.RequestServices.GetService<IDistributedCache>();
 
-            var key = $"Throttle-{Pool}-{ctx.HttpContext.Request.HttpContext.Connection.RemoteIpAddress}";
+            var key = $"Throttle-{Pool}-{context.HttpContext.Request.HttpContext.Connection.RemoteIpAddress}";
 
             var resetKey = $"{key}-reset";
             var timesKey = $"{key}-times";
@@ -56,9 +56,9 @@ namespace JoyMoe.Common.Attributes
                 ? DateTimeOffset.Now
                 : DateTimeOffset.Parse(reset, CultureInfo.InvariantCulture);
 
-            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
-            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Reset", resetAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
-            ctx.HttpContext.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString(CultureInfo.InvariantCulture));
+            context.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
+            context.HttpContext.Response.Headers.Add("X-RateLimit-Reset", resetAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
+            context.HttpContext.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString(CultureInfo.InvariantCulture));
 
             if (times < Times)
             {
@@ -83,10 +83,10 @@ namespace JoyMoe.Common.Attributes
             }
             else
             {
-                ctx.Result = new StatusCodeResult((int)HttpStatusCode.TooManyRequests);
+                context.Result = new StatusCodeResult((int)HttpStatusCode.TooManyRequests);
             }
 
-            base.OnActionExecuting(ctx);
+            base.OnActionExecuting(context);
         }
     }
 }

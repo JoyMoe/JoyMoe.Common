@@ -9,16 +9,16 @@ namespace JoyMoe.Common.Attributes
     /// </summary>
     public class OneOfAttribute : ValidationAttribute
     {
-        protected override ValidationResult IsValid(object value, ValidationContext ctx)
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            if (ctx == null)
+            if (validationContext == null)
             {
-                throw new ArgumentNullException(nameof(ctx));
+                throw new ArgumentNullException(nameof(validationContext));
             }
 
-            var properties = ctx.ObjectType.GetProperties()
+            var properties = validationContext.ObjectType.GetProperties()
                 .Where(p => p.CustomAttributes.Any(a => a.AttributeType == typeof(OneOfAttribute)))
-                .Count(p => p.GetValue(ctx.ObjectInstance) is string stringValue && stringValue.Trim().Length != 0);
+                .Count(p => p.GetValue(validationContext.ObjectInstance) is string stringValue && stringValue.Trim().Length != 0);
 
             return properties == 1
                 ? ValidationResult.Success

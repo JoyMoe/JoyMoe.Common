@@ -43,10 +43,7 @@ namespace JoyMoe.Common.Storage.QCloud
 
         private async Task<HttpResponseMessage> SendAsync(Uri url, Dictionary<string, string>? headers = null, DateTimeOffset? time = null, HttpMethod? method = null, HttpContent? content = null)
         {
-            if (method == null)
-            {
-                method = HttpMethod.Get;
-            }
+            method ??= HttpMethod.Get;
 
             using var message = new HttpRequestMessage
             {
