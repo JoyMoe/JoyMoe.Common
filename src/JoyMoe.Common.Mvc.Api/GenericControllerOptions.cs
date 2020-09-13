@@ -35,16 +35,6 @@ namespace JoyMoe.Common.Mvc.Api
                 throw new NotSupportedException();
             }
 
-            if (requestType != null && !typeof(IDataEntity).IsAssignableFrom(requestType))
-            {
-                throw new NotSupportedException();
-            }
-
-            if (responseType != null && !typeof(IDataEntity).IsAssignableFrom(responseType))
-            {
-                throw new NotSupportedException();
-            }
-
             base.Add(new GenericControllerType(entityType, requestType, responseType));
         }
     }
