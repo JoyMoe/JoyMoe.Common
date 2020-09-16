@@ -35,6 +35,16 @@ namespace JoyMoe.Common.Mvc.Api
                 throw new NotSupportedException();
             }
 
+            if (requestType != null && !typeof(IIdentifier).IsAssignableFrom(requestType))
+            {
+                throw new NotSupportedException();
+            }
+
+            if (responseType != null && !typeof(IIdentifier).IsAssignableFrom(responseType))
+            {
+                throw new NotSupportedException();
+            }
+
             base.Add(new GenericControllerType(entityType, requestType, responseType));
         }
     }
@@ -45,7 +55,7 @@ namespace JoyMoe.Common.Mvc.Api
         public Type? RequestType { get; set; }
         public Type? ResponseType { get; set; }
 
-        public GenericControllerType() {}
+        public GenericControllerType() { }
 
         public GenericControllerType(Type entityType, Type? requestType = null, Type? responseType = null)
         {
