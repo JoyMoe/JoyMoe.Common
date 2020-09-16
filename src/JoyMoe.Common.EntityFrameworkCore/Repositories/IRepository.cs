@@ -9,10 +9,10 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 {
     public interface IRepository<TEntity> where TEntity : class, IDataEntity
     {
-        ValueTask<TEntity> GetByIdAsync(long id);
-        IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate);
+        ValueTask<TEntity?> GetByIdAsync(long id);
+        IQueryable<TEntity?> Find(Expression<Func<TEntity, bool>>? predicate);
         Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null);
-        Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
         Task AddAsync(TEntity entity);
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
