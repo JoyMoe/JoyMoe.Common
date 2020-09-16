@@ -45,11 +45,11 @@ namespace JoyMoe.Common.Session
             return Task.FromResult(0);
         }
 
-        public Task<AuthenticationTicket?> RetrieveAsync(string key)
+        public Task<AuthenticationTicket> RetrieveAsync(string key)
         {
             var bytes = _cache.Get(key);
             var ticket = DeserializeFromBytes(bytes);
-            return Task.FromResult(ticket);
+            return Task.FromResult(ticket!);
         }
 
         public Task RemoveAsync(string key)
