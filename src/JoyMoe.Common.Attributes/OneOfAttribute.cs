@@ -9,7 +9,7 @@ namespace JoyMoe.Common.Attributes
     /// </summary>
     public class OneOfAttribute : ValidationAttribute
     {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
             if (validationContext == null)
             {
@@ -20,9 +20,11 @@ namespace JoyMoe.Common.Attributes
                 .Where(p => p.CustomAttributes.Any(a => a.AttributeType == typeof(OneOfAttribute)))
                 .Count(p => p.GetValue(validationContext.ObjectInstance) is string stringValue && stringValue.Trim().Length != 0);
 
-            return properties == 1
+            var result = properties == 1
                 ? ValidationResult.Success
                 : new ValidationResult(ErrorMessage);
+
+            return result!;
         }
     }
 }
