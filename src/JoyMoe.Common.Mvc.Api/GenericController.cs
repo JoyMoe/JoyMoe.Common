@@ -15,8 +15,8 @@ namespace JoyMoe.Common.Mvc.Api
     [Route("api/[controller]")]
     public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
         where TEntity : class, IDataEntity
-        where TRequest : class, IDataEntity
-        where TResponse : class, IDataEntity
+        where TRequest : class, IIdentifier
+        where TResponse : class, IIdentifier
     {
         private readonly IRepository<TEntity> _repository;
         private readonly IGenericControllerInterceptor<TEntity> _interceptor;
