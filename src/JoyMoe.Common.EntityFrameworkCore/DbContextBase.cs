@@ -88,7 +88,7 @@ namespace JoyMoe.Common.EntityFrameworkCore
                             soft.DeletedAt = null;
                         }
 
-                        if (entity is IDataEntity data)
+                        if (entity is ITimestamp data)
                         {
                             data.CreatedAt = now;
                             data.UpdatedAt = now;
@@ -100,7 +100,7 @@ namespace JoyMoe.Common.EntityFrameworkCore
                     {
                         await context.OnUpdateEntity(entity).ConfigureAwait(false);
 
-                        if (entity is IDataEntity data)
+                        if (entity is ITimestamp data)
                         {
                             data.UpdatedAt = now;
                         }
