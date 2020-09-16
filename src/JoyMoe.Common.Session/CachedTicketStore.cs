@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 
+#nullable disable
 namespace JoyMoe.Common.Session
 {
     /// <summary>
@@ -27,7 +28,7 @@ namespace JoyMoe.Common.Session
             return key;
         }
 
-        public Task RenewAsync(string key, AuthenticationTicket ticket)
+        public async Task RenewAsync(string key, AuthenticationTicket ticket)
         {
             if (ticket == null)
             {
@@ -41,21 +42,19 @@ namespace JoyMoe.Common.Session
                 options.SetAbsoluteExpiration(expiresUtc.Value);
             }
             var val = SerializeToBytes(ticket);
-            _cache.Set(key, val, options);
-            return Task.FromResult(0);
+            await _cache.SetAsync(key, val, options).ConfigureAwait(false);
         }
 
-        public Task<AuthenticationTicket> RetrieveAsync(string key)
+        public async Task<AuthenticationTicket> RetrieveAsync(string key)
         {
-            var bytes = _cache.Get(key);
+            var bytes = await _cache.GetAsync(key).ConfigureAwait(false);
             var ticket = DeserializeFromBytes(bytes);
-            return Task.FromResult(ticket!);
+            return ticket;
         }
 
-        public Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key)
         {
-            _cache.Remove(key);
-            return Task.FromResult(0);
+            await _cache.RemoveAsync(key).ConfigureAwait(false);
         }
 
         private static byte[] SerializeToBytes(AuthenticationTicket source)
@@ -63,9 +62,10 @@ namespace JoyMoe.Common.Session
             return TicketSerializer.Default.Serialize(source);
         }
 
-        private static AuthenticationTicket? DeserializeFromBytes(byte[]? source)
+        private static AuthenticationTicket DeserializeFromBytes(byte[] source)
         {
             return source == null ? null : TicketSerializer.Default.Deserialize(source);
         }
     }
 }
+#nullable restore
