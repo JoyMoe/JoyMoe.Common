@@ -17,12 +17,12 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             Context = context;
         }
 
-        public virtual ValueTask<TEntity?> GetByIdAsync(long id)
+        public virtual async ValueTask<TEntity?> GetByIdAsync(long id)
         {
-            return Context.Set<TEntity>().FindAsync(id);
+            return await Context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
         }
 
-        public virtual IQueryable<TEntity?> Find(Expression<Func<TEntity, bool>>? predicate)
+        public virtual IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate)
         {
             var query = Context.Set<TEntity>().AsQueryable();
 
@@ -39,9 +39,9 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return Find(predicate).PaginateAsync(before, size);
         }
 
-        public virtual Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public virtual async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return Context.Set<TEntity>().SingleOrDefaultAsync(predicate);
+            return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
         }
 
         public virtual async Task AddAsync(TEntity entity)
