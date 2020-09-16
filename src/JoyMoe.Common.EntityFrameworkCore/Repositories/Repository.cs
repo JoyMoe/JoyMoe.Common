@@ -17,12 +17,12 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             Context = context;
         }
 
-        public ValueTask<TEntity> GetByIdAsync(long id)
+        public virtual ValueTask<TEntity> GetByIdAsync(long id)
         {
             return Context.Set<TEntity>().FindAsync(id);
         }
 
-        public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate)
+        public virtual IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate)
         {
             var query = Context.Set<TEntity>().AsQueryable();
 
@@ -34,48 +34,48 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return query;
         }
 
-        public Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
+        public virtual Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
         {
             return Find(predicate).PaginateAsync(before, size);
         }
 
-        public Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public virtual Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
             return Context.Set<TEntity>().SingleOrDefaultAsync(predicate);
         }
 
-        public async Task AddAsync(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity)
         {
             await Context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
         }
 
-        public async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
             await Context.Set<TEntity>().AddRangeAsync(entities).ConfigureAwait(false);
         }
 
-        public void Update(TEntity entity)
+        public virtual void Update(TEntity entity)
         {
             Context.Set<TEntity>().Attach(entity);
             Context.Entry(entity).State = EntityState.Modified;
         }
 
-        public void Remove(TEntity entity)
+        public virtual void Remove(TEntity entity)
         {
             Context.Set<TEntity>().Remove(entity);
         }
 
-        public void RemoveRange(IEnumerable<TEntity> entities)
+        public virtual void RemoveRange(IEnumerable<TEntity> entities)
         {
             Context.Set<TEntity>().RemoveRange(entities);
         }
 
-        public int Commit()
+        public virtual int Commit()
         {
             return Context.SaveChanges();
         }
 
-        public async Task<int> CommitAsync()
+        public virtual async Task<int> CommitAsync()
         {
             return await Context.SaveChangesAsync().ConfigureAwait(false);
         }
