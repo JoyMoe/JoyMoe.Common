@@ -44,7 +44,9 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
             {
                 User = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
                 Value = SerializeToBytes(ticket),
-                ExpiresAt = ticket.Properties.ExpiresUtc
+                ExpiresAt = ticket.Properties.ExpiresUtc,
+                CreatedAt = ticket.Properties.IssuedUtc ?? DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
             };
 
             context.Add(entity);
