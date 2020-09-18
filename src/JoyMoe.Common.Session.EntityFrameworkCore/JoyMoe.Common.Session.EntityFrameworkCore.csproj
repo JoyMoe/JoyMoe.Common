@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Chino Chang</Authors>
+    <Description>JoyMoe.Common EntityFramework Ticket Store for Asp.Net Core</Description>
+    <PackageTags>session;store;ticket</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity\JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity.csproj" />
+    <ProjectReference Include="..\JoyMoe.Common.Session\JoyMoe.Common.Session.csproj" />
+  </ItemGroup>
+
+</Project>
