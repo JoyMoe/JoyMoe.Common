@@ -9,36 +9,34 @@ namespace JoyMoe.Common.Mvc.Api
 {
     public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
-        public List<GenericControllerType> Types { get; }
+        private readonly Type _entityType;
+        private readonly Type _requestType;
+        private readonly Type _responseType;
 
-        public GenericControllerFeatureProvider(List<GenericControllerType> types)
+        public GenericControllerFeatureProvider(Type entityType, Type requestType, Type responseType)
         {
-            Types = types;
+            _entityType = entityType;
+            _requestType = requestType;
+            _responseType = responseType;
         }
 
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            if (feature == null)
-            {
-                throw new ArgumentNullException(nameof(feature));
-            }
+            if (feature == null) throw new ArgumentNullException(nameof(feature));
 
-            // Get the list of entities that we want to support for the generic controller
-            foreach (var type in Types)
-            {
-                var typeName = type.EntityType.Name.Pluralize() + "Controller";
+            var typeName = _entityType.Name.Pluralize() + "Controller";
 
-                // Check to see if there is a "real" controller for this class
-                if (feature.Controllers.Any(t => t.Name == typeName)) continue;
+            // Check to see if there is a "real" controller for this class
+            if (feature.Controllers.Any(t => t.Name == typeName)) return;
 
-                // Create a generic controller for this type
-                var controllerType = typeof(GenericController<,,>).MakeGenericType(
-                    type.EntityType,
-                    type.RequestType!,
-                    type.ResponseType!
-                ).GetTypeInfo();
-                feature.Controllers.Add(controllerType);
-            }
+            // Create a generic controller for this type
+            var controllerType = typeof(GenericController<,,>).MakeGenericType(
+                _entityType,
+                _requestType,
+                _responseType
+            ).GetTypeInfo();
+
+            feature.Controllers.Add(controllerType);
         }
     }
 }
