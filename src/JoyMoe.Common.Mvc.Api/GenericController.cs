@@ -30,7 +30,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpGet]
-        public async Task<IActionResult> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
+        public async Task<ActionResult<IEnumerable<TResponse>>> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
         {
             if (!ModelState.IsValid)
             {
@@ -42,7 +42,7 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
+        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
         {
             var data = await _repository
                 .PaginateAsync(before, size, predicate)
@@ -52,7 +52,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Find(long id)
+        public async Task<ActionResult<TResponse>> Find(long id)
         {
             if (!ModelState.IsValid)
             {
@@ -64,7 +64,7 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _find(long id)
+        private async Task<ActionResult<TEntity>> _find(long id)
         {
             var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
@@ -77,7 +77,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TRequest? model)
+        public async Task<ActionResult<TResponse>> Create([FromBody] TRequest? model)
         {
             if (model == null)
             {
@@ -98,7 +98,7 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _create(TEntity entity)
+        private async Task<ActionResult<TEntity>> _create(TEntity entity)
         {
             await _repository.AddAsync(entity).ConfigureAwait(false);
 
@@ -111,7 +111,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, [FromBody] TRequest? model)
+        public async Task<ActionResult<TResponse>> Update(long id, [FromBody] TRequest? model)
         {
             if (model == null)
             {
@@ -135,7 +135,7 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _update(TEntity entity)
+        private async Task<ActionResult<TEntity>> _update(TEntity entity)
         {
             _repository.Update(entity);
 
@@ -148,7 +148,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Remove(long id)
+        public async Task<ActionResult> Remove(long id)
         {
             if (!ModelState.IsValid)
             {
@@ -165,7 +165,7 @@ namespace JoyMoe.Common.Mvc.Api
             return await _interceptor.Remove(HttpContext, User, entity, _remove).ConfigureAwait(false);
         }
 
-        private async Task<IActionResult> _remove(TEntity entity)
+        private async Task<ActionResult> _remove(TEntity entity)
         {
             _repository.Remove(entity);
 
@@ -189,19 +189,14 @@ namespace JoyMoe.Common.Mvc.Api
             throw new NotSupportedException();
         }
 
-        private IActionResult _mapResponse(IActionResult result)
+        private ActionResult<TResponse> _mapResponse(ActionResult<TEntity> result)
         {
-            if (!(result is ObjectResult or)) return result;
+            return result.Result ?? new ActionResult<TResponse>(_mapper.Map<TResponse>(result.Value));
+        }
 
-            or.Value = or.Value switch
-            {
-                TResponse => or.Value,
-                TEntity entity => _mapper.Map<TResponse>(entity),
-                IEnumerable<TEntity> entities => entities.Select(entity => _mapper.Map<TResponse>(entity)),
-                _ => or.Value
-            };
-
-            return or;
+        private ActionResult<IEnumerable<TResponse>> _mapResponse(ActionResult<IEnumerable<TEntity>> result)
+        {
+            return result.Result ?? new ActionResult<IEnumerable<TResponse>>(result.Value.Select(e => _mapper.Map<TResponse>(e)));
         }
     }
 }
