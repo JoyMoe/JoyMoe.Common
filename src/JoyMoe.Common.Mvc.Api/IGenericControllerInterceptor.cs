@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,10 +12,19 @@ namespace JoyMoe.Common.Mvc.Api
     public interface IGenericControllerInterceptor<TEntity>
         where TEntity : class, IDataEntity
     {
-        Task<IActionResult> Query(HttpContext context, ClaimsPrincipal user, Func<Expression<Func<TEntity, bool>>?, Task<IActionResult>> query);
-        Task<IActionResult> Find(HttpContext context, ClaimsPrincipal user, Func<Task<IActionResult>> find);
-        Task<IActionResult> Create(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> create);
-        Task<IActionResult> Update(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> update);
-        Task<IActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity, Func<TEntity, Task<IActionResult>> remove);
+        Task<ActionResult<IEnumerable<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
+            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<IEnumerable<TEntity>>>> query);
+
+        Task<ActionResult<TEntity>> Find(HttpContext context, ClaimsPrincipal user,
+            Func<Task<ActionResult<TEntity>>> find);
+
+        Task<ActionResult<TEntity>> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult<TEntity>>> create);
+
+        Task<ActionResult<TEntity>> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult<TEntity>>> update);
+
+        Task<ActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult>> remove);
     }
 }
