@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,8 +12,8 @@ namespace JoyMoe.Common.Mvc.Api
     public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
         where TEntity : class, IDataEntity
     {
-        public virtual Task<IActionResult> Query(HttpContext context, ClaimsPrincipal user,
-            Func<Expression<Func<TEntity, bool>>?, Task<IActionResult>> query)
+        public virtual Task<ActionResult<IEnumerable<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
+            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<IEnumerable<TEntity>>>> query)
         {
             if (query == null)
             {
@@ -22,8 +23,8 @@ namespace JoyMoe.Common.Mvc.Api
             return query(null);
         }
 
-        public virtual Task<IActionResult> Find(HttpContext context, ClaimsPrincipal user,
-            Func<Task<IActionResult>> find)
+        public virtual Task<ActionResult<TEntity>> Find(HttpContext context, ClaimsPrincipal user,
+            Func<Task<ActionResult<TEntity>>> find)
         {
             if (find == null)
             {
@@ -33,8 +34,8 @@ namespace JoyMoe.Common.Mvc.Api
             return find();
         }
 
-        public virtual Task<IActionResult> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<IActionResult>> create)
+        public virtual Task<ActionResult<TEntity>> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult<TEntity>>> create)
         {
             if (create == null)
             {
@@ -44,8 +45,8 @@ namespace JoyMoe.Common.Mvc.Api
             return create(entity);
         }
 
-        public virtual Task<IActionResult> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<IActionResult>> update)
+        public virtual Task<ActionResult<TEntity>> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult<TEntity>>> update)
         {
             if (update == null)
             {
@@ -55,8 +56,8 @@ namespace JoyMoe.Common.Mvc.Api
             return update(entity);
         }
 
-        public virtual Task<IActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<IActionResult>> remove)
+        public virtual Task<ActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
+            Func<TEntity, Task<ActionResult>> remove)
         {
             if (remove == null)
             {

@@ -30,7 +30,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpGet]
-        public async Task<IActionResult> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
+        public async Task<ActionResult<IEnumerable<TResponse>>> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
         {
             if (!ModelState.IsValid)
             {
@@ -42,17 +42,17 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
+        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
         {
-            var data = await _repository
+            var entities = await _repository
                 .PaginateAsync(before, size, predicate)
                 .ConfigureAwait(false);
 
-            return Ok(data);
+            return entities.ToArray();
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Find(long id)
+        public async Task<ActionResult<TResponse>> Find(long id)
         {
             if (!ModelState.IsValid)
             {
@@ -64,7 +64,7 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _find(long id)
+        private async Task<ActionResult<TEntity>> _find(long id)
         {
             var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
@@ -73,13 +73,13 @@ namespace JoyMoe.Common.Mvc.Api
                 return NotFound();
             }
 
-            return Ok(entity);
+            return entity;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TRequest? model)
+        public async Task<ActionResult<TResponse>> Create([FromBody] TRequest? request)
         {
-            if (model == null)
+            if (request == null)
             {
                 return BadRequest();
             }
@@ -89,16 +89,16 @@ namespace JoyMoe.Common.Mvc.Api
                 return UnprocessableEntity(ModelState);
             }
 
-            model.Id = default;
+            request.Id = default;
 
-            var entity = _mapRequest(model);
+            var entity = _mapRequest(request);
 
             var result = await _interceptor.Create(HttpContext, User, entity, _create).ConfigureAwait(false);
 
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _create(TEntity entity)
+        private async Task<ActionResult<TEntity>> _create(TEntity entity)
         {
             await _repository.AddAsync(entity).ConfigureAwait(false);
 
@@ -111,9 +111,9 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, [FromBody] TRequest? model)
+        public async Task<ActionResult<TResponse>> Update(long id, [FromBody] TRequest? request)
         {
-            if (model == null)
+            if (request == null)
             {
                 return BadRequest();
             }
@@ -123,19 +123,19 @@ namespace JoyMoe.Common.Mvc.Api
                 return UnprocessableEntity(ModelState);
             }
 
-            if (id != model.Id)
+            if (id != request.Id)
             {
                 return BadRequest();
             }
 
-            var entity = _mapRequest(model);
+            var entity = _mapRequest(request);
 
             var result = await _interceptor.Update(HttpContext, User, entity, _update).ConfigureAwait(false);
 
             return _mapResponse(result);
         }
 
-        private async Task<IActionResult> _update(TEntity entity)
+        private async Task<ActionResult<TEntity>> _update(TEntity entity)
         {
             _repository.Update(entity);
 
@@ -144,11 +144,11 @@ namespace JoyMoe.Common.Mvc.Api
                 return Problem();
             }
 
-            return Ok(entity);
+            return entity;
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Remove(long id)
+        public async Task<ActionResult> Remove(long id)
         {
             if (!ModelState.IsValid)
             {
@@ -165,7 +165,7 @@ namespace JoyMoe.Common.Mvc.Api
             return await _interceptor.Remove(HttpContext, User, entity, _remove).ConfigureAwait(false);
         }
 
-        private async Task<IActionResult> _remove(TEntity entity)
+        private async Task<ActionResult> _remove(TEntity entity)
         {
             _repository.Remove(entity);
 
@@ -177,11 +177,11 @@ namespace JoyMoe.Common.Mvc.Api
             return NoContent();
         }
 
-        private TEntity _mapRequest(TRequest model)
+        private TEntity _mapRequest(TRequest request)
         {
-            if (typeof(TRequest) != typeof(TEntity)) return _mapper.Map<TEntity>(model);
+            if (typeof(TRequest) != typeof(TEntity)) return _mapper.Map<TEntity>(request);
 
-            if (model is TEntity entity)
+            if (request is TEntity entity)
             {
                 return entity;
             }
@@ -189,19 +189,51 @@ namespace JoyMoe.Common.Mvc.Api
             throw new NotSupportedException();
         }
 
-        private IActionResult _mapResponse(IActionResult result)
+        private TResponse _mapResponse(TEntity entity)
         {
-            if (!(result is ObjectResult or)) return result;
+            if (typeof(TEntity) != typeof(TResponse)) return _mapper.Map<TResponse>(entity);
 
-            or.Value = or.Value switch
+            if (entity is TResponse response)
             {
-                TResponse => or.Value,
-                TEntity entity => _mapper.Map<TResponse>(entity),
-                IEnumerable<TEntity> entities => entities.Select(entity => _mapper.Map<TResponse>(entity)),
-                _ => or.Value
-            };
+                return response;
+            }
 
-            return or;
+            throw new NotSupportedException();
+        }
+
+        private IEnumerable<TResponse> _mapResponse(IEnumerable<TEntity> entities)
+        {
+            if (typeof(TEntity) != typeof(TResponse)) return entities.Select(e => _mapper.Map<TResponse>(e));
+
+            if (entities is IEnumerable<TResponse> responses)
+            {
+                return responses;
+            }
+
+            throw new NotSupportedException();
+        }
+
+        private ActionResult<TResponse> _mapResponse(ActionResult<TEntity> result)
+        {
+            if (result.Result == null) return new ActionResult<TResponse>(_mapResponse(result.Value));
+
+            if (!(result.Result is ObjectResult or) || !(or.Value is TEntity entity)) return result.Result;
+
+            or.Value = _mapResponse(entity);
+
+            return new ActionResult<TResponse>(or);
+
+        }
+
+        private ActionResult<IEnumerable<TResponse>> _mapResponse(ActionResult<IEnumerable<TEntity>> result)
+        {
+            if (result.Result == null) return new ActionResult<IEnumerable<TResponse>>(_mapResponse(result.Value));
+
+            if (!(result.Result is ObjectResult or) || !(or.Value is IEnumerable<TEntity> entities)) return result.Result;
+
+            or.Value = _mapResponse(entities);
+
+            return new ActionResult<IEnumerable<TResponse>>(or);
         }
     }
 }
