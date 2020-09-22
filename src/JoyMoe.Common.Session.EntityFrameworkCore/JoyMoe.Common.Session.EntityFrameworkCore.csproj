@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity\JoyMoe.Common.EntityFrameworkCore.AspNetCoreIdentity.csproj" />
+    <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\JoyMoe.Common.Session\JoyMoe.Common.Session.csproj" />
   </ItemGroup>
 
