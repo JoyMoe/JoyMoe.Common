@@ -14,12 +14,14 @@
                          '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.8" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.8" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="3.1.8" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0-rc.1.20451.17" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="5.0.0-rc.1.20451.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.0-rc.1.20451.13" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="5.0.0-rc.1.20451.14" />
   </ItemGroup>
 
