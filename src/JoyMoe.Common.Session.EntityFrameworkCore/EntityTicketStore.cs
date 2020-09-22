@@ -43,6 +43,7 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
             var entity = new EntityTicketStoreSession<TUser>
             {
                 User = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
+                Type = ticket.AuthenticationScheme,
                 Value = SerializeToBytes(ticket),
                 ExpiresAt = ticket.Properties.ExpiresUtc,
                 CreatedAt = ticket.Properties.IssuedUtc ?? DateTimeOffset.UtcNow,

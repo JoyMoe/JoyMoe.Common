@@ -9,6 +9,8 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
 
         public virtual TUser? User { get; set; }
 
+        public virtual string Type { get; set; } = null!;
+
         public IEnumerable<byte> Value { get; set; } = null!;
 
         public DateTimeOffset? ExpiresAt { get; set; }
