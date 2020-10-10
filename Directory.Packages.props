@@ -3,26 +3,14 @@
   <ItemGroup>
     <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.0.1" />
     <PackageVersion Include="Automatonymous" Version="5.0.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0-rc.1.20451.17" />
     <PackageVersion Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.0-rc.1.20451.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="5.0.0-rc.1.20451.13" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="5.0.0-rc.1.20451.14" />
     <PackageVersion Include="Microsoft.NetCore.Analyzers" Version="3.0.0" />
     <PackageVersion Include="Moq" Version="4.14.5" />
     <PackageVersion Include="System.Text.Json" Version="4.7.2" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' Or
-                         '$(TargetFramework)' == 'netstandard2.0' Or
-                         '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.8" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.8" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="3.1.8" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0-rc.1.20451.17" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="5.0.0-rc.1.20451.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.0-rc.1.20451.13" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="5.0.0-rc.1.20451.14" />
   </ItemGroup>
 
 </Project>
