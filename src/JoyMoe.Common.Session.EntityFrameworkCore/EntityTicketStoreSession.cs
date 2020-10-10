@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using JoyMoe.Common.EntityFrameworkCore.Models;
 
 namespace JoyMoe.Common.Session.EntityFrameworkCore
 {
-    public class EntityTicketStoreSession<TUser> where TUser : class
+    public class EntityTicketStoreSession<TUser> : ITimestamp where TUser : class
     {
         public virtual Guid Id { get; set; }
 
