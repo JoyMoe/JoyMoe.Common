@@ -70,8 +70,8 @@ namespace JoyMoe.Common.Storage.S3.Tests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.Method == HttpMethod.Get &&
                     req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
-                    req.Headers.Authorization.Scheme == "AWS4-HMAC-SHA256" &&
-                    req.Headers.Authorization.Parameter == $"{Credential},SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
+                    req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
+                    req.Headers.Authorization!.Parameter == $"{Credential},SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
                 ItExpr.IsAny<CancellationToken>());
         }
 
@@ -85,6 +85,7 @@ namespace JoyMoe.Common.Storage.S3.Tests
             var uri = new Uri($"https://{Endpoint}/test$file.text");
 
             using var content = new StringContent("Welcome to Amazon S3.");
+            content.Headers.ContentLength = null;
             content.Headers.ContentType = null;
 
             var result = await _client.PutAsync(uri, content, new Dictionary<string, string>
@@ -101,8 +102,8 @@ namespace JoyMoe.Common.Storage.S3.Tests
                     req.Method == HttpMethod.Put &&
                     req.Headers.FindFirstValue("x-amz-content-sha256") == "44ce7dd67c959e0d3524ffac1771dfbba87d2b6b4b4e99e42034a8b803f8b072" &&
                     req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
-                    req.Headers.Authorization.Scheme == "AWS4-HMAC-SHA256" &&
-                    req.Headers.Authorization.Parameter == $"{Credential},SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
+                    req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
+                    req.Headers.Authorization!.Parameter == $"{Credential},SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
                 ItExpr.IsAny<CancellationToken>());
         }
 
