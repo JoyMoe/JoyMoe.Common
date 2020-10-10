@@ -12,7 +12,9 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
 
         public virtual string Type { get; set; } = null!;
 
-        public IEnumerable<byte> Value { get; set; } = null!;
+#pragma warning disable CA1819 // Properties should not return arrays
+        public byte[] Value { get; set; } = null!;
+#pragma warning restore CA1819 // Properties should not return arrays
 
         public DateTimeOffset? ExpiresAt { get; set; }
 
