@@ -64,14 +64,14 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
         }
 
-        public virtual async Task AddAsync(TEntity entity)
+        public virtual void Add(TEntity entity)
         {
-            await Context.AddAsync(entity).ConfigureAwait(false);
+             Context.Add(entity);
         }
 
-        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        public virtual void AddRange(IEnumerable<TEntity> entities)
         {
-            await Context.AddRangeAsync(entities).ConfigureAwait(false);
+            Context.AddRange(entities);
         }
 
         public virtual void Update(TEntity entity)

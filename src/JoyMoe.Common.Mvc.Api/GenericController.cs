@@ -100,7 +100,7 @@ namespace JoyMoe.Common.Mvc.Api
 
         private async Task<ActionResult<TEntity>> _create(TEntity entity)
         {
-            await _repository.AddAsync(entity).ConfigureAwait(false);
+            _repository.Add(entity);
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {

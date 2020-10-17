@@ -15,8 +15,8 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
         ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
         ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
         ValueTask<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
-        Task AddAsync(TEntity entity);
-        Task AddRangeAsync(IEnumerable<TEntity> entities);
+        void Add(TEntity entity);
+        void AddRange(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
         void Remove(TEntity entity);
         void RemoveRange(IEnumerable<TEntity> entities);
