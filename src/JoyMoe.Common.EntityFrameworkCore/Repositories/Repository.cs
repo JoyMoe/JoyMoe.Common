@@ -54,6 +54,16 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
         }
 
+        public async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await Context.Set<TEntity>().AnyAsync(predicate).ConfigureAwait(false);
+        }
+
+        public async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
+        }
+
         public virtual async Task AddAsync(TEntity entity)
         {
             await Context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
