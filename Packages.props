@@ -1,0 +1,16 @@
+<Project>
+
+  <ItemGroup>
+    <PackageReference Update="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
+    <PackageReference Update="Automatonymous" Version="5.0.1" />
+    <PackageReference Update="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.0-rc.2.20475.17" />
+    <PackageReference Update="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="5.0.0-rc.2.20475.6" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="5.0.0-rc.2.20475.6" />
+    <PackageReference Update="Microsoft.Extensions.Options" Version="5.0.0-rc.2.20475.5" />
+    <PackageReference Update="Microsoft.NetCore.Analyzers" Version="3.3.0" />
+    <PackageReference Update="Moq" Version="4.14.7" />
+    <PackageReference Update="System.Text.Json" Version="4.7.2" />
+  </ItemGroup>
+
+</Project>
