@@ -10,9 +10,9 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IDataEntity
     {
-        protected DbContextBase Context { get; }
+        protected DbContext Context { get; }
 
-        public Repository(DbContextBase context)
+        public Repository(DbContext context)
         {
             Context = context;
         }
@@ -66,32 +66,27 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 
         public virtual async Task AddAsync(TEntity entity)
         {
-            await Context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
+            await Context.AddAsync(entity).ConfigureAwait(false);
         }
 
         public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            await Context.Set<TEntity>().AddRangeAsync(entities).ConfigureAwait(false);
+            await Context.AddRangeAsync(entities).ConfigureAwait(false);
         }
 
         public virtual void Update(TEntity entity)
         {
-            if (Context.Entry(entity).State == EntityState.Detached)
-            {
-                Context.Set<TEntity>().Attach(entity);
-            }
-
-            Context.Entry(entity).State = EntityState.Modified;
+            Context.Update(entity);
         }
 
         public virtual void Remove(TEntity entity)
         {
-            Context.Set<TEntity>().Remove(entity);
+            Context.Remove(entity);
         }
 
         public virtual void RemoveRange(IEnumerable<TEntity> entities)
         {
-            Context.Set<TEntity>().RemoveRange(entities);
+            Context.RemoveRange(entities);
         }
 
         public virtual int Commit()
