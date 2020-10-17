@@ -13,6 +13,8 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
         IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate);
         Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null);
         ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+        ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
+        ValueTask<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
         Task AddAsync(TEntity entity);
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
