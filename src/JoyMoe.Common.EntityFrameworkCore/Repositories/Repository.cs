@@ -34,12 +34,22 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return query;
         }
 
-        public virtual Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
+        public virtual async Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
         {
-            return Find(predicate).PaginateAsync(before, size);
+            var query = Find(predicate);
+
+            if (before != null)
+            {
+                query = query.Where(a => a.Id < before);
+            }
+
+            return await query.OrderByDescending(a => a.Id)
+                .Take(size)
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
 
-        public virtual async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
             return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
         }
@@ -56,7 +66,11 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
 
         public virtual void Update(TEntity entity)
         {
-            Context.Set<TEntity>().Attach(entity);
+            if (Context.Entry(entity).State == EntityState.Detached)
+            {
+                Context.Set<TEntity>().Attach(entity);
+            }
+
             Context.Entry(entity).State = EntityState.Modified;
         }
 
@@ -75,7 +89,7 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return Context.SaveChanges();
         }
 
-        public virtual async Task<int> CommitAsync()
+        public virtual async ValueTask<int> CommitAsync()
         {
             return await Context.SaveChangesAsync().ConfigureAwait(false);
         }
