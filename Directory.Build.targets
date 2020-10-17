@@ -2,6 +2,7 @@
 <Project>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="Packages.props" />
 
   <PropertyGroup>
     <Copyright>$(_ProjectCopyright)</Copyright>
