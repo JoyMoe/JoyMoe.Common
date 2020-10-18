@@ -6,7 +6,7 @@ namespace JoyMoe.Common.Workflow.Models
 
         public string Note { get; set; }
 
-        public long? LastUpdatedById { get; set; }
+        public long LastUpdatedById { get; set; }
 
         public string LastUpdatedBy { get; set; }
     }

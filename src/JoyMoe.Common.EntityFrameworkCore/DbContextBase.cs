@@ -26,16 +26,16 @@ namespace JoyMoe.Common.EntityFrameworkCore
             base.OnModelCreating(builder);
         }
 
-        public override int SaveChanges()
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             OnBeforeSaving().GetAwaiter().GetResult();
-            return base.SaveChanges();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
         {
             await OnBeforeSaving().ConfigureAwait(false);
-            return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task OnBeforeSaving()
