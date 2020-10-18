@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using JoyMoe.Common.EntityFrameworkCore.Models;
 
 namespace JoyMoe.Common.Session.EntityFrameworkCore
