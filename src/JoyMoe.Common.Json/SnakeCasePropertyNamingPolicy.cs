@@ -10,6 +10,8 @@ namespace JoyMoe.Common.Json
     /// </summary>
     public class SnakeCaseNamingPolicy : JsonNamingPolicy
     {
+        public static readonly SnakeCaseNamingPolicy Instance = new SnakeCaseNamingPolicy();
+
         /// <inheritdoc/>
         public override string ConvertName(string name)
         {
