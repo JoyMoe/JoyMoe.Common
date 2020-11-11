@@ -53,7 +53,7 @@ namespace JoyMoe.Common.Attributes
 
             var reset = cache.GetString(resetKey);
             var resetAt = string.IsNullOrWhiteSpace(reset)
-                ? DateTimeOffset.Now
+                ? DateTimeOffset.UtcNow
                 : DateTimeOffset.Parse(reset, CultureInfo.InvariantCulture);
 
             context.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
@@ -64,7 +64,7 @@ namespace JoyMoe.Common.Attributes
             {
                 if (times == 1)
                 {
-                    var expiration = DateTimeOffset.Now.AddSeconds(Seconds);
+                    var expiration = DateTimeOffset.UtcNow.AddSeconds(Seconds);
 
                     cache.SetString(timesKey, "1", new DistributedCacheEntryOptions
                     {
