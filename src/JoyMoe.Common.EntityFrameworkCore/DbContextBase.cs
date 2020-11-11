@@ -74,7 +74,7 @@ namespace JoyMoe.Common.EntityFrameworkCore
 
             foreach (var entry in entries)
             {
-                var now = DateTimeOffset.UtcNow;
+                var now = DateTime.UtcNow;
                 var entity = entry.Entity;
 
                 switch (entry.State)
