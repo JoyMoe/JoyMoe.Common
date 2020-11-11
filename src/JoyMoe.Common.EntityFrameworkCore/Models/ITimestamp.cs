@@ -4,8 +4,8 @@ namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
     public interface ITimestamp
     {
-        DateTimeOffset CreatedAt { get; set; }
+        DateTime CreatedAt { get; set; }
 
-        DateTimeOffset UpdatedAt { get; set; }
+        DateTime UpdatedAt { get; set; }
     }
 }

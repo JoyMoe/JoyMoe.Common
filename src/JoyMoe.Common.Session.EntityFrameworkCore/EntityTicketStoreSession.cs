@@ -15,9 +15,9 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
         public byte[] Value { get; set; } = null!;
 #pragma warning restore CA1819 // Properties should not return arrays
 
-        public DateTimeOffset? ExpiresAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

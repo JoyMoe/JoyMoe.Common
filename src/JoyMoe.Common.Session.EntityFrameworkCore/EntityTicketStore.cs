@@ -40,14 +40,16 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
             var manager = scope.ServiceProvider.GetService<UserManager<TUser>>();
             if (manager == null) throw new InvalidOperationException();
 
+            var now = DateTime.UtcNow;
+
             var entity = new EntityTicketStoreSession<TUser>
             {
                 User = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
                 Type = ticket.AuthenticationScheme,
                 Value = SerializeToBytes(ticket),
-                ExpiresAt = ticket.Properties.ExpiresUtc,
-                CreatedAt = ticket.Properties.IssuedUtc ?? DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                ExpiresAt = ticket.Properties.ExpiresUtc?.UtcDateTime,
+                CreatedAt = ticket.Properties.IssuedUtc?.UtcDateTime ?? now,
+                UpdatedAt = now
             };
 
             context.Add(entity);
@@ -74,8 +76,8 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
             if (entity == null) return;
 
             entity.Value = SerializeToBytes(ticket);
-            entity.ExpiresAt = ticket.Properties.ExpiresUtc;
-            entity.UpdatedAt = DateTimeOffset.UtcNow;
+            entity.ExpiresAt = ticket.Properties.ExpiresUtc?.UtcDateTime;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync().ConfigureAwait(false);
         }
@@ -91,11 +93,18 @@ namespace JoyMoe.Common.Session.EntityFrameworkCore
             var entity = await context.Set<TSession>().FindAsync(guid).ConfigureAwait(false);
             if (entity == null) return null;
 
-            entity.UpdatedAt = DateTimeOffset.UtcNow;
+            entity.UpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
-            return DeserializeFromBytes(entity.Value.ToArray());
+            var ticket = DeserializeFromBytes(entity.Value.ToArray());
+
+            ticket.Properties.ExpiresUtc = entity.ExpiresAt != null
+                ? DateTime.SpecifyKind(entity.ExpiresAt.Value, DateTimeKind.Utc)
+                : null;
+            ticket.Properties.IssuedUtc = DateTime.SpecifyKind(entity.CreatedAt, DateTimeKind.Utc);
+
+            return ticket;
         }
 
         public async Task RemoveAsync(string key)

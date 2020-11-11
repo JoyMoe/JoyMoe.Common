@@ -4,6 +4,6 @@ namespace JoyMoe.Common.EntityFrameworkCore.Models
 {
     public interface ISoftDelete
     {
-        DateTimeOffset? DeletedAt { get; set; }
+        DateTime? DeletedAt { get; set; }
     }
 }
