@@ -11,14 +11,13 @@ namespace JoyMoe.Common.Storage.S3
     {
         private readonly S3StorageOptions _options;
 
-        private HttpClient _client;
+        private HttpClient _client = new();
+
         private bool _disposed;
 
         public S3WebClient(S3StorageOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            _client = new HttpClient();
 
             var version = GetType().Assembly.GetName().Version;
 

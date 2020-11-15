@@ -8,6 +8,6 @@ namespace JoyMoe.Common.Storage
         public string Method { get; set; } = "post";
         public string FieldContentType { get; set; } = "content-type";
         public string FieldFile { get; set; } = "file";
-        public Dictionary<string, string> Data { get; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Data { get; } = new();
     }
 }

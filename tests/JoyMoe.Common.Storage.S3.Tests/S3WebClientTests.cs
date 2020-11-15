@@ -16,19 +16,15 @@ namespace JoyMoe.Common.Storage.S3.Tests
         private const string Credential = "Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request";
         private const string Endpoint = "examplebucket.s3.amazonaws.com";
 
-        private readonly S3WebClient _client;
-        private readonly DateTimeOffset _time = new DateTimeOffset(2013, 05, 24, 00, 00, 00, TimeSpan.Zero);
-
-        public S3WebClientTests()
+        private readonly S3WebClient _client = new(new S3StorageOptions
         {
-            _client = new S3WebClient(new S3StorageOptions
-            {
-                AccessKey = "AKIAIOSFODNN7EXAMPLE",
-                SecretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-                Region = "us-east-1",
-                BucketName = "examplebucket"
-            });
-        }
+            AccessKey = "AKIAIOSFODNN7EXAMPLE",
+            SecretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            Region = "us-east-1",
+            BucketName = "examplebucket"
+        });
+
+        private readonly DateTimeOffset _time = new(2013, 05, 24, 00, 00, 00, TimeSpan.Zero);
 
         [Fact]
         public void ShouldDeriveKeys()

@@ -18,18 +18,13 @@ namespace JoyMoe.Common.Storage.QCloud.Tests
     {
         private const string Endpoint = "examplebucket-1250000000.cos.ap-beijing.myqcloud.com";
 
-        private readonly QCloudWebClient _client;
-
-        public QCloudWebClientTests()
+        private readonly QCloudWebClient _client = new(new QCloudStorageOptions
         {
-            _client = new QCloudWebClient(new QCloudStorageOptions
-            {
-                SecretId = "AKIDQjz3ltompVjBni5LitkWHFlFpwkn9U5q",
-                SecretKey = "BQYIM75p8x0iWVFSIgqEKwFprpRSVHlz",
-                Region = "ap-beijing",
-                BucketName = "examplebucket-1250000000"
-            });
-        }
+            SecretId = "AKIDQjz3ltompVjBni5LitkWHFlFpwkn9U5q",
+            SecretKey = "BQYIM75p8x0iWVFSIgqEKwFprpRSVHlz",
+            Region = "ap-beijing",
+            BucketName = "examplebucket-1250000000"
+        });
 
         [Fact]
         public void ShouldDeriveKeys()

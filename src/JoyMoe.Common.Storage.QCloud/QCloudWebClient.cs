@@ -10,14 +10,13 @@ namespace JoyMoe.Common.Storage.QCloud
     {
         private readonly QCloudStorageOptions _options;
 
-        private HttpClient _client;
+        private HttpClient _client = new();
+
         private bool _disposed;
 
         public QCloudWebClient(QCloudStorageOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            _client = new HttpClient();
 
             var version = GetType().Assembly.GetName().Version;
 
