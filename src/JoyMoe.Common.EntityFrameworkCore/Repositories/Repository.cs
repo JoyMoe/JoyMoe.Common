@@ -157,13 +157,16 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
         {
             if (everything) return predicate;
 
-            var soft = Expression.Parameter(typeof(ISoftDelete), "sd");
-            var deletedAt = Expression.Property(soft, nameof(ISoftDelete.DeletedAt));
-            var filtering = Expression.Equal(deletedAt, Expression.Constant(null));
+            var parameter = predicate == null
+                ? Expression.Parameter(typeof(ISoftDelete), "sd")
+                : predicate.Parameters[0];
+
+            var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
+            var equipment = Expression.Equal(property, Expression.Constant(null));
 
             return predicate == null
-                ? Expression.Lambda<Func<TEntity, bool>>(filtering)
-                : Expression.Lambda<Func<TEntity, bool>>(Expression.AndAlso(predicate, filtering));
+                ? Expression.Lambda<Func<TEntity, bool>>(equipment, parameter)
+                : Expression.Lambda<Func<TEntity, bool>>(Expression.AndAlso(predicate.Body, equipment), parameter);
         }
     }
 }
