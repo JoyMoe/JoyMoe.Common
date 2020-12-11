@@ -22,21 +22,17 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return await Context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
         }
 
-        public virtual IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate)
+        public virtual IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
-            var query = Context.Set<TEntity>().AsQueryable();
-
-            if (predicate != null)
-            {
-                query = query.Where(predicate);
-            }
-
-            return query;
+            predicate = FilteringQuery(predicate, everything);
+            return predicate == null
+                ? Context.Set<TEntity>()
+                : Context.Set<TEntity>().Where(predicate);
         }
 
-        public virtual async Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null)
+        public virtual async Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false)
         {
-            var query = Find(predicate);
+            var query = Find(predicate, everything);
 
             if (before != null)
             {
@@ -49,54 +45,125 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
                 .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
-            return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
+            predicate = FilteringQuery(predicate, everything);
+            return predicate == null
+                ? await Context.Set<TEntity>().SingleOrDefaultAsync().ConfigureAwait(false)
+                : await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
         }
 
-        public async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+        public async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
-            return await Context.Set<TEntity>().AnyAsync(predicate).ConfigureAwait(false);
+            predicate = FilteringQuery(predicate, everything);
+            return predicate == null
+                ? await Context.Set<TEntity>().AnyAsync().ConfigureAwait(false)
+                : await Context.Set<TEntity>().AnyAsync(predicate).ConfigureAwait(false);
         }
 
-        public async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        public async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
-            return await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
+            predicate = FilteringQuery(predicate, everything);
+            return predicate == null
+                ? await Context.Set<TEntity>().CountAsync().ConfigureAwait(false)
+                : await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
         }
 
-        public virtual void Add(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity)
         {
-             Context.Add(entity);
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            var now = DateTime.UtcNow;
+
+            entity.CreatedAt = now;
+            entity.UpdatedAt = now;
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if (entity is ISoftDelete soft)
+            {
+                soft.DeletedAt = null;
+            }
+
+            await Context.AddAsync(entity).ConfigureAwait(false);
         }
 
-        public virtual void AddRange(IEnumerable<TEntity> entities)
+        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            Context.AddRange(entities);
+            if (entities == null)
+            {
+                throw new ArgumentNullException(nameof(entities));
+            }
+
+            foreach (var entity in entities)
+            {
+                await AddAsync(entity).ConfigureAwait(false);
+            }
         }
 
-        public virtual void Update(TEntity entity)
+        public virtual Task UpdateAsync(TEntity entity)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            Context.Entry(entity).State = EntityState.Detached;
             Context.Update(entity);
+            return Task.CompletedTask;
         }
 
-        public virtual void Remove(TEntity entity)
+        public virtual Task RemoveAsync(TEntity entity)
         {
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if (entity is ISoftDelete soft)
+            {
+                soft.DeletedAt = DateTime.UtcNow;
+                return Task.CompletedTask;
+            }
+
             Context.Remove(entity);
+            return Task.CompletedTask;
         }
 
-        public virtual void RemoveRange(IEnumerable<TEntity> entities)
+        public virtual async Task RemoveRangeAsync(IEnumerable<TEntity> entities)
         {
-            Context.RemoveRange(entities);
-        }
+            if (entities == null)
+            {
+                throw new ArgumentNullException(nameof(entities));
+            }
 
-        public virtual int Commit()
-        {
-            return Context.SaveChanges();
+            foreach (var entity in entities)
+            {
+                await RemoveAsync(entity).ConfigureAwait(false);
+            }
         }
 
         public virtual async ValueTask<int> CommitAsync()
         {
             return await Context.SaveChangesAsync().ConfigureAwait(false);
+        }
+
+        private static Expression<Func<TEntity,bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
+        {
+            if (everything) return predicate;
+
+            var soft = Expression.Parameter(typeof(ISoftDelete), "sd");
+            var deletedAt = Expression.Property(soft, nameof(ISoftDelete.DeletedAt));
+            var filtering = Expression.Equal(deletedAt, Expression.Constant(null));
+
+            return predicate == null
+                ? Expression.Lambda<Func<TEntity, bool>>(filtering)
+                : Expression.Lambda<Func<TEntity, bool>>(Expression.AndAlso(predicate, filtering));
         }
     }
 }

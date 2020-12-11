@@ -100,7 +100,7 @@ namespace JoyMoe.Common.Mvc.Api
 
         private async Task<ActionResult<TEntity>> _create(TEntity entity)
         {
-            _repository.Add(entity);
+            await _repository.AddAsync(entity).ConfigureAwait(false);
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {
@@ -137,7 +137,7 @@ namespace JoyMoe.Common.Mvc.Api
 
         private async Task<ActionResult<TEntity>> _update(TEntity entity)
         {
-            _repository.Update(entity);
+            await _repository.UpdateAsync(entity).ConfigureAwait(false);
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {
@@ -167,7 +167,7 @@ namespace JoyMoe.Common.Mvc.Api
 
         private async Task<ActionResult> _remove(TEntity entity)
         {
-            _repository.Remove(entity);
+            await _repository.RemoveAsync(entity).ConfigureAwait(false);
 
             if (await _repository.CommitAsync().ConfigureAwait(false) == 0)
             {

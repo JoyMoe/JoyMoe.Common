@@ -10,17 +10,16 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
     public interface IRepository<TEntity> where TEntity : class, IDataEntity
     {
         ValueTask<TEntity?> GetByIdAsync(long id);
-        IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate);
-        Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null);
-        ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
-        ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
-        ValueTask<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
-        void Add(TEntity entity);
-        void AddRange(IEnumerable<TEntity> entities);
-        void Update(TEntity entity);
-        void Remove(TEntity entity);
-        void RemoveRange(IEnumerable<TEntity> entities);
-        int Commit();
+        IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
+        Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false);
+        ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
+        ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
+        ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
+        Task AddAsync(TEntity entity);
+        Task AddRangeAsync(IEnumerable<TEntity> entities);
+        Task UpdateAsync(TEntity entity);
+        Task RemoveAsync(TEntity entity);
+        Task RemoveRangeAsync(IEnumerable<TEntity> entities);
         ValueTask<int> CommitAsync();
     }
 }
