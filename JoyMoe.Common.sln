@@ -6,7 +6,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6DB1B66-8A4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Attributes", "src\JoyMoe.Common.Attributes\JoyMoe.Common.Attributes.csproj", "{0136718C-081D-4375-9159-CB17B2B17E31}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.EntityFrameworkCore", "src\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj", "{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Data", "src\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj", "{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Data.EFCore", "src\JoyMoe.Common.Data.EFCore\JoyMoe.Common.Data.EFCore.csproj", "{3359D789-BF67-486A-8226-FB53560D3690}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Json", "src\JoyMoe.Common.Json\JoyMoe.Common.Json.csproj", "{98C0BC6A-A0C9-48D0-AC40-A03A62F70FC9}"
 EndProject
@@ -14,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Mvc.Api", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Session", "src\JoyMoe.Common.Session\JoyMoe.Common.Session.csproj", "{2BD0CD7D-04A3-40A7-93D2-3FC8C75674BF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Session.EntityFrameworkCore", "src\JoyMoe.Common.Session.EntityFrameworkCore\JoyMoe.Common.Session.EntityFrameworkCore.csproj", "{3FE883F8-CE05-461E-B5C1-4325D5DC1E8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Session.Repository", "src\JoyMoe.Common.Session.Repository\JoyMoe.Common.Session.Repository.csproj", "{3FE883F8-CE05-461E-B5C1-4325D5DC1E8B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoyMoe.Common.Storage", "src\JoyMoe.Common.Storage\JoyMoe.Common.Storage.csproj", "{680CBAA4-FFB1-4596-BEE4-CB11F3F7E163}"
 EndProject
@@ -46,6 +48,10 @@ Global
 		{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3359D789-BF67-486A-8226-FB53560D3690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3359D789-BF67-486A-8226-FB53560D3690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3359D789-BF67-486A-8226-FB53560D3690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3359D789-BF67-486A-8226-FB53560D3690}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98C0BC6A-A0C9-48D0-AC40-A03A62F70FC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{98C0BC6A-A0C9-48D0-AC40-A03A62F70FC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98C0BC6A-A0C9-48D0-AC40-A03A62F70FC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -97,6 +103,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{0136718C-081D-4375-9159-CB17B2B17E31} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{765603AD-0AFD-4B87-8AF4-E4833EC1DCD1} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
+		{3359D789-BF67-486A-8226-FB53560D3690} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{98C0BC6A-A0C9-48D0-AC40-A03A62F70FC9} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{09B61604-E3D9-462A-8487-167AB44C5707} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}
 		{2BD0CD7D-04A3-40A7-93D2-3FC8C75674BF} = {F6DB1B66-8A4B-421E-81F2-DB00EF468B59}

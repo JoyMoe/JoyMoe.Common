@@ -1,6 +1,5 @@
 using System;
 using AutoMapper;
-using JoyMoe.Common.EntityFrameworkCore.Repositories;
 using JoyMoe.Common.Mvc.Api;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -22,7 +21,6 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             mvc.Services.TryAddScoped(typeof(IGenericControllerInterceptor<>), typeof(GenericControllerInterceptor<>));
-            mvc.Services.TryAddScoped(typeof(IRepository<>), typeof(Repository<>));
 
             var builder = new GenericControllerBuilder(mvc);
             configure(builder);

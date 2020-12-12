@@ -14,4 +14,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
+  </ItemGroup>
+
 </Project>

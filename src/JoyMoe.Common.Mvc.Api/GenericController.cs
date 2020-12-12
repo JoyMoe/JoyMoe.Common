@@ -4,8 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
-using JoyMoe.Common.EntityFrameworkCore.Models;
-using JoyMoe.Common.EntityFrameworkCore.Repositories;
+using JoyMoe.Common.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JoyMoe.Common.Mvc.Api

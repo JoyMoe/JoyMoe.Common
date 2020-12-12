@@ -3,21 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using JoyMoe.Common.EntityFrameworkCore.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace JoyMoe.Common.EntityFrameworkCore.Repositories
+namespace JoyMoe.Common.Data.EFCore
 {
-    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IDataEntity
+    public class EntityFrameworkCoreRepository<TContext, TEntity> : IRepository<TEntity>
+        where TContext : DbContext
+        where TEntity : class, IDataEntity
     {
-        protected DbContext Context { get; }
+        protected TContext Context { get; }
 
-        public Repository(DbContext context)
+        public EntityFrameworkCoreRepository(TContext context)
         {
             Context = context;
         }
 
-        public virtual async ValueTask<TEntity?> GetByIdAsync(long id)
+        public virtual async ValueTask<TEntity> GetByIdAsync(long id)
         {
             return await Context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
         }
@@ -30,7 +31,7 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
                 : Context.Set<TEntity>().Where(predicate);
         }
 
-        public virtual async Task<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false)
+        public virtual async ValueTask<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false)
         {
             var query = Find(predicate, everything);
 
@@ -45,7 +46,7 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
                 .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
             return predicate == null
@@ -153,7 +154,7 @@ namespace JoyMoe.Common.EntityFrameworkCore.Repositories
             return await Context.SaveChangesAsync().ConfigureAwait(false);
         }
 
-        private static Expression<Func<TEntity,bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
+        private static Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
         {
             if (everything) return predicate;
 

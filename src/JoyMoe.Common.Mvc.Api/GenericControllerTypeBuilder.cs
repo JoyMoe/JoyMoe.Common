@@ -1,5 +1,5 @@
 ﻿using AutoMapper.Configuration;
-using JoyMoe.Common.EntityFrameworkCore.Models;
+using JoyMoe.Common.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

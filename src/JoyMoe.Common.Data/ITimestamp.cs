@@ -1,6 +1,6 @@
 using System;
 
-namespace JoyMoe.Common.EntityFrameworkCore.Models
+namespace JoyMoe.Common.Data
 {
     public interface ITimestamp
     {

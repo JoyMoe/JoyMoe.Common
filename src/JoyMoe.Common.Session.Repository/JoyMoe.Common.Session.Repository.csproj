@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common EntityFramework Ticket Store for Asp.Net Core</Description>
+    <Description>JoyMoe.Common Repository Ticket Store for Asp.Net Core</Description>
     <PackageTags>session;store;ticket</PackageTags>
   </PropertyGroup>
 
@@ -15,11 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
     <ProjectReference Include="..\JoyMoe.Common.Session\JoyMoe.Common.Session.csproj" />
   </ItemGroup>
 

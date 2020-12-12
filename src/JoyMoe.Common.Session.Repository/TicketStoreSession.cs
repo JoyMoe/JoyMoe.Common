@@ -1,11 +1,11 @@
 using System;
-using JoyMoe.Common.EntityFrameworkCore.Models;
+using JoyMoe.Common.Data;
 
-namespace JoyMoe.Common.Session.EntityFrameworkCore
+namespace JoyMoe.Common.Session.Repository
 {
-    public class EntityTicketStoreSession<TUser> : ITimestamp where TUser : class
+    public class TicketStoreSession<TUser> : IDataEntity where TUser : class
     {
-        public virtual Guid Id { get; set; }
+        public virtual long Id { get; set; }
 
         public virtual TUser? User { get; set; }
 

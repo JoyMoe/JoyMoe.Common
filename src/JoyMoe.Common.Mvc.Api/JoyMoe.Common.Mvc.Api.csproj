@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\JoyMoe.Common.EntityFrameworkCore\JoyMoe.Common.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
   </ItemGroup>
 
 </Project>
