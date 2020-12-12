@@ -65,7 +65,7 @@ namespace JoyMoe.Common.Mvc.Api
 
         private async Task<ActionResult<TEntity>> _find(long id)
         {
-            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+            var entity = await _repository.FindAsync(id).ConfigureAwait(false);
 
             if (entity == null)
             {
@@ -154,7 +154,7 @@ namespace JoyMoe.Common.Mvc.Api
                 return UnprocessableEntity(ModelState);
             }
 
-            var entity = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+            var entity = await _repository.FindAsync(id).ConfigureAwait(false);
 
             if (entity == null)
             {

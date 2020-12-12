@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -27,9 +28,37 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public virtual async ValueTask<TEntity> GetByIdAsync(long id, CancellationToken ct = default)
+        public virtual ValueTask<TEntity?> FindAsync<TKey>(TKey id, CancellationToken ct = default)
+            where TKey : struct
         {
-            return await Context.Set<TEntity>().FindAsync(new object[] {id}, ct).ConfigureAwait(false);
+            return FindAsync(new object[] {id}, ct);
+        }
+
+        public virtual async ValueTask<TEntity?> FindAsync(object[]? keys, CancellationToken ct = default)
+        {
+            return await Context.Set<TEntity>().FindAsync(keys, ct).ConfigureAwait(false);
+        }
+
+        public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids)
+            where TKey : struct
+        {
+            if (selector?.Body is not MemberExpression key)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+
+            var property = Expression.Property(parameter, key.Member.Name);
+
+            var contains = typeof(Enumerable).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                .MakeGenericMethod(typeof(int));
+
+            var body = Expression.Call(contains, Expression.Constant(ids), property);
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+
+            return Context.Set<TEntity>().Where(predicate).AsAsyncEnumerable();
         }
 
         public virtual IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
@@ -57,7 +86,7 @@ namespace JoyMoe.Common.Data.EFCore
 
             if (before != null)
             {
-                if (!(selector.Body is MemberExpression key))
+                if (selector.Body is not MemberExpression key)
                 {
                     throw new ArgumentNullException(nameof(selector));
                 }
@@ -88,7 +117,7 @@ namespace JoyMoe.Common.Data.EFCore
                 .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 

@@ -71,7 +71,7 @@ namespace JoyMoe.Common.Session.Repository
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.GetByIdAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(id).ConfigureAwait(false);
             if (entity == null) return;
 
             entity.Value = SerializeToBytes(ticket);
@@ -90,7 +90,7 @@ namespace JoyMoe.Common.Session.Repository
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.GetByIdAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(id).ConfigureAwait(false);
             if (entity == null) return null;
 
             entity.UpdatedAt = DateTime.UtcNow;
@@ -116,7 +116,7 @@ namespace JoyMoe.Common.Session.Repository
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.GetByIdAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(id).ConfigureAwait(false);
             if (entity == null) return;
 
             await repository.RemoveAsync(entity).ConfigureAwait(false);
