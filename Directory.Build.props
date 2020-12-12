@@ -29,7 +29,7 @@
   -->
   <PropertyGroup Condition=" '$(GITHUB_ACTIONS)' == 'true' AND '$(GITHUB_REF.StartsWith(`refs/pull/`))' == 'false' ">
     <OfficialBuild>true</OfficialBuild>
-    <OfficialBuildId>$(_AspNetContribBuildNumber)</OfficialBuildId>
+    <OfficialBuildId>$(_ComputedOfficialBuildId)</OfficialBuildId>
   </PropertyGroup>
 
   <PropertyGroup>
