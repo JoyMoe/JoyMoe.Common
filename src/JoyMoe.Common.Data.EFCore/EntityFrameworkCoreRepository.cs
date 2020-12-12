@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,9 +27,9 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public virtual async ValueTask<TEntity> GetByIdAsync(long id)
+        public virtual async ValueTask<TEntity> GetByIdAsync(long id, CancellationToken ct = default)
         {
-            return await Context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
+            return await Context.Set<TEntity>().FindAsync(new object[] {id}, ct).ConfigureAwait(false);
         }
 
         public virtual IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
@@ -45,7 +46,8 @@ namespace JoyMoe.Common.Data.EFCore
             TKey? before = null,
             int size = 10,
             Expression<Func<TEntity, bool>>? predicate = null,
-            bool everything = false)
+            bool everything = false,
+            CancellationToken ct = default)
             where TKey : struct, IComparable
         {
             if (selector == null)
@@ -82,38 +84,38 @@ namespace JoyMoe.Common.Data.EFCore
             return await query
                 .OrderByDescending(selector)
                 .Take(size)
-                .ToListAsync()
+                .ToListAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
             return predicate == null
-                ? await Context.Set<TEntity>().SingleOrDefaultAsync().ConfigureAwait(false)
-                : await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
+                ? await Context.Set<TEntity>().SingleOrDefaultAsync(ct).ConfigureAwait(false)
+                : await Context.Set<TEntity>().SingleOrDefaultAsync(predicate, ct).ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
             return predicate == null
-                ? await Context.Set<TEntity>().AnyAsync().ConfigureAwait(false)
-                : await Context.Set<TEntity>().AnyAsync(predicate).ConfigureAwait(false);
+                ? await Context.Set<TEntity>().AnyAsync(ct).ConfigureAwait(false)
+                : await Context.Set<TEntity>().AnyAsync(predicate, ct).ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
             return predicate == null
-                ? await Context.Set<TEntity>().CountAsync().ConfigureAwait(false)
-                : await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
+                ? await Context.Set<TEntity>().CountAsync(ct).ConfigureAwait(false)
+                : await Context.Set<TEntity>().CountAsync(predicate, ct).ConfigureAwait(false);
         }
 
-        public virtual async Task AddAsync(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
@@ -133,10 +135,10 @@ namespace JoyMoe.Common.Data.EFCore
                 soft.DeletedAt = null;
             }
 
-            await Context.AddAsync(entity).ConfigureAwait(false);
+            await Context.AddAsync(entity, ct).ConfigureAwait(false);
         }
 
-        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
         {
             if (entities == null)
             {
@@ -145,11 +147,11 @@ namespace JoyMoe.Common.Data.EFCore
 
             foreach (var entity in entities)
             {
-                await AddAsync(entity).ConfigureAwait(false);
+                await AddAsync(entity, ct).ConfigureAwait(false);
             }
         }
 
-        public virtual Task UpdateAsync(TEntity entity)
+        public virtual Task UpdateAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
@@ -166,7 +168,7 @@ namespace JoyMoe.Common.Data.EFCore
             return Task.CompletedTask;
         }
 
-        public virtual Task RemoveAsync(TEntity entity)
+        public virtual Task RemoveAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
@@ -183,7 +185,7 @@ namespace JoyMoe.Common.Data.EFCore
             return Task.CompletedTask;
         }
 
-        public virtual async Task RemoveRangeAsync(IEnumerable<TEntity> entities)
+        public virtual async Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
         {
             if (entities == null)
             {
@@ -192,13 +194,13 @@ namespace JoyMoe.Common.Data.EFCore
 
             foreach (var entity in entities)
             {
-                await RemoveAsync(entity).ConfigureAwait(false);
+                await RemoveAsync(entity, ct).ConfigureAwait(false);
             }
         }
 
-        public virtual async ValueTask<int> CommitAsync()
+        public virtual async ValueTask<int> CommitAsync(CancellationToken ct = default)
         {
-            return await Context.SaveChangesAsync().ConfigureAwait(false);
+            return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
 
         private static Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
