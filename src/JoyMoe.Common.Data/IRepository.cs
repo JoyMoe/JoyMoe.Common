@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace JoyMoe.Common.Data
 {
-    public interface IRepository<TEntity> where TEntity : class, IDataEntity
+    public interface IRepository<TEntity> where TEntity : class
     {
         ValueTask<TEntity> GetByIdAsync(long id);
-        IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
-        ValueTask<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false);
+        IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
+        ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false) where TKey : struct, IComparable;
         ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
         ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
         ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);

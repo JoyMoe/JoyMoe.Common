@@ -44,7 +44,7 @@ namespace JoyMoe.Common.Mvc.Api
         private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
         {
             var entities = await _repository
-                .PaginateAsync(before, size, predicate)
+                .PaginateAsync(e => e.Id, before, size, predicate)
                 .ConfigureAwait(false);
 
             return entities.ToArray();

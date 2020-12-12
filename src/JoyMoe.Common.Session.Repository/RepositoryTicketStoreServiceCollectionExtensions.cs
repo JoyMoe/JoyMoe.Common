@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IServiceCollection AddRepositoryTicketStore<TUser, TSession, TRepository>(this IServiceCollection services)
             where TSession : TicketStoreSession<TUser>, new()
-            where TRepository: IRepository<TSession>
+            where TRepository : IRepository<TSession>
             where TUser : class
         {
             if (services == null)

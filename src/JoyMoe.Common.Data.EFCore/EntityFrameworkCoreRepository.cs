@@ -7,9 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JoyMoe.Common.Data.EFCore
 {
+    public class EntityFrameworkCoreRepository<TEntity> : EntityFrameworkCoreRepository<DbContext, TEntity>
+        where TEntity : class
+    {
+        public EntityFrameworkCoreRepository(DbContext context) : base(context)
+        {
+        }
+    }
+
     public class EntityFrameworkCoreRepository<TContext, TEntity> : IRepository<TEntity>
         where TContext : DbContext
-        where TEntity : class, IDataEntity
+        where TEntity : class
     {
         protected TContext Context { get; }
 
@@ -23,24 +31,56 @@ namespace JoyMoe.Common.Data.EFCore
             return await Context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
         }
 
-        public virtual IQueryable<TEntity> Find(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
+
             return predicate == null
-                ? Context.Set<TEntity>()
-                : Context.Set<TEntity>().Where(predicate);
+                ? Context.Set<TEntity>().AsAsyncEnumerable()
+                : Context.Set<TEntity>().Where(predicate).AsAsyncEnumerable();
         }
 
-        public virtual async ValueTask<IEnumerable<TEntity>> PaginateAsync(long? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false)
+        public virtual async ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            TKey? before = null,
+            int size = 10,
+            Expression<Func<TEntity, bool>>? predicate = null,
+            bool everything = false)
+            where TKey : struct, IComparable
         {
-            var query = Find(predicate, everything);
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
 
             if (before != null)
             {
-                query = query.Where(a => a.Id < before);
+                if (!(selector.Body is MemberExpression key))
+                {
+                    throw new ArgumentNullException(nameof(selector));
+                }
+
+                var parameter = predicate == null
+                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+                    : predicate.Parameters[0];
+
+                var property = Expression.Property(parameter, key.Member.Name);
+
+                var less = Expression.LessThan(property, Expression.Constant(before));
+
+                predicate = predicate == null
+                    ? Expression.Lambda<Func<TEntity, bool>>(less, parameter)
+                    : predicate.And(less);
             }
 
-            return await query.OrderByDescending(a => a.Id)
+            predicate = FilteringQuery(predicate, everything);
+
+            var query = predicate == null
+                ? Context.Set<TEntity>()
+                : Context.Set<TEntity>().Where(predicate);
+
+            return await query
+                .OrderByDescending(selector)
                 .Take(size)
                 .ToListAsync()
                 .ConfigureAwait(false);
@@ -49,22 +89,25 @@ namespace JoyMoe.Common.Data.EFCore
         public virtual async ValueTask<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
+
             return predicate == null
                 ? await Context.Set<TEntity>().SingleOrDefaultAsync().ConfigureAwait(false)
                 : await Context.Set<TEntity>().SingleOrDefaultAsync(predicate).ConfigureAwait(false);
         }
 
-        public async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
+
             return predicate == null
                 ? await Context.Set<TEntity>().AnyAsync().ConfigureAwait(false)
                 : await Context.Set<TEntity>().AnyAsync(predicate).ConfigureAwait(false);
         }
 
-        public async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
+
             return predicate == null
                 ? await Context.Set<TEntity>().CountAsync().ConfigureAwait(false)
                 : await Context.Set<TEntity>().CountAsync(predicate).ConfigureAwait(false);
@@ -79,10 +122,12 @@ namespace JoyMoe.Common.Data.EFCore
 
             var now = DateTime.UtcNow;
 
-            entity.CreatedAt = now;
-            entity.UpdatedAt = now;
+            if (entity is ITimestamp stamp)
+            {
+                stamp.CreatedAt = now;
+                stamp.UpdatedAt = now;
+            }
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
             if (entity is ISoftDelete soft)
             {
                 soft.DeletedAt = null;
@@ -111,7 +156,10 @@ namespace JoyMoe.Common.Data.EFCore
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            entity.UpdatedAt = DateTime.UtcNow;
+            if (entity is ITimestamp stamp)
+            {
+                stamp.UpdatedAt = DateTime.UtcNow;
+            }
 
             Context.Entry(entity).State = EntityState.Detached;
             Context.Update(entity);
@@ -125,7 +173,6 @@ namespace JoyMoe.Common.Data.EFCore
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
             if (entity is ISoftDelete soft)
             {
                 soft.DeletedAt = DateTime.UtcNow;
@@ -156,10 +203,13 @@ namespace JoyMoe.Common.Data.EFCore
 
         private static Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
         {
-            if (everything) return predicate;
+            if (everything)
+            {
+                return predicate;
+            }
 
             var parameter = predicate == null
-                ? Expression.Parameter(typeof(ISoftDelete), "sd")
+                ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
                 : predicate.Parameters[0];
 
             var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
@@ -167,7 +217,7 @@ namespace JoyMoe.Common.Data.EFCore
 
             return predicate == null
                 ? Expression.Lambda<Func<TEntity, bool>>(equipment, parameter)
-                : Expression.Lambda<Func<TEntity, bool>>(Expression.AndAlso(predicate.Body, equipment), parameter);
+                : predicate.And(equipment);
         }
     }
 }

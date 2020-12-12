@@ -15,7 +15,7 @@ namespace JoyMoe.Common.Session.Repository
     /// </summary>
     public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
         where TSession : TicketStoreSession<TUser>, new()
-        where TRepository: IRepository<TSession>
+        where TRepository : IRepository<TSession>
         where TUser : class
     {
         private readonly IServiceProvider _serviceProvider;
