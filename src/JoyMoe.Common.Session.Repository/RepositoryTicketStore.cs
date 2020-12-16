@@ -44,6 +44,7 @@ namespace JoyMoe.Common.Session.Repository
 
             var entity = new TSession
             {
+                Id = Guid.NewGuid(),
                 User = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
                 Type = ticket.AuthenticationScheme,
                 Value = SerializeToBytes(ticket),
@@ -55,7 +56,7 @@ namespace JoyMoe.Common.Session.Repository
             await repository.AddAsync(entity).ConfigureAwait(false);
             await repository.CommitAsync().ConfigureAwait(false);
 
-            return entity.Id.ToString(CultureInfo.InvariantCulture);
+            return entity.Id.ToString();
         }
 
         public async Task RenewAsync(string key, AuthenticationTicket ticket)
@@ -65,13 +66,13 @@ namespace JoyMoe.Common.Session.Repository
                 throw new ArgumentNullException(nameof(ticket));
             }
 
-            if (!long.TryParse(key, out var id)) return;
+            if (!Guid.TryParse(key, out var id)) return;
 
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.FindAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
             if (entity == null) return;
 
             entity.Value = SerializeToBytes(ticket);
@@ -84,13 +85,13 @@ namespace JoyMoe.Common.Session.Repository
 
         public async Task<AuthenticationTicket> RetrieveAsync(string key)
         {
-            if (!long.TryParse(key, out var id)) return null;
+            if (!Guid.TryParse(key, out var id)) return null;
 
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.FindAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
             if (entity == null) return null;
 
             entity.UpdatedAt = DateTime.UtcNow;
@@ -110,13 +111,13 @@ namespace JoyMoe.Common.Session.Repository
 
         public async Task RemoveAsync(string key)
         {
-            if (!long.TryParse(key, out var id)) return;
+            if (!Guid.TryParse(key, out var id)) return;
 
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetService<TRepository>();
             if (repository == null) throw new InvalidOperationException();
 
-            var entity = await repository.FindAsync(id).ConfigureAwait(false);
+            var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
             if (entity == null) return;
 
             await repository.RemoveAsync(entity).ConfigureAwait(false);

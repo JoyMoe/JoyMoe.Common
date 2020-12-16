@@ -3,9 +3,9 @@ using JoyMoe.Common.Data;
 
 namespace JoyMoe.Common.Session.Repository
 {
-    public class TicketStoreSession<TUser> : IDataEntity where TUser : class
+    public class TicketStoreSession<TUser> : ITimestamp where TUser : class
     {
-        public virtual long Id { get; set; }
+        public virtual Guid Id { get; set; }
 
         public virtual TUser? User { get; set; }
 
