@@ -8,8 +8,7 @@ namespace JoyMoe.Common.Data
 {
     public interface IRepository<TEntity> where TEntity : class
     {
-        ValueTask<TEntity?> FindAsync<TKey>(TKey id, CancellationToken ct = default) where TKey: struct;
-        ValueTask<TEntity?> FindAsync(object[]? keys, CancellationToken ct = default);
+        ValueTask<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default) where TKey: struct;
         IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids) where TKey : struct;
         IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
         ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false, CancellationToken ct = default) where TKey : struct, IComparable;

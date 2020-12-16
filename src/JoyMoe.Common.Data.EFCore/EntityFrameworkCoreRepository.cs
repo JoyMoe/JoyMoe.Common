@@ -28,15 +28,23 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public virtual ValueTask<TEntity?> FindAsync<TKey>(TKey id, CancellationToken ct = default)
+        public virtual async ValueTask<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default)
             where TKey : struct
         {
-            return FindAsync(new object[] {id}, ct);
-        }
+            if (selector?.Body is not MemberExpression key)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
 
-        public virtual async ValueTask<TEntity?> FindAsync(object[]? keys, CancellationToken ct = default)
-        {
-            return await Context.Set<TEntity>().FindAsync(keys, ct).ConfigureAwait(false);
+            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+
+            var property = Expression.Property(parameter, key.Member.Name);
+
+            var equipment = Expression.Equal(property, Expression.Constant(key));
+
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);
+
+            return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate, cancellationToken: ct).ConfigureAwait(false);
         }
 
         public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids)
