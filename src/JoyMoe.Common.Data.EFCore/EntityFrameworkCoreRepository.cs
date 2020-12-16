@@ -247,6 +247,11 @@ namespace JoyMoe.Common.Data.EFCore
                 return predicate;
             }
 
+            if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity)))
+            {
+                return predicate;
+            }
+
             var parameter = predicate == null
                 ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
                 : predicate.Parameters[0];
