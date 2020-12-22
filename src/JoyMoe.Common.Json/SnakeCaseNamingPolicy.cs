@@ -42,7 +42,6 @@ namespace JoyMoe.Common.Json
                     case UnicodeCategory.TitlecaseLetter:
                         if (previousCategory == UnicodeCategory.SpaceSeparator ||
                             previousCategory == UnicodeCategory.LowercaseLetter ||
-                            previousCategory != UnicodeCategory.DecimalDigitNumber &&
                             previousCategory != null &&
                             currentIndex > 0 &&
                             currentIndex + 1 < name.Length &&
