@@ -125,6 +125,15 @@ namespace JoyMoe.Common.Data.EFCore
                 .ConfigureAwait(false);
         }
 
+        public virtual async ValueTask<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        {
+            predicate = FilteringQuery(predicate, everything);
+
+            return predicate == null
+                ? await Context.Set<TEntity>().FirstOrDefaultAsync(ct).ConfigureAwait(false)
+                : await Context.Set<TEntity>().FirstOrDefaultAsync(predicate, ct).ConfigureAwait(false);
+        }
+
         public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);

@@ -12,6 +12,7 @@ namespace JoyMoe.Common.Data
         IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids) where TKey : struct;
         IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false);
         ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey? before = null, int size = 10, Expression<Func<TEntity, bool>>? predicate = null, bool everything = false, CancellationToken ct = default) where TKey : struct, IComparable;
+        ValueTask<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default);
         ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default);
         ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default);
         ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default);
