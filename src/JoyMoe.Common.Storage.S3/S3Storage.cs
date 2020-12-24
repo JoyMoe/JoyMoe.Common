@@ -93,8 +93,9 @@ namespace JoyMoe.Common.Storage.S3
         {
             var now = DateTimeOffset.UtcNow;
             var date = $"{now:yyyyMMdd}";
+            var timestamp = $"{now:O}";
 
-            var uri = await GetUrlAsync(path, true, ct).ConfigureAwait(false);
+            var uri = await GetUrlAsync(string.Empty, true, ct).ConfigureAwait(false);
 
             var arguments = new ObjectStorageFrontendUploadArguments
             {
@@ -105,7 +106,7 @@ namespace JoyMoe.Common.Storage.S3
                     ["acl"] = everyone ? "public-read" : "private",
                     ["x-amz-algorithm"] = "AWS4-HMAC-SHA256",
                     ["x-amz-credential"] = $"{Options.AccessKey}/{date}/{Options.Region}/s3/aws4_request",
-                    ["x-amz-date"] = date
+                    ["x-amz-date"] = timestamp
                 }
             };
 
