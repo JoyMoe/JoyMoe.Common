@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -28,61 +28,56 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public virtual async ValueTask<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default)
+        public virtual ValueTask<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default)
             where TKey : struct
         {
-            if (selector?.Body is not MemberExpression key)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
+            var key = GetColumnName(selector);
 
-            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
-
-            var property = Expression.Property(parameter, key.Member.Name);
-
-            var equipment = Expression.Equal(property, Expression.Constant(key));
-
-            var predicate = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);
-
-            return await Context.Set<TEntity>().SingleOrDefaultAsync(predicate, cancellationToken: ct).ConfigureAwait(false);
+            return SingleOrDefaultAsync($"@{key} = {{0}}", new List<object> { id }, true, ct);
         }
 
         public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids)
             where TKey : struct
         {
-            if (selector?.Body is not MemberExpression key)
+            if (ids == null)
             {
-                throw new ArgumentNullException(nameof(selector));
+                throw new ArgumentNullException(nameof(ids));
             }
 
-            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+            var key = GetColumnName(selector);
 
-            var property = Expression.Property(parameter, key.Member.Name);
+            var i = 0;
+            var sb = new StringBuilder();
+            var keys = new List<object>();
+            foreach (var id in ids)
+            {
+                sb.Append($"{{{i}}}");
+                sb.Append(',');
 
-            var contains = typeof(Enumerable).GetMethods(BindingFlags.Static | BindingFlags.Public)
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(int));
+                keys.Add(id);
 
-            var body = Expression.Call(contains, Expression.Constant(ids), property);
-            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+                i++;
+            }
 
-            return Context.Set<TEntity>().Where(predicate).AsAsyncEnumerable();
+            var list = sb.ToString().TrimEnd(',');
+
+            return ListAsync($"@{key} IN ({list})", keys, true);
         }
 
-        public virtual IAsyncEnumerable<TEntity> ListAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false)
+        public virtual IAsyncEnumerable<TEntity> ListAsync(string? predicate, List<object>? values, bool everything = false)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return predicate == null
-                ? Context.Set<TEntity>().AsAsyncEnumerable()
-                : Context.Set<TEntity>().Where(predicate).AsAsyncEnumerable();
+            return BuildSql(predicate, values ?? new List<object>())
+                .AsAsyncEnumerable();
         }
 
         public virtual async ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            Expression<Func<TEntity, bool>>? predicate = null,
+            string? predicate = null,
+            List<object>? values = null,
             bool everything = false,
             CancellationToken ct = default)
             where TKey : struct, IComparable
@@ -92,73 +87,61 @@ namespace JoyMoe.Common.Data.EFCore
                 throw new ArgumentNullException(nameof(selector));
             }
 
+            values ??= new List<object>();
+
+            var key = GetColumnName(selector);
+
             if (before != null)
             {
-                if (selector.Body is not MemberExpression key)
-                {
-                    throw new ArgumentNullException(nameof(selector));
-                }
-
-                var parameter = predicate == null
-                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
-                    : predicate.Parameters[0];
-
-                var property = Expression.Property(parameter, key.Member.Name);
-
-                var less = Expression.LessThan(property, Expression.Constant(before));
-
-                predicate = predicate == null
-                    ? Expression.Lambda<Func<TEntity, bool>>(less, parameter)
-                    : predicate.And(less);
+                predicate = string.IsNullOrEmpty(predicate)
+                    ? $"@{key} < {{{values.Count}}}"
+                    : $"({predicate}) AND @{key} < {{{values.Count}}}";
+                values.Add(before);
             }
 
             predicate = FilteringQuery(predicate, everything);
 
-            var query = predicate == null
-                ? Context.Set<TEntity>()
-                : Context.Set<TEntity>().Where(predicate);
-
-            return await query
+            return await BuildSql(predicate, values)
                 .OrderByDescending(selector)
                 .Take(size)
                 .ToListAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        public virtual async ValueTask<TEntity?> FirstOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return predicate == null
-                ? await Context.Set<TEntity>().FirstOrDefaultAsync(ct).ConfigureAwait(false)
-                : await Context.Set<TEntity>().FirstOrDefaultAsync(predicate, ct).ConfigureAwait(false);
+            return await BuildSql(predicate, values ?? new List<object>())
+                .FirstOrDefaultAsync(ct)
+                .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        public virtual async ValueTask<TEntity?> SingleOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return predicate == null
-                ? await Context.Set<TEntity>().SingleOrDefaultAsync(ct).ConfigureAwait(false)
-                : await Context.Set<TEntity>().SingleOrDefaultAsync(predicate, ct).ConfigureAwait(false);
+            return await BuildSql(predicate, values ?? new List<object>())
+                .SingleOrDefaultAsync(ct)
+                .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        public virtual async ValueTask<bool> AnyAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return predicate == null
-                ? await Context.Set<TEntity>().AnyAsync(ct).ConfigureAwait(false)
-                : await Context.Set<TEntity>().AnyAsync(predicate, ct).ConfigureAwait(false);
+            return await BuildSql(predicate, values ?? new List<object>())
+                .AnyAsync(ct)
+                .ConfigureAwait(false);
         }
 
-        public virtual async ValueTask<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, bool everything = false, CancellationToken ct = default)
+        public virtual async ValueTask<long> CountAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return predicate == null
-                ? await Context.Set<TEntity>().CountAsync(ct).ConfigureAwait(false)
-                : await Context.Set<TEntity>().CountAsync(predicate, ct).ConfigureAwait(false);
+            return await BuildSql(predicate, values ?? new List<object>())
+                .LongCountAsync(ct)
+                .ConfigureAwait(false);
         }
 
         public virtual async Task AddAsync(TEntity entity, CancellationToken ct = default)
@@ -249,7 +232,54 @@ namespace JoyMoe.Common.Data.EFCore
             return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
 
-        private static Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate, bool everything)
+        private static string GetColumnName<TKey>(Expression<Func<TEntity, TKey>> selector)
+        {
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            if (selector.Body is not MemberExpression key)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            return $"{key.Member.Name}";
+        }
+
+        private IQueryable<TEntity> BuildSql(string? predicate, List<object> values)
+        {
+            if (predicate == null)
+            {
+                return Context.Set<TEntity>();
+            }
+
+            var tokens = new List<string>();
+            foreach (var token in predicate.Split(' '))
+            {
+                if (token.StartsWith('@'))
+                {
+                    tokens.Add($"\"{token.Substring(1)}\"");
+                    continue;
+                }
+
+                if (token.StartsWith("(@", StringComparison.InvariantCulture))
+                {
+                    tokens.Add($"(\"{token.Substring(2)}\"");
+                    continue;
+                }
+
+                tokens.Add(token);
+            }
+
+            predicate = string.Join(' ', tokens);
+
+            var sql = $"SELECT * FROM {Context.GetTableName<TEntity>()} WHERE {predicate}";
+
+            return Context.Set<TEntity>().FromSqlRaw(sql, values.ToArray());
+        }
+
+        private static string? FilteringQuery(string? predicate, bool everything)
         {
             if (everything)
             {
@@ -261,16 +291,11 @@ namespace JoyMoe.Common.Data.EFCore
                 return predicate;
             }
 
-            var parameter = predicate == null
-                ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
-                : predicate.Parameters[0];
+            var filtering = $"@{nameof(ISoftDelete.DeletedAt)} IS NULL";
 
-            var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
-            var equipment = Expression.Equal(property, Expression.Constant(null));
-
-            return predicate == null
-                ? Expression.Lambda<Func<TEntity, bool>>(equipment, parameter)
-                : predicate.And(equipment);
+            return string.IsNullOrEmpty(predicate)
+                ? filtering
+                : $"({predicate}) AND {filtering}";
         }
     }
 }

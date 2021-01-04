@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using JoyMoe.Common.Data;
@@ -36,15 +35,15 @@ namespace JoyMoe.Common.Mvc.Api
                 return UnprocessableEntity(ModelState);
             }
 
-            var result = await _interceptor.Query(HttpContext, User, predicate => _query(before, size, predicate)).ConfigureAwait(false);
+            var result = await _interceptor.Query(HttpContext, User, (predicate, values) => _query(before, size, predicate, values)).ConfigureAwait(false);
 
             return _mapResponse(result);
         }
 
-        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
+        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, string? predicate, List<object>? values)
         {
             var entities = await _repository
-                .PaginateAsync(e => e.Id, before, size, predicate)
+                .PaginateAsync(e => e.Id, before, size, predicate, values)
                 .ConfigureAwait(false);
 
             return entities.ToArray();
