@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 
-namespace JoyMoe.Common.Mvc.Api
+// ReSharper disable once CheckNamespace
+namespace System
 {
     public static class Pluralizer
     {

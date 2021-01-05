@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Chino Chang</Authors>
+    <Description>JoyMoe.Common stubs for Entity Framework Core, with automatically timestamps</Description>
+    <PackageTags>ef;efcore;entity-framework-core;Entity;Framework;Core;timestamp</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper.StrongName" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
+  </ItemGroup>
+
+</Project>
