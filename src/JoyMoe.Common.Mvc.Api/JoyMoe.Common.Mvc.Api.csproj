@@ -6,8 +6,8 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common API stubs for Asp.Net Core MVC</Description>
-    <PackageTags>api;pagination;mvc</PackageTags>
+    <Description>JoyMoe.Common generic REST API controller for Asp.Net Core MVC</Description>
+    <PackageTags>api;pagination;rest;mvc</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

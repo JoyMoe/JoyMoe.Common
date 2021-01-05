@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common stubs for ORMs</Description>
+    <Description>JoyMoe.Common repository for Database</Description>
     <PackageTags>database;datasource;repository;timestamp</PackageTags>
   </PropertyGroup>
 
