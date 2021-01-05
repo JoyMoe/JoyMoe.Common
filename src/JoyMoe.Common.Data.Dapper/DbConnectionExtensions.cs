@@ -63,10 +63,67 @@ namespace JoyMoe.Common.Data.Dapper
                 i++;
             }
 
+            columnsBuilder.Remove(columnsBuilder.Length - 3, 3);
+            fieldsBuilder.Remove(fieldsBuilder.Length - 3, 3);
+
             var columns = columnsBuilder.ToString();
             var fields = fieldsBuilder.ToString();
 
-            var sql = $"INSERT INTO {table.Escape()} ( {columns[..^3]} ) VALUES ( {fields[..^3]} )";
+            var sql = $"INSERT INTO {table.Escape()} ( {columns} ) VALUES ( {fields} )";
+
+            return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
+        }
+
+        public static async Task<int> BulkInsertAsync<TEntity>(this DbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction) where TEntity : class
+        {
+            if (entities == null)
+            {
+                throw new ArgumentNullException(nameof(entities));
+            }
+
+            var type = typeof(TEntity);
+
+            var table = type.Name.Pluralize();
+
+            var columnsBuilder = new StringBuilder();
+            foreach (var property in GetProperties(type))
+            {
+                columnsBuilder.Append($"@{property.Name}");
+                columnsBuilder.Append(" , ");
+            }
+
+            columnsBuilder.Remove(columnsBuilder.Length - 3, 3);
+
+            var columns = columnsBuilder.ToString();
+
+            var i = 0;
+            var values = new List<object?>();
+            var fieldsBuilder = new StringBuilder();
+            foreach (var entity in entities)
+            {
+                fieldsBuilder.Append(" ( ");
+
+                foreach (var property in GetProperties(type))
+                {
+                    fieldsBuilder.Append($"{{{i}}}");
+                    fieldsBuilder.Append(" , ");
+
+                    values.Add(property.GetValue(entity));
+
+                    i++;
+                }
+
+                fieldsBuilder.Remove(fieldsBuilder.Length - 3, 3);
+
+                fieldsBuilder.Append(" ) ");
+                fieldsBuilder.Append(" , ");
+            }
+
+            fieldsBuilder.Remove(fieldsBuilder.Length - 3, 3);
+
+            var fields = fieldsBuilder.ToString();
+
+            var sql = $"INSERT INTO {table.Escape()} ( {columns} ) VALUES {fields}";
 
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }
@@ -93,6 +150,8 @@ namespace JoyMoe.Common.Data.Dapper
                 i++;
             }
 
+            fieldsBuilder.Remove(fieldsBuilder.Length - 3, 3);
+
             var fields = fieldsBuilder.ToString();
 
             var predicateBuilder = new StringBuilder();
@@ -106,15 +165,16 @@ namespace JoyMoe.Common.Data.Dapper
                 i++;
             }
 
+            predicateBuilder.Remove(predicateBuilder.Length - 5, 5);
+
             var predicate = predicateBuilder.ToString();
 
-            predicate = predicate[..^5];
             if (string.IsNullOrWhiteSpace(predicate))
             {
                 return 0;
             }
 
-            var sql = $"UPDATE {table.Escape()} SET {fields[..^3]} WHERE {predicate}";
+            var sql = $"UPDATE {table.Escape()} SET {fields} WHERE {predicate}";
 
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }
@@ -141,15 +201,16 @@ namespace JoyMoe.Common.Data.Dapper
                 i++;
             }
 
+            predicateBuilder.Remove(predicateBuilder.Length - 5, 5);
+
             var predicate = predicateBuilder.ToString();
 
-            predicate = predicate[..^5];
             if (string.IsNullOrWhiteSpace(predicate))
             {
                 return 0;
             }
 
-            var sql = $"UPDATE FROM {table.Escape()} WHERE {predicate}";
+            var sql = $"DELETE FROM {table.Escape()} WHERE {predicate}";
 
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }

@@ -108,60 +108,39 @@ namespace JoyMoe.Common.Data.EFCore
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            var now = DateTime.UtcNow;
-
-            if (entity is ITimestamp stamp)
-            {
-                stamp.CreatedAt = now;
-                stamp.UpdatedAt = now;
-            }
-
-            if (entity is ISoftDelete soft)
-            {
-                soft.DeletedAt = null;
-            }
+            await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
 
             await Context.AddAsync(entity, ct).ConfigureAwait(false);
         }
 
-        public override Task UpdateAsync(TEntity entity, CancellationToken ct = default)
+        public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            if (entity is ITimestamp stamp)
+            await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
+
+            Context.Entry(entity).State = EntityState.Detached;
+            Context.Update(entity);
+        }
+
+        public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default)
+        {
+            if (entity == null)
             {
-                stamp.UpdatedAt = DateTime.UtcNow;
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
+            {
+                Context.Remove(entity);
+                return;
             }
 
             Context.Entry(entity).State = EntityState.Detached;
             Context.Update(entity);
-
-            return Task.CompletedTask;
-        }
-
-        public override Task RemoveAsync(TEntity entity, CancellationToken ct = default)
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (entity is ISoftDelete soft)
-            {
-                soft.DeletedAt = DateTime.UtcNow;
-
-                Context.Entry(entity).State = EntityState.Detached;
-                Context.Update(entity);
-
-                return Task.CompletedTask;
-            }
-
-            Context.Remove(entity);
-
-            return Task.CompletedTask;
         }
 
         public override async ValueTask<int> CommitAsync(CancellationToken ct = default)

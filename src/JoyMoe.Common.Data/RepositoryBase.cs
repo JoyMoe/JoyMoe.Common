@@ -34,9 +34,11 @@ namespace JoyMoe.Common.Data
                 i++;
             }
 
+            sb.Remove(sb.Length - 3, 3);
+
             var list = sb.ToString();
 
-            return ListAsync($"@{selector.GetColumnName()} IN ( {list[..^3]} )", keys, true);
+            return ListAsync($"@{selector.GetColumnName()} IN ( {list} )", keys, true);
         }
 
         public abstract IAsyncEnumerable<TEntity> ListAsync(string? predicate, List<object>? values, bool everything = false);
@@ -59,6 +61,24 @@ namespace JoyMoe.Common.Data
 
         public abstract ValueTask<long> CountAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default);
 
+        public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
+        {
+            var now = DateTime.UtcNow;
+
+            if (entity is ITimestamp stamp)
+            {
+                stamp.CreatedAt = now;
+                stamp.UpdatedAt = now;
+            }
+
+            if (entity is ISoftDelete soft)
+            {
+                soft.DeletedAt = null;
+            }
+
+            return Task.CompletedTask;
+        }
+
         public abstract Task AddAsync(TEntity entity, CancellationToken ct = default);
 
         public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
@@ -74,7 +94,29 @@ namespace JoyMoe.Common.Data
             }
         }
 
+        public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default)
+        {
+            if (entity is ITimestamp stamp)
+            {
+                stamp.UpdatedAt = DateTime.UtcNow;
+            }
+
+            return Task.CompletedTask;
+        }
+
         public abstract Task UpdateAsync(TEntity entity, CancellationToken ct = default);
+
+        public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default)
+        {
+            if (entity is ISoftDelete soft)
+            {
+                soft.DeletedAt = DateTime.UtcNow;
+
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(true);
+        }
 
         public abstract Task RemoveAsync(TEntity entity, CancellationToken ct = default);
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,9 @@ namespace JoyMoe.Common.Data.Dapper
         {
             predicate = FilteringQuery(predicate, everything);
 
-            var entities = await Connection.ListAsync<TEntity>(predicate, values).ConfigureAwait(false);
+            var result = await Connection.ListAsync<TEntity>(predicate, values).ConfigureAwait(false);
+
+            var entities = result.ToArray();
 
             foreach (var entity in entities)
             {
@@ -100,18 +103,7 @@ namespace JoyMoe.Common.Data.Dapper
                 Transaction = await Connection.BeginTransactionAsync(ct).ConfigureAwait(false);
             }
 
-            var now = DateTime.UtcNow;
-
-            if (entity is ITimestamp stamp)
-            {
-                stamp.CreatedAt = now;
-                stamp.UpdatedAt = now;
-            }
-
-            if (entity is ISoftDelete soft)
-            {
-                soft.DeletedAt = null;
-            }
+            await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
 
             await Connection.InsertAsync(entity, Transaction).ConfigureAwait(false);
         }
@@ -129,10 +121,7 @@ namespace JoyMoe.Common.Data.Dapper
                 Transaction = await Connection.BeginTransactionAsync(ct).ConfigureAwait(false);
             }
 
-            if (entity is ITimestamp stamp)
-            {
-                stamp.UpdatedAt = DateTime.UtcNow;
-            }
+            await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
 
             await Connection.UpdateAsync(entity, Transaction).ConfigureAwait(false);
         }
@@ -150,16 +139,13 @@ namespace JoyMoe.Common.Data.Dapper
                 Transaction = await Connection.BeginTransactionAsync(ct).ConfigureAwait(false);
             }
 
-            if (entity is ISoftDelete soft)
+            if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
             {
-                soft.DeletedAt = DateTime.UtcNow;
-
-                await Connection.UpdateAsync(entity, Transaction).ConfigureAwait(false);
-
+                await Connection.DeleteAsync(entity, Transaction).ConfigureAwait(false);
                 return;
             }
 
-            await Connection.DeleteAsync(entity, Transaction).ConfigureAwait(false);
+            await Connection.UpdateAsync(entity, Transaction).ConfigureAwait(false);
         }
 
         public override async ValueTask<int> CommitAsync(CancellationToken ct = default)
@@ -167,8 +153,6 @@ namespace JoyMoe.Common.Data.Dapper
             if (Transaction == null) return 0;
 
             await Transaction.CommitAsync(ct).ConfigureAwait(false);
-
-            await Transaction.DisposeAsync().ConfigureAwait(false);
 
             Transaction = null;
 
