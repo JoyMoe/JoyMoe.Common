@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,12 +10,20 @@ namespace JoyMoe.Common.Data
 {
     public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        public virtual ValueTask<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default) where TKey : struct
+        public virtual Task<TEntity?> FindAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            TKey id,
+            CancellationToken ct = default)
+            where TKey : struct
         {
-            return SingleOrDefaultAsync($"@{selector.GetColumnName()} = {{0}}", new List<object> { id }, true, ct);
+            return SingleOrDefaultAsync(true, $"@{selector.GetColumnName()} = {{0}}", ct, id);
         }
 
-        public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids) where TKey : struct
+        public virtual async IAsyncEnumerable<TEntity> FindAllAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            IEnumerable<TKey> ids,
+            [EnumeratorCancellation] CancellationToken ct = default)
+            where TKey : struct
         {
             if (ids == null)
             {
@@ -37,29 +46,52 @@ namespace JoyMoe.Common.Data
             sb.Remove(sb.Length - 3, 3);
 
             var list = sb.ToString();
-
-            return ListAsync($"@{selector.GetColumnName()} IN ( {list} )", keys, true);
+            var enumerable = ListAsync(true, $"@{selector.GetColumnName()} IN ( {list} )", values: keys.ToArray(), ct: ct);
+            await foreach (var entity in enumerable.WithCancellation(ct))
+            {
+                yield return entity;
+            }
         }
 
-        public abstract IAsyncEnumerable<TEntity> ListAsync(string? predicate, List<object>? values, bool everything = false);
+        public abstract IAsyncEnumerable<TEntity> ListAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values);
 
-        public abstract ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(
+        public abstract Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            string? predicate = null,
-            List<object>? values = null,
             bool everything = false,
-            CancellationToken ct = default)
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
             where TKey : struct, IComparable;
 
-        public abstract ValueTask<TEntity?> FirstOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default);
+        public abstract Task<TEntity?> FirstOrDefaultAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values);
 
-        public abstract ValueTask<TEntity?> SingleOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default);
+        public abstract Task<TEntity?> SingleOrDefaultAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values);
 
-        public abstract ValueTask<bool> AnyAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default);
+        public abstract Task<bool> AnyAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values);
 
-        public abstract ValueTask<long> CountAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default);
+        public abstract Task<long> CountAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values);
 
         public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
         {
@@ -134,6 +166,6 @@ namespace JoyMoe.Common.Data
             }
         }
 
-        public abstract ValueTask<int> CommitAsync(CancellationToken ct = default);
+        public abstract Task<int> CommitAsync(CancellationToken ct = default);
     }
 }

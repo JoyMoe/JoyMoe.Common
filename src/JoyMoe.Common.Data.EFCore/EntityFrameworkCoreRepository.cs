@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -27,33 +28,41 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public override IAsyncEnumerable<TEntity> ListAsync(string? predicate, List<object>? values, bool everything = false)
+        public override async IAsyncEnumerable<TEntity> ListAsync(
+            bool everything = false,
+            string? predicate = null,
+            [EnumeratorCancellation] CancellationToken ct = default,
+            params object[] values)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return BuildQuery(Context, predicate, values ?? new List<object>())
-                .AsAsyncEnumerable();
+            var enumerable = BuildQuery(Context, predicate, values).AsAsyncEnumerable();
+
+            await foreach (var entity in enumerable.WithCancellation(ct))
+            {
+                yield return entity;
+            }
         }
 
-        public override async ValueTask<IEnumerable<TEntity>> PaginateAsync<TKey>(
+        public override async Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            string? predicate = null,
-            List<object>? values = null,
             bool everything = false,
-            CancellationToken ct = default)
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
         {
-            values ??= new List<object>();
-
             var key = selector.GetColumnName();
 
             if (before != null)
             {
                 predicate = string.IsNullOrEmpty(predicate)
-                    ? $"@{key} < {{{values.Count}}}"
-                    : $"( {predicate} ) AND @{key} < {{{values.Count}}}";
-                values.Add(before);
+                    ? $"@{key} < {{{values.Length}}}"
+                    : $"( {predicate} ) AND @{key} < {{{values.Length}}}";
+
+                Array.Resize(ref values, values.Length + 1);
+                values[values.GetUpperBound(0)] = before;
             }
 
             predicate = FilteringQuery(predicate, everything);
@@ -65,38 +74,54 @@ namespace JoyMoe.Common.Data.EFCore
                 .ConfigureAwait(false);
         }
 
-        public override async ValueTask<TEntity?> FirstOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
+        public override async Task<TEntity?> FirstOrDefaultAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return await BuildQuery(Context, predicate, values ?? new List<object>())
+            return await BuildQuery(Context, predicate, values)
                 .FirstOrDefaultAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async ValueTask<TEntity?> SingleOrDefaultAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
+        public override async Task<TEntity?> SingleOrDefaultAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return await BuildQuery(Context, predicate, values ?? new List<object>())
+            return await BuildQuery(Context, predicate, values)
                 .SingleOrDefaultAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async ValueTask<bool> AnyAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
+        public override async Task<bool> AnyAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return await BuildQuery(Context, predicate, values ?? new List<object>())
+            return await BuildQuery(Context, predicate, values)
                 .AnyAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async ValueTask<long> CountAsync(string? predicate, List<object>? values, bool everything = false, CancellationToken ct = default)
+        public override async Task<long> CountAsync(
+            bool everything = false,
+            string? predicate = null,
+            CancellationToken ct = default,
+            params object[] values)
         {
             predicate = FilteringQuery(predicate, everything);
 
-            return await BuildQuery(Context, predicate, values ?? new List<object>())
+            return await BuildQuery(Context, predicate, values)
                 .LongCountAsync(ct)
                 .ConfigureAwait(false);
         }
@@ -143,12 +168,12 @@ namespace JoyMoe.Common.Data.EFCore
             Context.Update(entity);
         }
 
-        public override async ValueTask<int> CommitAsync(CancellationToken ct = default)
+        public override async Task<int> CommitAsync(CancellationToken ct = default)
         {
             return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
 
-        private static IQueryable<TEntity> BuildQuery(TContext context, string? predicate, List<object> values)
+        private static IQueryable<TEntity> BuildQuery(TContext context, string? predicate, params object[] values)
         {
             if (context == null)
             {
@@ -173,7 +198,7 @@ namespace JoyMoe.Common.Data.EFCore
                 ? $"SELECT * FROM {name}"
                 : $"SELECT * FROM {name} WHERE {predicate.PrepareSql()}";
 
-            return context.Set<TEntity>().FromSqlRaw(sql, values.ToArray());
+            return context.Set<TEntity>().FromSqlRaw(sql, values);
         }
 
         private static string? FilteringQuery(string? predicate, bool everything)

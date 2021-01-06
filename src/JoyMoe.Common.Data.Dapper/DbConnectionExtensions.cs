@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 
@@ -18,28 +19,34 @@ namespace JoyMoe.Common.Data.Dapper
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> Keys = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> Properties = new();
 
-        public static async Task<IEnumerable<TEntity>> ListAsync<TEntity>(this DbConnection connection, string? predicate, List<object>? values) where TEntity : class
+        public static async Task<IEnumerable<TEntity>> ListAsync<TEntity>(this DbConnection connection, string? predicate, CancellationToken ct = default, params object[] values) where TEntity : class
         {
-            return await connection.QueryAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values ?? new List<object>())).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            return await connection.QueryAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values)).ConfigureAwait(false);
         }
 
-        public static async Task<TEntity?> FirstOrDefaultAsync<TEntity>(this DbConnection connection, string? predicate, List<object>? values) where TEntity : class
+        public static async Task<TEntity?> FirstOrDefaultAsync<TEntity>(this DbConnection connection, string? predicate, CancellationToken ct = default, params object[] values) where TEntity : class
         {
-            return await connection.QueryFirstOrDefaultAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values ?? new List<object>())).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            return await connection.QueryFirstOrDefaultAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values)).ConfigureAwait(false);
         }
 
-        public static async Task<TEntity?> SingleOrDefaultAsync<TEntity>(this DbConnection connection, string? predicate, List<object>? values) where TEntity : class
+        public static async Task<TEntity?> SingleOrDefaultAsync<TEntity>(this DbConnection connection, string? predicate, CancellationToken ct = default, params object[] values) where TEntity : class
         {
-            return await connection.QuerySingleOrDefaultAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values ?? new List<object>())).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            return await connection.QuerySingleOrDefaultAsync<TEntity>(BuildCommand(BuildSelectSql<TEntity>(predicate), values)).ConfigureAwait(false);
         }
 
-        public static async Task<long> CountAsync<TEntity>(this DbConnection connection, string? predicate, List<object>? values) where TEntity : class
+        public static async Task<long> CountAsync<TEntity>(this DbConnection connection, string? predicate, CancellationToken ct = default, params object[] values) where TEntity : class
         {
-            return await connection.ExecuteScalarAsync<long>(BuildCommand(BuildSelectSql<TEntity>(predicate), values ?? new List<object>())).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            return await connection.ExecuteScalarAsync<long>(BuildCommand(BuildSelectSql<TEntity>(predicate), values)).ConfigureAwait(false);
         }
 
-        public static async Task<int> InsertAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction) where TEntity : class
+        public static async Task<int> InsertAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction, CancellationToken ct = default) where TEntity : class
         {
+            ct.ThrowIfCancellationRequested();
+
             var type = typeof(TEntity);
 
             var table = type.Name.Pluralize();
@@ -74,8 +81,10 @@ namespace JoyMoe.Common.Data.Dapper
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }
 
-        public static async Task<int> BulkInsertAsync<TEntity>(this DbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction) where TEntity : class
+        public static async Task<int> BulkInsertAsync<TEntity>(this DbConnection connection, IEnumerable<TEntity> entities, IDbTransaction? transaction, CancellationToken ct = default) where TEntity : class
         {
+            ct.ThrowIfCancellationRequested();
+
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
@@ -128,8 +137,10 @@ namespace JoyMoe.Common.Data.Dapper
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }
 
-        public static async Task<int> UpdateAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction) where TEntity : class
+        public static async Task<int> UpdateAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction, CancellationToken ct = default) where TEntity : class
         {
+            ct.ThrowIfCancellationRequested();
+
             var type = typeof(TEntity);
 
             var table = type.Name.Pluralize();
@@ -179,8 +190,10 @@ namespace JoyMoe.Common.Data.Dapper
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
         }
 
-        public static async Task<int> DeleteAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction) where TEntity : class
+        public static async Task<int> DeleteAsync<TEntity>(this DbConnection connection, TEntity entity, IDbTransaction? transaction, CancellationToken ct = default) where TEntity : class
         {
+            ct.ThrowIfCancellationRequested();
+
             var type = typeof(TEntity);
 
             var table = type.Name.Pluralize();
@@ -274,6 +287,12 @@ namespace JoyMoe.Common.Data.Dapper
                 if (token[0] == '{' && char.IsDigit(token, 1) && token[^1] == '}')
                 {
                     var id = int.Parse(token[1..^1], CultureInfo.InvariantCulture);
+
+                    if (id >= values.Count)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(sql));
+                    }
+
                     var holder = $"@__p{id}";
                     tokens.Add(holder);
                     parameters.Add(holder, values[id]);

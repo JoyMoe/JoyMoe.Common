@@ -35,15 +35,15 @@ namespace JoyMoe.Common.Mvc.Api
                 return UnprocessableEntity(ModelState);
             }
 
-            var result = await _interceptor.Query(HttpContext, User, (predicate, values) => _query(before, size, predicate, values)).ConfigureAwait(false);
+            var result = await _interceptor.Query(HttpContext, User, (predicate, values) => _query(before, size, predicate, values ?? Array.Empty<object>())).ConfigureAwait(false);
 
             return _mapResponse(result);
         }
 
-        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, string? predicate, List<object>? values)
+        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, string? predicate, params object[] values)
         {
             var entities = await _repository
-                .PaginateAsync(e => e.Id, before, size, predicate, values)
+                .PaginateAsync(e => e.Id, before, size, predicate: predicate, values: values)
                 .ConfigureAwait(false);
 
             return entities.ToArray();

@@ -12,7 +12,7 @@ namespace JoyMoe.Common.Mvc.Api
         where TEntity : class, IDataEntity
     {
         public virtual Task<ActionResult<IEnumerable<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
-            Func<string?, List<object>?, Task<ActionResult<IEnumerable<TEntity>>>> query)
+            Func<string?, object[]?, Task<ActionResult<IEnumerable<TEntity>>>> query)
         {
             if (query == null)
             {
