@@ -1,28 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace JoyMoe.Common.Data
 {
     public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        public virtual Task<TEntity?> FindAsync<TKey>(
-            Expression<Func<TEntity, TKey>> selector,
-            TKey id,
-            CancellationToken ct = default)
+        public bool IgnoreQueryFilters { get; set; }
+
+        public virtual Task<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id)
             where TKey : struct
         {
-            return SingleOrDefaultAsync(true, $"@{selector.GetColumnName()} = {{0}}", ct, id);
+            IgnoreQueryFilters = true;
+
+            return SingleOrDefaultAsync($"@{selector.GetColumnName()} = {{0}}", id);
         }
 
-        public virtual async IAsyncEnumerable<TEntity> FindAllAsync<TKey>(
-            Expression<Func<TEntity, TKey>> selector,
-            IEnumerable<TKey> ids,
-            [EnumeratorCancellation] CancellationToken ct = default)
+        public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids)
             where TKey : struct
         {
             if (ids == null)
@@ -46,54 +43,31 @@ namespace JoyMoe.Common.Data
             sb.Remove(sb.Length - 3, 3);
 
             var list = sb.ToString();
-            var enumerable = ListAsync(true, $"@{selector.GetColumnName()} IN ( {list} )", values: keys.ToArray(), ct: ct);
-            await foreach (var entity in enumerable.WithCancellation(ct))
-            {
-                yield return entity;
-            }
+
+            IgnoreQueryFilters = true;
+
+            return ListAsync($"@{selector.GetColumnName()} IN ( {list} )", keys.ToArray());
         }
 
-        public abstract IAsyncEnumerable<TEntity> ListAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values);
+        public abstract IAsyncEnumerable<TEntity> ListAsync(string? predicate = null, params object[] values);
 
         public abstract Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            bool everything = false,
             string? predicate = null,
-            CancellationToken ct = default,
             params object[] values)
             where TKey : struct, IComparable;
 
-        public abstract Task<TEntity?> FirstOrDefaultAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values);
+        public abstract Task<TEntity?> FirstOrDefaultAsync(string? predicate = null, params object[] values);
 
-        public abstract Task<TEntity?> SingleOrDefaultAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values);
+        public abstract Task<TEntity?> SingleOrDefaultAsync(string? predicate = null, params object[] values);
 
-        public abstract Task<bool> AnyAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values);
+        public abstract Task<bool> AnyAsync(string? predicate = null, params object[] values);
 
-        public abstract Task<long> CountAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values);
+        public abstract Task<long> CountAsync(string? predicate = null, params object[] values);
 
-        public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
+        public virtual Task OnBeforeAddAsync(TEntity entity)
         {
             var now = DateTime.UtcNow;
 
@@ -111,22 +85,21 @@ namespace JoyMoe.Common.Data
             return Task.CompletedTask;
         }
 
-        public abstract Task AddAsync(TEntity entity, CancellationToken ct = default);
+        public abstract Task AddAsync(TEntity entity);
 
-        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
+        public virtual Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
             }
 
-            foreach (var entity in entities)
-            {
-                await AddAsync(entity, ct).ConfigureAwait(false);
-            }
+            var tasks = entities.Select(AddAsync).ToArray();
+
+            return Task.WhenAny(tasks);
         }
 
-        public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default)
+        public virtual Task OnBeforeUpdateAsync(TEntity entity)
         {
             if (entity is ITimestamp stamp)
             {
@@ -136,9 +109,9 @@ namespace JoyMoe.Common.Data
             return Task.CompletedTask;
         }
 
-        public abstract Task UpdateAsync(TEntity entity, CancellationToken ct = default);
+        public abstract Task UpdateAsync(TEntity entity);
 
-        public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default)
+        public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity)
         {
             if (entity is ISoftDelete soft)
             {
@@ -150,22 +123,41 @@ namespace JoyMoe.Common.Data
             return Task.FromResult(true);
         }
 
-        public abstract Task RemoveAsync(TEntity entity, CancellationToken ct = default);
+        public abstract Task RemoveAsync(TEntity entity);
 
-
-        public virtual async Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
+        public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities)
         {
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
             }
 
-            foreach (var entity in entities)
-            {
-                await RemoveAsync(entity, ct).ConfigureAwait(false);
-            }
+            var tasks = entities.Select(RemoveAsync).ToArray();
+
+            return Task.WhenAny(tasks);
         }
 
-        public abstract Task<int> CommitAsync(CancellationToken ct = default);
+        public abstract Task<int> CommitAsync();
+
+        protected string? FilteringQuery(string? predicate)
+        {
+            if (IgnoreQueryFilters)
+            {
+                IgnoreQueryFilters = false;
+
+                return predicate;
+            }
+
+            if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity)))
+            {
+                return predicate;
+            }
+
+            var filtering = $"@{nameof(ISoftDelete.DeletedAt)} IS NULL";
+
+            return string.IsNullOrEmpty(predicate)
+                ? filtering
+                : $"( {predicate} ) AND {filtering}";
+        }
     }
 }

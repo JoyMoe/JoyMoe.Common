@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace JoyMoe.Common.Data
+// ReSharper disable once CheckNamespace
+namespace System.Collections.Generic
 {
     public static class AsyncEnumerableExtensions
     {

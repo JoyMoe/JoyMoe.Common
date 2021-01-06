@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace JoyMoe.Common.Data.Dapper
@@ -19,15 +17,11 @@ namespace JoyMoe.Common.Data.Dapper
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
-        public override async IAsyncEnumerable<TEntity> ListAsync(
-            bool everything = false,
-            string? predicate = null,
-            [EnumeratorCancellation] CancellationToken ct = default,
-            params object[] values)
+        public override async IAsyncEnumerable<TEntity> ListAsync(string? predicate = null, params object[] values)
         {
-            predicate = FilteringQuery(predicate, everything);
+            predicate = FilteringQuery(predicate);
 
-            var entities = await Connection.ListAsync<TEntity>(predicate, values: values, ct: ct).ConfigureAwait(false);
+            var entities = await Connection.ListAsync<TEntity>(predicate, values).ConfigureAwait(false);
 
             foreach (var entity in entities)
             {
@@ -39,9 +33,7 @@ namespace JoyMoe.Common.Data.Dapper
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            bool everything = false,
             string? predicate = null,
-            CancellationToken ct = default,
             params object[] values)
         {
             var key = selector.GetColumnName();
@@ -56,109 +48,93 @@ namespace JoyMoe.Common.Data.Dapper
                 values[values.GetUpperBound(0)] = before;
             }
 
-            predicate = FilteringQuery(predicate, everything);
+            predicate = FilteringQuery(predicate);
 
             predicate += $" ORDER BY @{key} DESC ";
             predicate += $" LIMIT {size} ";
 
-            return await Connection.ListAsync<TEntity>(predicate, values: values, ct: ct).ConfigureAwait(false);
+            return await Connection.ListAsync<TEntity>(predicate, values).ConfigureAwait(false);
         }
 
-        public override async Task<TEntity?> FirstOrDefaultAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values)
+        public override async Task<TEntity?> FirstOrDefaultAsync(string? predicate = null, params object[] values)
         {
-            predicate = FilteringQuery(predicate, everything);
+            predicate = FilteringQuery(predicate);
 
-            return await Connection.FirstOrDefaultAsync<TEntity>(predicate, values: values, ct: ct).ConfigureAwait(false);
+            return await Connection.FirstOrDefaultAsync<TEntity>(predicate, values).ConfigureAwait(false);
         }
 
-        public override async Task<TEntity?> SingleOrDefaultAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values)
+        public override async Task<TEntity?> SingleOrDefaultAsync(string? predicate = null, params object[] values)
         {
-            predicate = FilteringQuery(predicate, everything);
+            predicate = FilteringQuery(predicate);
 
-            return await Connection.SingleOrDefaultAsync<TEntity>(predicate, values: values, ct: ct).ConfigureAwait(false);
+            return await Connection.SingleOrDefaultAsync<TEntity>(predicate, values).ConfigureAwait(false);
         }
 
-        public override async Task<bool> AnyAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values)
+        public override async Task<bool> AnyAsync(string? predicate = null, params object[] values)
         {
-            var count = await CountAsync(everything, predicate, values: values, ct: ct).ConfigureAwait(false);
+            var count = await CountAsync(predicate, values).ConfigureAwait(false);
 
             return count > 0;
         }
 
-        public override async Task<long> CountAsync(
-            bool everything = false,
-            string? predicate = null,
-            CancellationToken ct = default,
-            params object[] values)
+        public override async Task<long> CountAsync(string? predicate = null, params object[] values)
         {
-            predicate = FilteringQuery(predicate, everything);
+            predicate = FilteringQuery(predicate);
 
-            return await Connection.CountAsync<TEntity>(predicate, values: values, ct: ct).ConfigureAwait(false);
+            return await Connection.CountAsync<TEntity>(predicate, values).ConfigureAwait(false);
         }
 
-        public override async Task AddAsync(TEntity entity, CancellationToken ct = default)
+        public override async Task AddAsync(TEntity entity)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await BeginTransactionAsync(ct).ConfigureAwait(false);
+            await BeginTransactionAsync().ConfigureAwait(false);
 
-            await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
+            await OnBeforeAddAsync(entity).ConfigureAwait(false);
 
-            await Connection.InsertAsync(entity, Transaction, ct).ConfigureAwait(false);
+            await Connection.InsertAsync(entity, Transaction).ConfigureAwait(false);
         }
 
-        public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default)
+        public override async Task UpdateAsync(TEntity entity)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await BeginTransactionAsync(ct).ConfigureAwait(false);
+            await BeginTransactionAsync().ConfigureAwait(false);
 
-            await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
+            await OnBeforeUpdateAsync(entity).ConfigureAwait(false);
 
-            await Connection.UpdateAsync(entity, Transaction, ct).ConfigureAwait(false);
+            await Connection.UpdateAsync(entity, Transaction).ConfigureAwait(false);
         }
 
-        public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default)
+        public override async Task RemoveAsync(TEntity entity)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await BeginTransactionAsync(ct).ConfigureAwait(false);
+            await BeginTransactionAsync().ConfigureAwait(false);
 
-            if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
+            if (await OnBeforeRemoveAsync(entity).ConfigureAwait(false))
             {
-                await Connection.DeleteAsync(entity, Transaction, ct).ConfigureAwait(false);
+                await Connection.DeleteAsync(entity, Transaction).ConfigureAwait(false);
                 return;
             }
 
-            await Connection.UpdateAsync(entity, Transaction, ct).ConfigureAwait(false);
+            await Connection.UpdateAsync(entity, Transaction).ConfigureAwait(false);
         }
 
-        public override async Task<int> CommitAsync(CancellationToken ct = default)
+        public override async Task<int> CommitAsync()
         {
             if (Transaction == null) return 0;
 
-            await Transaction.CommitAsync(ct).ConfigureAwait(false);
+            await Transaction.CommitAsync().ConfigureAwait(false);
 
             Transaction = null;
 
@@ -167,35 +143,16 @@ namespace JoyMoe.Common.Data.Dapper
             return 1;
         }
 
-        private async Task BeginTransactionAsync(CancellationToken ct = default)
+        private async Task BeginTransactionAsync()
         {
             if (Transaction != null) return;
 
             if (Connection.State == ConnectionState.Closed)
             {
-                await Connection.OpenAsync(ct).ConfigureAwait(false);
+                await Connection.OpenAsync().ConfigureAwait(false);
             }
 
-            Transaction = await Connection.BeginTransactionAsync(ct).ConfigureAwait(false);
-        }
-
-        private static string? FilteringQuery(string? predicate, bool everything)
-        {
-            if (everything)
-            {
-                return predicate;
-            }
-
-            if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity)))
-            {
-                return predicate;
-            }
-
-            var filtering = $"@{nameof(ISoftDelete.DeletedAt)} IS NULL";
-
-            return string.IsNullOrEmpty(predicate)
-                ? filtering
-                : $"( {predicate} ) AND {filtering}";
+            Transaction = await Connection.BeginTransactionAsync().ConfigureAwait(false);
         }
     }
 }
