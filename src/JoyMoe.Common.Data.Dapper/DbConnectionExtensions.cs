@@ -246,7 +246,7 @@ namespace JoyMoe.Common.Data.Dapper
                 return cache.ToList();
             }
 
-            var properties = type.GetProperties().ToList();
+            var properties = type.GetProperties().Where(p => !p.IsVirtual()).ToList();
             Properties[type.TypeHandle] = properties;
 
             return properties;
