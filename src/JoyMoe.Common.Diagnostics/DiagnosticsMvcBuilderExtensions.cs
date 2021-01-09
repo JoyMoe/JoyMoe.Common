@@ -22,7 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection AddRfcHealthCheckWriter(this IServiceCollection services)
+        public static IHealthChecksBuilder AddRfcHealthChecks(this IServiceCollection services)
         {
             if (services == null)
             {
@@ -31,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddSingleton<IPostConfigureOptions<HealthCheckOptions>, RfcHealthCheckWriterPostConfigureOptions>();
 
-            return services;
+            return services.AddHealthChecks();
         }
     }
 }
