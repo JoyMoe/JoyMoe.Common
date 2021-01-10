@@ -167,9 +167,30 @@ namespace JoyMoe.Common.Data.EFCore
 
             string sql = string.IsNullOrWhiteSpace(predicate)
                 ? $"SELECT * FROM {name}"
-                : $"SELECT * FROM {name} WHERE {predicate.PrepareSql()}";
+                : $"SELECT * FROM {name} WHERE {PreparePredicate(predicate)}";
 
             return context.Set<TEntity>().FromSqlRaw(sql, values);
+        }
+
+        private static string PreparePredicate(string predicate)
+        {
+            if (string.IsNullOrWhiteSpace(predicate)) return predicate;
+
+            var tokens = new List<string>();
+            foreach (var token in predicate.Split(' '))
+            {
+                if (string.IsNullOrWhiteSpace(token)) continue;
+
+                if (token.IsColumnName())
+                {
+                    tokens.Add(token.EscapeColumnName());
+                    continue;
+                }
+
+                tokens.Add(token);
+            }
+
+            return string.Join(' ', tokens);
         }
     }
 }

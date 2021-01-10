@@ -21,30 +21,19 @@ namespace JoyMoe.Common.Data
             return $"{key.Member.Name}";
         }
 
-        public static string Escape(this string name)
+        public static string Escape(this string token)
         {
-            return $"\"{name}\"";
+            return $"\"{token}\"";
         }
 
-        public static string PrepareSql(this string sql)
+        public static bool IsColumnName(this string token)
         {
-            if (string.IsNullOrWhiteSpace(sql)) return sql;
+            return token.Length >=2 && token[0] == '@' && char.IsLetterOrDigit(token, 1);
+        }
 
-            var tokens = new List<string>();
-            foreach (var token in sql.Split(' '))
-            {
-                if (string.IsNullOrWhiteSpace(token)) continue;
-
-                if (token[0] == '@' && char.IsLetterOrDigit(token, 1))
-                {
-                    tokens.Add(Escape(token[1..]));
-                    continue;
-                }
-
-                tokens.Add(token);
-            }
-
-            return string.Join(' ', tokens);
+        public static string EscapeColumnName(this string token)
+        {
+            return Escape(token[1..]);
         }
     }
 }

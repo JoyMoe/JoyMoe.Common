@@ -15,6 +15,7 @@ namespace JoyMoe.Common.Data.Dapper
 {
     public static class DbConnectionExtensions
     {
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> Tables = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> Keys = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> Properties = new();
 
@@ -42,7 +43,7 @@ namespace JoyMoe.Common.Data.Dapper
         {
             var type = typeof(TEntity);
 
-            var table = type.Name.Pluralize();
+            var table = GetTableName(type);
 
             var i = 0;
 
@@ -83,7 +84,7 @@ namespace JoyMoe.Common.Data.Dapper
 
             var type = typeof(TEntity);
 
-            var table = type.Name.Pluralize();
+            var table = GetTableName(type);
 
             var columnsBuilder = new StringBuilder();
             foreach (var property in GetProperties(type))
@@ -132,7 +133,7 @@ namespace JoyMoe.Common.Data.Dapper
         {
             var type = typeof(TEntity);
 
-            var table = type.Name.Pluralize();
+            var table = GetTableName(type);
 
             var i = 0;
 
@@ -183,7 +184,7 @@ namespace JoyMoe.Common.Data.Dapper
         {
             var type = typeof(TEntity);
 
-            var table = type.Name.Pluralize();
+            var table = GetTableName(type);
 
             var i = 0;
 
@@ -213,6 +214,22 @@ namespace JoyMoe.Common.Data.Dapper
             var sql = $"DELETE FROM {table.Escape()} WHERE {predicate}";
 
             return await connection.ExecuteAsync(BuildCommand(sql, values, transaction)).ConfigureAwait(false);
+        }
+
+        private static string GetTableName(Type type)
+        {
+            if (Tables.TryGetValue(type.TypeHandle, out var name))
+            {
+                return name;
+            }
+
+            var table = GetKeys(type).Count == 1
+                ? type.Name.Pluralize()
+                : type.Name;
+
+            Tables[type.TypeHandle] = table;
+
+            return table;
         }
 
         private static List<PropertyInfo> GetKeys(Type type)
@@ -256,7 +273,7 @@ namespace JoyMoe.Common.Data.Dapper
         {
             var type = typeof(TEntity);
 
-            var table = type.Name.Pluralize();
+            var table = GetTableName(type);
 
             return string.IsNullOrWhiteSpace(predicate)
                 ? $"SELECT * FROM {table.Escape()}"
@@ -286,10 +303,16 @@ namespace JoyMoe.Common.Data.Dapper
                     continue;
                 }
 
+                if (token.IsColumnName())
+                {
+                    tokens.Add(token.EscapeColumnName());
+                    continue;
+                }
+
                 tokens.Add(token);
             }
 
-            sql = string.Join(' ', tokens).PrepareSql();
+            sql = string.Join(' ', tokens);
 
             return new CommandDefinition(sql, parameters, transaction, flags: CommandFlags.None);
         }
