@@ -55,7 +55,7 @@ namespace JoyMoe.Common.Diagnostics
                 throw new ArgumentNullException(nameof(modelStateDictionary));
             }
 
-            statusCode ??= 400;
+            statusCode ??= 422;
 
             var problemDetails = new ValidationProblemDetails(modelStateDictionary)
             {
