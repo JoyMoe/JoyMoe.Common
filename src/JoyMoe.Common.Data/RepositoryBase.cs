@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JoyMoe.Common.Data
@@ -11,15 +12,30 @@ namespace JoyMoe.Common.Data
     {
         public bool IgnoreQueryFilters { get; set; }
 
-        public virtual Task<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id)
+        public Task<TEntity?> FindAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            TKey id,
+            CancellationToken ct = default)
             where TKey : struct
         {
-            IgnoreQueryFilters = true;
+            var key = selector.GetColumn();
 
-            return SingleOrDefaultAsync($"@{selector.GetColumnName()} = {{0}}", id);
+            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+
+            var property = Expression.Property(parameter, key.Member.Name);
+
+            var equipment = Expression.Equal(property, Expression.Constant(id));
+
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);
+
+            IgnoreQueryFilters = true;
+            return SingleOrDefaultAsync(predicate, ct);
         }
 
-        public virtual IAsyncEnumerable<TEntity> FindAllAsync<TKey>(Expression<Func<TEntity, TKey>> selector, IEnumerable<TKey> ids)
+        public IAsyncEnumerable<TEntity> FindAllAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            IEnumerable<TKey> ids,
+            CancellationToken ct = default)
             where TKey : struct
         {
             if (ids == null)
@@ -27,47 +43,75 @@ namespace JoyMoe.Common.Data
                 throw new ArgumentNullException(nameof(ids));
             }
 
-            var i = 0;
-            var sb = new StringBuilder();
-            var keys = new List<object>();
-            foreach (var id in ids)
-            {
-                sb.Append($"{{{i}}}");
-                sb.Append(" , ");
+            var key = selector.GetColumn();
 
-                keys.Add(id);
+            var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
 
-                i++;
-            }
+            var property = Expression.Property(parameter, key.Member.Name);
 
-            sb.Remove(sb.Length - 3, 3);
+            var contains = typeof(Enumerable).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                .MakeGenericMethod(typeof(TKey));
 
-            var list = sb.ToString();
+            var body = Expression.Call(contains, Expression.Constant(ids), property);
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
 
             IgnoreQueryFilters = true;
-
-            return ListAsync($"@{selector.GetColumnName()} IN ( {list} )", keys.ToArray());
+            return ListAsync(predicate, selector, null, ct);
         }
 
-        public abstract IAsyncEnumerable<TEntity> ListAsync(string? predicate = null, params object[] values);
+        public virtual IAsyncEnumerable<TEntity> ListAsync(
+            Expression<Func<TEntity, bool>>? predicate,
+            CancellationToken ct = default)
+        {
+            return ListAsync<int>(predicate, null, null, ct);
+        }
 
-        public abstract Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
+        public abstract IAsyncEnumerable<TEntity> ListAsync<TKey>(
+            Expression<Func<TEntity, bool>>? predicate,
+            Expression<Func<TEntity, TKey>>? ordering,
+            int? limitation,
+            CancellationToken ct = default)
+            where TKey : struct;
+
+        public virtual async Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey? before = null,
             int size = 10,
-            string? predicate = null,
-            params object[] values)
-            where TKey : struct, IComparable;
+            Expression<Func<TEntity, bool>>? predicate = null,
+            CancellationToken ct = default)
+            where TKey : struct, IComparable
+        {
+            if (before != null)
+            {
+                var key = selector.GetColumn();
 
-        public abstract Task<TEntity?> FirstOrDefaultAsync(string? predicate = null, params object[] values);
+                var parameter = predicate == null
+                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+                    : predicate.Parameters[0];
 
-        public abstract Task<TEntity?> SingleOrDefaultAsync(string? predicate = null, params object[] values);
+                var property = Expression.Property(parameter, key.Member.Name);
+                var less = Expression.LessThan(property, Expression.Constant(before));
 
-        public abstract Task<bool> AnyAsync(string? predicate = null, params object[] values);
+                var binary = predicate != null
+                    ? Expression.And(predicate.Body, less)
+                    : less;
 
-        public abstract Task<long> CountAsync(string? predicate = null, params object[] values);
+                predicate = Expression.Lambda<Func<TEntity, bool>>(binary, parameter);
+            }
 
-        public virtual Task OnBeforeAddAsync(TEntity entity)
+            return await ListAsync(predicate, selector, size, ct).ToListAsync(ct).ConfigureAwait(false);
+        }
+
+        public abstract Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+
+        public abstract Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+
+        public abstract Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+
+        public abstract Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+
+        public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
         {
             var now = DateTime.UtcNow;
 
@@ -85,21 +129,21 @@ namespace JoyMoe.Common.Data
             return Task.CompletedTask;
         }
 
-        public abstract Task AddAsync(TEntity entity);
+        public abstract Task AddAsync(TEntity entity, CancellationToken ct = default);
 
-        public virtual Task AddRangeAsync(IEnumerable<TEntity> entities)
+        public virtual Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
         {
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
             }
 
-            var tasks = entities.Select(AddAsync).ToArray();
+            var tasks = entities.Select(e => AddAsync(e, ct)).ToArray();
 
             return Task.WhenAny(tasks);
         }
 
-        public virtual Task OnBeforeUpdateAsync(TEntity entity)
+        public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity is ITimestamp stamp)
             {
@@ -109,9 +153,9 @@ namespace JoyMoe.Common.Data
             return Task.CompletedTask;
         }
 
-        public abstract Task UpdateAsync(TEntity entity);
+        public abstract Task UpdateAsync(TEntity entity, CancellationToken ct = default);
 
-        public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity)
+        public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity is ISoftDelete soft)
             {
@@ -123,23 +167,23 @@ namespace JoyMoe.Common.Data
             return Task.FromResult(true);
         }
 
-        public abstract Task RemoveAsync(TEntity entity);
+        public abstract Task RemoveAsync(TEntity entity, CancellationToken ct = default);
 
-        public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities)
+        public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
         {
             if (entities == null)
             {
                 throw new ArgumentNullException(nameof(entities));
             }
 
-            var tasks = entities.Select(RemoveAsync).ToArray();
+            var tasks = entities.Select(e => RemoveAsync(e, ct)).ToArray();
 
             return Task.WhenAny(tasks);
         }
 
-        public abstract Task<int> CommitAsync();
+        public abstract Task<int> CommitAsync(CancellationToken ct = default);
 
-        protected string? FilteringQuery(string? predicate)
+        protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate)
         {
             if (IgnoreQueryFilters)
             {
@@ -153,11 +197,18 @@ namespace JoyMoe.Common.Data
                 return predicate;
             }
 
-            var filtering = $"@{nameof(ISoftDelete.DeletedAt)} IS NULL";
+            var parameter = predicate == null
+                ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
+                : predicate.Parameters[0];
 
-            return string.IsNullOrEmpty(predicate)
-                ? filtering
-                : $"( {predicate} ) AND {filtering}";
+            var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
+            var equipment = Expression.Equal(property, Expression.Constant(null));
+
+            var binary = predicate != null
+                ? Expression.And(predicate.Body, equipment)
+                : equipment;
+
+            return Expression.Lambda<Func<TEntity, bool>>(binary, parameter);
         }
     }
 }

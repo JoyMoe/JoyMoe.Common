@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using JoyMoe.Common.Data;
@@ -12,14 +13,14 @@ namespace JoyMoe.Common.Mvc.Api
         where TEntity : class, IDataEntity
     {
         public virtual Task<ActionResult<IEnumerable<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
-            Func<string?, object[]?, Task<ActionResult<IEnumerable<TEntity>>>> query)
+            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<IEnumerable<TEntity>>>> query)
         {
             if (query == null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return query(null, null);
+            return query(null);
         }
 
         public virtual Task<ActionResult<TEntity>> Find(HttpContext context, ClaimsPrincipal user,

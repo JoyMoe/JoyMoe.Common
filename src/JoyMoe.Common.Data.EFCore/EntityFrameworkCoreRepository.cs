@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,110 +28,105 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
-        public override IAsyncEnumerable<TEntity> ListAsync(string? predicate = null, params object[] values)
+        public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
+            Expression<Func<TEntity, bool>>? predicate,
+            Expression<Func<TEntity, TKey>>? ordering,
+            int? limitation,
+            [EnumeratorCancellation] CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            return BuildQuery(Context, predicate, values).AsAsyncEnumerable();
-        }
+            var query = BuildQuery(Context, predicate);
 
-        public override async Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
-            Expression<Func<TEntity, TKey>> selector,
-            TKey? before = null,
-            int size = 10,
-            string? predicate = null,
-            params object[] values)
-        {
-            var key = selector.GetColumnName();
-
-            if (before != null)
+            if (ordering != null)
             {
-                predicate = string.IsNullOrEmpty(predicate)
-                    ? $"@{key} < {{{values.Length}}}"
-                    : $"( {predicate} ) AND @{key} < {{{values.Length}}}";
-
-                Array.Resize(ref values, values.Length + 1);
-                values[values.GetUpperBound(0)] = before;
+                query = query.OrderByDescending(ordering);
             }
 
-            predicate = FilteringQuery(predicate);
+            if (limitation.HasValue)
+            {
+                query = query.Take(limitation.Value);
+            }
 
-            return await BuildQuery(Context, predicate, values)
-                .OrderByDescending(selector)
-                .Take(size)
-                .ToListAsync()
-                .ConfigureAwait(false);
+            var enumerable = query
+                .AsAsyncEnumerable()
+                .WithCancellation(ct);
+
+            await foreach (var entity in enumerable)
+            {
+                yield return entity;
+            }
         }
 
-        public override async Task<TEntity?> FirstOrDefaultAsync(string? predicate = null, params object[] values)
+        public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            return await BuildQuery(Context, predicate, values)
-                .FirstOrDefaultAsync()
+            return await BuildQuery(Context, predicate)
+                .FirstOrDefaultAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async Task<TEntity?> SingleOrDefaultAsync(string? predicate = null, params object[] values)
+        public override async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            return await BuildQuery(Context, predicate, values)
-                .SingleOrDefaultAsync()
+            return await BuildQuery(Context, predicate)
+                .SingleOrDefaultAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async Task<bool> AnyAsync(string? predicate = null, params object[] values)
+        public override async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            return await BuildQuery(Context, predicate, values)
-                .AnyAsync()
+            return await BuildQuery(Context, predicate)
+                .AnyAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async Task<long> CountAsync(string? predicate = null, params object[] values)
+        public override async Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            return await BuildQuery(Context, predicate, values)
-                .LongCountAsync()
+            return await BuildQuery(Context, predicate)
+                .LongCountAsync(ct)
                 .ConfigureAwait(false);
         }
 
-        public override async Task AddAsync(TEntity entity)
+        public override async Task AddAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await OnBeforeAddAsync(entity).ConfigureAwait(false);
+            await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
 
-            await Context.AddAsync(entity).ConfigureAwait(false);
+            await Context.AddAsync(entity, ct).ConfigureAwait(false);
         }
 
-        public override async Task UpdateAsync(TEntity entity)
+        public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await OnBeforeUpdateAsync(entity).ConfigureAwait(false);
+            await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
 
             Context.Entry(entity).State = EntityState.Detached;
             Context.Update(entity);
         }
 
-        public override async Task RemoveAsync(TEntity entity)
+        public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            if (await OnBeforeRemoveAsync(entity).ConfigureAwait(false))
+            if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
             {
                 Context.Remove(entity);
                 return;
@@ -139,58 +136,21 @@ namespace JoyMoe.Common.Data.EFCore
             Context.Update(entity);
         }
 
-        public override async Task<int> CommitAsync()
+        public override async Task<int> CommitAsync(CancellationToken ct = default)
         {
-            return await Context.SaveChangesAsync().ConfigureAwait(false);
+            return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
         }
 
-        private static IQueryable<TEntity> BuildQuery(TContext context, string? predicate, params object[] values)
+        private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate)
         {
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (predicate == null)
-            {
-                return context.Set<TEntity>();
-            }
-
-            var type = context.Model.FindEntityType(typeof(TEntity));
-
-            var schema = type.GetSchema();
-            var table = type.GetTableName();
-
-            var name = string.IsNullOrWhiteSpace(schema)
-                ? table.Escape()
-                : $"{schema.Escape()}.{table.Escape()}";
-
-            string sql = string.IsNullOrWhiteSpace(predicate)
-                ? $"SELECT * FROM {name}"
-                : $"SELECT * FROM {name} WHERE {PreparePredicate(predicate)}";
-
-            return context.Set<TEntity>().FromSqlRaw(sql, values);
-        }
-
-        private static string PreparePredicate(string predicate)
-        {
-            if (string.IsNullOrWhiteSpace(predicate)) return predicate;
-
-            var tokens = new List<string>();
-            foreach (var token in predicate.Split(' '))
-            {
-                if (string.IsNullOrWhiteSpace(token)) continue;
-
-                if (token.IsColumnName())
-                {
-                    tokens.Add(token.EscapeColumnName());
-                    continue;
-                }
-
-                tokens.Add(token);
-            }
-
-            return string.Join(' ', tokens);
+            return predicate != null
+                ? context.Set<TEntity>().Where(predicate)
+                : context.Set<TEntity>();
         }
     }
 }
