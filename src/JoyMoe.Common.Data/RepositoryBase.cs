@@ -12,6 +12,11 @@ namespace JoyMoe.Common.Data
     {
         public bool IgnoreQueryFilters { get; set; }
 
+        public Expression<Func<TEntity, bool>> Query(Expression<Func<TEntity, bool>>? predicate = null)
+        {
+            return predicate ?? (e => true);
+        }
+
         public Task<TEntity?> FindAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey id,
@@ -86,18 +91,13 @@ namespace JoyMoe.Common.Data
             {
                 var key = selector.GetColumn();
 
-                var parameter = predicate == null
-                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
-                    : predicate.Parameters[0];
+                var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
 
                 var property = Expression.Property(parameter, key.Member.Name);
                 var less = Expression.LessThan(property, Expression.Constant(before));
+                var lambda = Expression.Lambda<Func<TEntity, bool>>(less, parameter);
 
-                var binary = predicate != null
-                    ? Expression.And(predicate.Body, less)
-                    : less;
-
-                predicate = Expression.Lambda<Func<TEntity, bool>>(binary, parameter);
+                predicate = predicate.And(lambda);
             }
 
             return await ListAsync(predicate, selector, size, ct).ToListAsync(ct).ConfigureAwait(false);
@@ -204,11 +204,9 @@ namespace JoyMoe.Common.Data
             var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
             var equipment = Expression.Equal(property, Expression.Constant(null));
 
-            var binary = predicate != null
-                ? Expression.And(predicate.Body, equipment)
-                : equipment;
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);
 
-            return Expression.Lambda<Func<TEntity, bool>>(binary, parameter);
+            return predicate.And(lambda);
         }
     }
 }

@@ -10,6 +10,8 @@ namespace JoyMoe.Common.Data
     {
         bool IgnoreQueryFilters { get; set; }
 
+        Expression<Func<TEntity, bool>> Query(Expression<Func<TEntity, bool>>? predicate = null);
+
         Task<TEntity?> FindAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey id,

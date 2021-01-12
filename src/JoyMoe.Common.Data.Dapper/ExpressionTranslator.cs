@@ -108,15 +108,31 @@ namespace JoyMoe.Common.Data.Dapper
 
                 case "CompareString":
                 case "Equals":
-                    // TODO: support StringComparison
-
                     if (m.Object?.NodeType == ExpressionType.MemberAccess)
                     {
                         // a.Equals(b)
 
-                        Visit(m.Object);
-                        _sb.Append(" = ");
-                        Visit(m.Arguments[0]);
+                        if (m.Arguments.Count == 2 &&
+                            m.Arguments[1] is ConstantExpression ce &&
+                            ce.Type == typeof(StringComparison) &&
+                            ce.Value?.ToString()?.EndsWith("IgnoreCase") == true)
+                        {
+                            _sb.Append("UPPER(");
+                            Visit(m.Object);
+                            _sb.Append(") = UPPER(");
+                            Visit(m.Arguments[0]);
+                            _sb.Append(')');
+                        }
+                        else if (m.Arguments.Count == 2 || m.Arguments.Count == 1)
+                        {
+                            Visit(m.Object);
+                            _sb.Append(" = ");
+                            Visit(m.Arguments[0]);
+                        }
+                        else
+                        {
+                            goto default;
+                        }
 
                         break;
                     }
@@ -125,9 +141,27 @@ namespace JoyMoe.Common.Data.Dapper
                     {
                         // string.Equals(a, b)
 
-                        Visit(m.Arguments[0]);
-                        _sb.Append(" = ");
-                        Visit(m.Arguments[1]);
+                        if (m.Arguments.Count == 3 &&
+                            m.Arguments[2] is ConstantExpression ce &&
+                            ce.Type == typeof(StringComparison) &&
+                            ce.Value?.ToString()?.EndsWith("IgnoreCase") == true)
+                        {
+                            _sb.Append("UPPER(");
+                            Visit(m.Arguments[0]);
+                            _sb.Append(") = UPPER(");
+                            Visit(m.Arguments[1]);
+                            _sb.Append(')');
+                        }
+                        else if (m.Arguments.Count == 3 || m.Arguments.Count == 2)
+                        {
+                            Visit(m.Arguments[0]);
+                            _sb.Append(" = ");
+                            Visit(m.Arguments[1]);
+                        }
+                        else
+                        {
+                            goto default;
+                        }
 
                         break;
                     }
@@ -154,6 +188,7 @@ namespace JoyMoe.Common.Data.Dapper
                     Visit(u.Operand);
                     break;
                 case ExpressionType.Convert:
+                    // TODO: Enum to String
                     Visit(u.Operand);
                     break;
                 default:
@@ -261,24 +296,24 @@ namespace JoyMoe.Common.Data.Dapper
                 throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
             }
 
-            if (m.Expression.NodeType == ExpressionType.MemberAccess)
+            if (m.NodeType == ExpressionType.MemberAccess && m.Expression.NodeType != ExpressionType.Parameter)
             {
                 var item = Expression.Lambda<Func<object>>(Expression.Convert(m, typeof(object)))
                     .Compile()
                     .Invoke();
 
-                AppendParameter(item);
+                Visit(Expression.Constant(item));
 
                 return m;
             }
 
-            if (m.Expression.NodeType != ExpressionType.Parameter)
+            if (m.Expression.NodeType == ExpressionType.Parameter)
             {
-                Visit(m.Expression);
+                _adapter.AppendColumnName(_sb, m.Member.Name);
                 return m;
             }
 
-            _adapter.AppendColumnName(_sb, m.Member.Name);
+            Visit(m.Expression);
 
             return m;
         }
