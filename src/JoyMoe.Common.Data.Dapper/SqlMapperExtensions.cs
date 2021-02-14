@@ -23,6 +23,7 @@ namespace Dapper.Contrib
     {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> KeyProperties = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> TypeProperties = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, PropertyInfo?> VersionProperty = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> TypeTableName = new();
 
         private static readonly ISqlAdapter DefaultAdapter = new SqlServerAdapter();
@@ -204,6 +205,15 @@ namespace Dapper.Contrib
             adapter.AppendColumnName(sb, name);
             sb.Append(" SET ");
 
+            var versionProperty = VersionPropertyCache(type!);
+            if (versionProperty != null)
+            {
+                adapter.AppendColumnName(sb, versionProperty.Name);
+                sb.AppendFormat(" = \'{0}\', ", Guid.NewGuid());
+
+                keyProperties.Add(versionProperty);
+            }
+
             var allProperties = TypePropertiesCache(type!);
             var nonIdProps = allProperties.Except(keyProperties).ToList();
 
@@ -318,6 +328,20 @@ namespace Dapper.Contrib
             var properties = type.GetProperties().Where(IsNotVirtual).ToArray();
             TypeProperties[type.TypeHandle] = properties;
             return properties.ToList();
+        }
+
+        private static PropertyInfo? VersionPropertyCache(Type type)
+        {
+            if (VersionProperty.TryGetValue(type.TypeHandle, out var pi))
+            {
+                return pi;
+            }
+
+            var allProperties = TypePropertiesCache(type);
+            var versionProperty = allProperties.FirstOrDefault(p => p.GetCustomAttributes(true).Any(a => a is TimestampAttribute));
+
+            VersionProperty[type.TypeHandle] = versionProperty;
+            return versionProperty;
         }
 
         private static bool IsNotVirtual(PropertyInfo method)
