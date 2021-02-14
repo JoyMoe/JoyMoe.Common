@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Dapper.Contrib;
 
 namespace JoyMoe.Common.Data.Dapper
@@ -115,7 +116,16 @@ namespace JoyMoe.Common.Data.Dapper
         {
             if (Transaction == null) return 0;
 
-            await Transaction.CommitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                await Transaction.CommitAsync(ct).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                await Transaction.RollbackAsync(ct).ConfigureAwait(false);
+
+                throw new TransactionAbortedException(ex.Message, ex);
+            }
 
             Transaction = null;
 
