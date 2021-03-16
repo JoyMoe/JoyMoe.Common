@@ -344,14 +344,17 @@ namespace Dapper.Contrib
             return versionProperty;
         }
 
-        private static bool IsNotVirtual(PropertyInfo method)
+        private static bool IsNotVirtual(PropertyInfo property)
         {
-            if (!method.CanRead) return false;
+            if (!property.CanRead) return false;
 
-            var getter = method.GetGetMethod();
+            var getter = property.GetGetMethod();
             if (getter == null) return false;
 
-            return !getter.IsVirtual || getter.IsFinal;
+            if (getter.IsVirtual) return false;
+            if (!getter.IsFinal) return false;
+
+            return !property.GetCustomAttributes(true).Any(a => a is NotMappedAttribute);
         }
 
         private static string GetTableName(Type type)
