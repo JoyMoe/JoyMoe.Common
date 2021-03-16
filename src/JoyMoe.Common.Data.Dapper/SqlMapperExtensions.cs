@@ -358,10 +358,7 @@ namespace Dapper.Contrib
         {
             if (TypeTableName.TryGetValue(type.TypeHandle, out var name)) return name;
 
-            //NOTE: This as dynamic trick falls back to handle both our own Table-attribute as well as the one in EntityFramework
-            var tableAttrName =
-                type.GetCustomAttribute<TableAttribute>(false)?.Name
-                ?? (type.GetCustomAttributes(false).FirstOrDefault(attr => attr.GetType().Name == "TableAttribute") as dynamic)?.Name;
+            var tableAttrName = type.GetCustomAttribute<TableAttribute>(false)?.Name;
 
             if (tableAttrName != null)
             {
