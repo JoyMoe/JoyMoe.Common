@@ -15,7 +15,7 @@ namespace JoyMoe.Common.Data.Dapper.Tests
             Assert.Equal("(\"Id\" = 1)", clause);
             Assert.Null(parameters);
 
-            var student = new Student {Id = 1};
+            var student = new Student { Id = 1 };
             (clause, parameters) = Translate(s => s.Id == student.Id);
             Assert.Equal("(\"Id\" = 1)", clause);
             Assert.Null(parameters);

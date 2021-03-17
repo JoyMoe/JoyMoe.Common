@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DbMocker" />
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\JoyMoe.Common.Data.Dapper\JoyMoe.Common.Data.Dapper.csproj" />
   </ItemGroup>
 

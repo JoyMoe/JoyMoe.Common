@@ -120,7 +120,7 @@ namespace JoyMoe.Common.Data.Dapper
             {
                 await Transaction.CommitAsync(ct).ConfigureAwait(false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await Transaction.RollbackAsync(ct).ConfigureAwait(false);
 

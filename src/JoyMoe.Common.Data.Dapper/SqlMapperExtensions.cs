@@ -19,7 +19,7 @@ namespace Dapper.Contrib
     /// codes from https://github.com/StackExchange/Dapper/tree/main/Dapper.Contrib
     /// the Apache 2.0 License
     /// </summary>
-    internal static class SqlMapperExtensions
+    public static class SqlMapperExtensions
     {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> KeyProperties = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> TypeProperties = new();
@@ -307,7 +307,7 @@ namespace Dapper.Contrib
 
             if (keyProperties.Count == 0)
             {
-                var idProperty = allProperties.Find(p => string.Equals(p.Name, "id", StringComparison.CurrentCultureIgnoreCase));
+                var idProperty = allProperties.Find(p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
                 if (idProperty != null)
                 {
                     keyProperties.Add(idProperty);
@@ -350,9 +350,6 @@ namespace Dapper.Contrib
 
             var getter = property.GetGetMethod();
             if (getter == null) return false;
-
-            if (getter.IsVirtual) return false;
-            if (!getter.IsFinal) return false;
 
             return !property.HasCustomAttribute<NotMappedAttribute>(false);
         }
