@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper.StrongName" />
-    <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 
   <ItemGroup>

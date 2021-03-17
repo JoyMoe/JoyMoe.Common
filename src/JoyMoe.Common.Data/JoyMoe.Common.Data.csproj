@@ -10,4 +10,8 @@
     <PackageTags>database;datasource;repository;timestamp</PackageTags>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" />
+  </ItemGroup>
+
 </Project>
