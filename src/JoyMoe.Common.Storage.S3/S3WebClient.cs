@@ -141,7 +141,7 @@ namespace JoyMoe.Common.Storage.S3
             }
 
             var uri = Uri.EscapeDataString(message.RequestUri!.AbsolutePath)
-                .Replace("%2F", "/", StringComparison.InvariantCulture);
+                .Replace("%2F", "/", StringComparison.InvariantCultureIgnoreCase);
             var query = string.Join("&", message.RequestUri!
                 .ToQueryKeyValuePairs()
                 .OrderBy(q => q.Key)

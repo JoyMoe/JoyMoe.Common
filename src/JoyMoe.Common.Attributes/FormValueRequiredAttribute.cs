@@ -24,10 +24,10 @@ namespace JoyMoe.Common.Attributes
                 throw new ArgumentNullException(nameof(routeContext));
             }
 
-            if (string.Equals(routeContext.HttpContext.Request.Method, "GET", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(routeContext.HttpContext.Request.Method, "HEAD", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(routeContext.HttpContext.Request.Method, "DELETE", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(routeContext.HttpContext.Request.Method, "TRACE", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(routeContext.HttpContext.Request.Method, "GET", StringComparison.InvariantCultureIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "HEAD", StringComparison.InvariantCultureIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "DELETE", StringComparison.InvariantCultureIgnoreCase) ||
+                string.Equals(routeContext.HttpContext.Request.Method, "TRACE", StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }
@@ -37,7 +37,7 @@ namespace JoyMoe.Common.Attributes
                 return false;
             }
 
-            if (!routeContext.HttpContext.Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            if (!routeContext.HttpContext.Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }

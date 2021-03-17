@@ -40,35 +40,35 @@ namespace System
                 return text.Substring(0, text.Length - 1) + "ies";
             }
 
-            if (text.EndsWith("us", StringComparison.InvariantCultureIgnoreCase))
+            if (text.EndsWith("us", StringComparison.OrdinalIgnoreCase))
             {
                 // http://en.wikipedia.org/wiki/Plural_form_of_words_ending_in_-us
                 return text + "es";
             }
 
-            if (text.EndsWith("ss", StringComparison.InvariantCultureIgnoreCase))
+            if (text.EndsWith("ss", StringComparison.OrdinalIgnoreCase))
             {
                 return text + "es";
             }
 
-            if (text.EndsWith("s", StringComparison.InvariantCultureIgnoreCase))
+            if (text.EndsWith("s", StringComparison.OrdinalIgnoreCase))
             {
                 return text;
             }
 
-            if (text.EndsWith("x", StringComparison.InvariantCultureIgnoreCase) ||
-                text.EndsWith("ch", StringComparison.InvariantCultureIgnoreCase) ||
-                text.EndsWith("sh", StringComparison.InvariantCultureIgnoreCase))
+            if (text.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
+                text.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
+                text.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             {
                 return text + "es";
             }
 
-            if (text.EndsWith("f", StringComparison.InvariantCultureIgnoreCase) && text.Length > 1)
+            if (text.EndsWith("f", StringComparison.OrdinalIgnoreCase) && text.Length > 1)
             {
                 return text.Substring(0, text.Length - 1) + "ves";
             }
 
-            if (text.EndsWith("fe", StringComparison.InvariantCultureIgnoreCase) && text.Length > 2)
+            if (text.EndsWith("fe", StringComparison.OrdinalIgnoreCase) && text.Length > 2)
             {
                 return text.Substring(0, text.Length - 2) + "ves";
             }

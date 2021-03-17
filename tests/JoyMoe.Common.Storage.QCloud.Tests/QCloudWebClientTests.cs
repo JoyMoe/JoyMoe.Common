@@ -53,9 +53,9 @@ namespace JoyMoe.Common.Storage.QCloud.Tests
                 Times.Exactly(1),
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.Method == HttpMethod.Get &&
-                    req.Headers.FindFirstValue("Authorization")!.Contains("q-header-list=date;host", StringComparison.InvariantCulture) &&
-                    req.Headers.FindFirstValue("Authorization")!.Contains("q-url-param-list=response-cache-control;response-content-type", StringComparison.InvariantCulture) &&
-                    req.Headers.FindFirstValue("Authorization")!.Contains("q-signature=01681b8c9d798a678e43b685a9f1bba0f6c0e012", StringComparison.InvariantCulture)),
+                    req.Headers.FindFirstValue("Authorization")!.Contains("q-header-list=date;host", StringComparison.InvariantCultureIgnoreCase) &&
+                    req.Headers.FindFirstValue("Authorization")!.Contains("q-url-param-list=response-cache-control;response-content-type", StringComparison.InvariantCultureIgnoreCase) &&
+                    req.Headers.FindFirstValue("Authorization")!.Contains("q-signature=01681b8c9d798a678e43b685a9f1bba0f6c0e012", StringComparison.InvariantCultureIgnoreCase)),
                 ItExpr.IsAny<CancellationToken>());
         }
 
@@ -89,8 +89,8 @@ namespace JoyMoe.Common.Storage.QCloud.Tests
                 Times.Exactly(1),
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.Method == HttpMethod.Put &&
-                    req.Headers.FindFirstValue("Authorization")!.Contains("q-header-list=content-length;content-md5;content-type;date;host;x-cos-acl;x-cos-grant-read", StringComparison.InvariantCulture) &&
-                    req.Headers.FindFirstValue("Authorization")!.Contains("q-signature=3b8851a11a569213c17ba8fa7dcf2abec6935172", StringComparison.InvariantCulture)),
+                    req.Headers.FindFirstValue("Authorization")!.Contains("q-header-list=content-length;content-md5;content-type;date;host;x-cos-acl;x-cos-grant-read", StringComparison.InvariantCultureIgnoreCase) &&
+                    req.Headers.FindFirstValue("Authorization")!.Contains("q-signature=3b8851a11a569213c17ba8fa7dcf2abec6935172", StringComparison.InvariantCultureIgnoreCase)),
                 ItExpr.IsAny<CancellationToken>());
         }
 
