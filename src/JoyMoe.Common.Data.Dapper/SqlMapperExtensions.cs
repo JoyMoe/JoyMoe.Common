@@ -215,13 +215,13 @@ namespace Dapper.Contrib
             }
 
             var allProperties = TypePropertiesCache(type!);
-            var nonIdProps = allProperties.Except(keyProperties).ToList();
+            var nonIdProperties = allProperties.Except(keyProperties).ToList();
 
-            for (var i = 0; i < nonIdProps.Count; i++)
+            for (var i = 0; i < nonIdProperties.Count; i++)
             {
-                var property = nonIdProps[i];
+                var property = nonIdProperties[i];
                 adapter.AppendColumnNameEqualsValue(sb, property.Name);
-                if (i < nonIdProps.Count - 1)
+                if (i < nonIdProperties.Count - 1)
                 {
                     sb.Append(", ");
                 }
@@ -303,14 +303,14 @@ namespace Dapper.Contrib
             }
 
             var allProperties = TypePropertiesCache(type);
-            var keyProperties = allProperties.Where(p => p.GetCustomAttributes(true).Any(a => a is KeyAttribute)).ToList();
+            var keyProperties = allProperties.Where(p => p.HasCustomAttribute<KeyAttribute>(true)).ToList();
 
             if (keyProperties.Count == 0)
             {
-                var idProp = allProperties.Find(p => string.Equals(p.Name, "id", StringComparison.CurrentCultureIgnoreCase));
-                if (idProp != null)
+                var idProperty = allProperties.Find(p => string.Equals(p.Name, "id", StringComparison.CurrentCultureIgnoreCase));
+                if (idProperty != null)
                 {
-                    keyProperties.Add(idProp);
+                    keyProperties.Add(idProperty);
                 }
             }
 
@@ -338,7 +338,7 @@ namespace Dapper.Contrib
             }
 
             var allProperties = TypePropertiesCache(type);
-            var versionProperty = allProperties.FirstOrDefault(p => p.GetCustomAttributes(true).Any(a => a is TimestampAttribute));
+            var versionProperty = allProperties.FirstOrDefault(p => p.HasCustomAttribute<TimestampAttribute>(true));
 
             VersionProperty[type.TypeHandle] = versionProperty;
             return versionProperty;
@@ -354,7 +354,7 @@ namespace Dapper.Contrib
             if (getter.IsVirtual) return false;
             if (!getter.IsFinal) return false;
 
-            return !property.GetCustomAttributes(true).Any(a => a is NotMappedAttribute);
+            return !property.HasCustomAttribute<NotMappedAttribute>(false);
         }
 
         private static string GetTableName(Type type)
