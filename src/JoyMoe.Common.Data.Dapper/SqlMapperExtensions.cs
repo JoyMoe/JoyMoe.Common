@@ -21,8 +21,8 @@ namespace Dapper.Contrib
     /// </summary>
     public static class SqlMapperExtensions
     {
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> KeyProperties = new();
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> TypeProperties = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> KeyProperties = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> TypeProperties = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, PropertyInfo?> VersionProperty = new();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> TypeTableName = new();
 
@@ -193,7 +193,7 @@ namespace Dapper.Contrib
                 }
             }
 
-            var keyProperties = KeyPropertiesCache(type!).ToList();
+            var keyProperties = KeyPropertiesCache(type!);
             if (keyProperties.Count == 0)
             {
                 throw new ArgumentException("Entity must have at least one [Key]");
@@ -276,17 +276,16 @@ namespace Dapper.Contrib
             }
 
             var name = GetTableName(type!);
-            var allKeyProperties = keyProperties.ToList();
 
             var sb = new StringBuilder("DELETE FROM ");
             adapter.AppendColumnName(sb, name);
             sb.Append(" WHERE ");
 
-            for (var i = 0; i < allKeyProperties.Count; i++)
+            for (var i = 0; i < keyProperties.Count; i++)
             {
-                var property = allKeyProperties[i];
+                var property = keyProperties[i];
                 adapter.AppendColumnNameEqualsValue(sb, property.Name);
-                if (i < allKeyProperties.Count - 1)
+                if (i < keyProperties.Count - 1)
                 {
                     sb.Append(" AND ");
                 }
@@ -295,11 +294,11 @@ namespace Dapper.Contrib
             return await connection.ExecuteAsync(sb.ToString(), entityToDelete, transaction, timeout).ConfigureAwait(false);
         }
 
-        private static List<PropertyInfo> KeyPropertiesCache(Type type)
+        private static IList<PropertyInfo> KeyPropertiesCache(Type type)
         {
             if (KeyProperties.TryGetValue(type.TypeHandle, out var pi))
             {
-                return pi.ToList();
+                return pi;
             }
 
             var allProperties = TypePropertiesCache(type);
@@ -307,7 +306,7 @@ namespace Dapper.Contrib
 
             if (keyProperties.Count == 0)
             {
-                var idProperty = allProperties.Find(p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
+                var idProperty = allProperties.FirstOrDefault(p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
                 if (idProperty != null)
                 {
                     keyProperties.Add(idProperty);
@@ -318,16 +317,16 @@ namespace Dapper.Contrib
             return keyProperties;
         }
 
-        private static List<PropertyInfo> TypePropertiesCache(Type type)
+        private static IList<PropertyInfo> TypePropertiesCache(Type type)
         {
             if (TypeProperties.TryGetValue(type.TypeHandle, out var pis))
             {
-                return pis.ToList();
+                return pis;
             }
 
-            var properties = type.GetProperties().Where(IsNotVirtual).ToArray();
+            var properties = type.GetProperties().Where(IsNotVirtual).ToList();
             TypeProperties[type.TypeHandle] = properties;
-            return properties.ToList();
+            return properties;
         }
 
         private static PropertyInfo? VersionPropertyCache(Type type)
