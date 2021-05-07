@@ -12,11 +12,6 @@ namespace JoyMoe.Common.Data
     {
         public bool IgnoreQueryFilters { get; set; }
 
-        public Expression<Func<TEntity, bool>> Query(Expression<Func<TEntity, bool>>? predicate = null)
-        {
-            return predicate ?? (e => true);
-        }
-
         public Task<TEntity?> FindAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
             TKey id,
@@ -34,6 +29,7 @@ namespace JoyMoe.Common.Data
             var predicate = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);
 
             IgnoreQueryFilters = true;
+
             return SingleOrDefaultAsync(predicate, ct);
         }
 
@@ -62,14 +58,16 @@ namespace JoyMoe.Common.Data
             var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
 
             IgnoreQueryFilters = true;
+
             return ListAsync(predicate, selector, null, ct);
         }
 
-        public virtual IAsyncEnumerable<TEntity> ListAsync(
+        public virtual IAsyncEnumerable<TEntity> ListAsync<TKey>(
             Expression<Func<TEntity, bool>>? predicate,
             CancellationToken ct = default)
+            where TKey : struct
         {
-            return ListAsync<int>(predicate, null, null, ct);
+            return ListAsync<TKey>(predicate, null, null, ct);
         }
 
         public abstract IAsyncEnumerable<TEntity> ListAsync<TKey>(
