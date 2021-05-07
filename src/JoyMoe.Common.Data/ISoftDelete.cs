@@ -4,6 +4,6 @@ namespace JoyMoe.Common.Data
 {
     public interface ISoftDelete
     {
-        DateTime? DeletedAt { get; set; }
+        DateTime? DeletionDate { get; set; }
     }
 }

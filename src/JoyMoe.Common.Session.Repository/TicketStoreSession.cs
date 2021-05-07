@@ -15,9 +15,15 @@ namespace JoyMoe.Common.Session.Repository
         public byte[] Value { get; set; } = null!;
 #pragma warning restore CA1819 // Properties should not return arrays
 
-        public DateTime? ExpiresAt { get; set; }
+        public DateTime? ExpirationDate { get; set; }
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime CreationDate { get; set; }
+
+        public DateTime ModificationDate { get; set; }
+
+        public TicketStoreSession()
+        {
+            Id = Guid.NewGuid();
+        }
     }
 }

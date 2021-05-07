@@ -115,13 +115,13 @@ namespace JoyMoe.Common.Data
 
             if (entity is ITimestamp stamp)
             {
-                stamp.CreatedAt = now;
-                stamp.UpdatedAt = now;
+                stamp.CreationDate = now;
+                stamp.ModificationDate = now;
             }
 
             if (entity is ISoftDelete soft)
             {
-                soft.DeletedAt = null;
+                soft.DeletionDate = null;
             }
 
             return Task.CompletedTask;
@@ -145,7 +145,7 @@ namespace JoyMoe.Common.Data
         {
             if (entity is ITimestamp stamp)
             {
-                stamp.UpdatedAt = DateTime.UtcNow;
+                stamp.ModificationDate = DateTime.UtcNow;
             }
 
             return Task.CompletedTask;
@@ -157,7 +157,7 @@ namespace JoyMoe.Common.Data
         {
             if (entity is ISoftDelete soft)
             {
-                soft.DeletedAt = DateTime.UtcNow;
+                soft.DeletionDate = DateTime.UtcNow;
 
                 return Task.FromResult(false);
             }
@@ -199,7 +199,7 @@ namespace JoyMoe.Common.Data
                 ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
                 : predicate.Parameters[0];
 
-            var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedAt));
+            var property = Expression.Property(parameter, nameof(ISoftDelete.DeletionDate));
             var equipment = Expression.Equal(property, Expression.Constant(null));
 
             var lambda = Expression.Lambda<Func<TEntity, bool>>(equipment, parameter);

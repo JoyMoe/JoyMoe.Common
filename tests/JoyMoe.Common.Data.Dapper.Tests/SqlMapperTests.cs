@@ -15,8 +15,8 @@ namespace JoyMoe.Common.Data.Dapper.Tests
             FirstName = "Carolyne",
             LastName = "Sophia",
             Timestamp = Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreationDate = DateTime.UtcNow,
+            ModificationDate = DateTime.UtcNow
         };
 
         [Fact]
@@ -30,8 +30,8 @@ namespace JoyMoe.Common.Data.Dapper.Tests
                 .ReturnsTable(CreateMockTable().AddRow(Student.Id, Student.FirstName, Student.LastName,
                     Student.Grade,
                     Student.Timestamp,
-                    Student.CreatedAt, Student.UpdatedAt,
-                    Student.DeletedAt));
+                    Student.CreationDate, Student.ModificationDate,
+                    Student.DeletionDate));
 
             var result = (await conn.QueryAsync<Student>(s => s.Id == 1)).ToArray();
             Assert.Single(result);
@@ -43,7 +43,7 @@ namespace JoyMoe.Common.Data.Dapper.Tests
         {
             var conn = new MockDbConnection();
 
-            const string sql = "INSERT INTO [Students] ([Grade], [Id], [FirstName], [LastName], [Timestamp], [CreatedAt], [UpdatedAt], [DeletedAt]) VALUES (@Grade, @Id, @FirstName, @LastName, @Timestamp, @CreatedAt, @UpdatedAt, @DeletedAt)";
+            const string sql = "INSERT INTO [Students] ([Grade], [Id], [FirstName], [LastName], [Timestamp], [CreationDate], [ModificationDate], [DeletionDate]) VALUES (@Grade, @Id, @FirstName, @LastName, @Timestamp, @CreationDate, @ModificationDate, @DeletionDate)";
 
             conn.Mocks.When(cmd => cmd.CommandText == sql && cmd.Parameters.Count() == 8)
                 .ReturnsRow(1);
@@ -57,7 +57,7 @@ namespace JoyMoe.Common.Data.Dapper.Tests
         {
             var conn = new MockDbConnection();
 
-            const string sql = "UPDATE [Students] SET [Grade] = @Grade, [FirstName] = @FirstName, [LastName] = @LastName, [Timestamp] = @Timestamp, [CreatedAt] = @CreatedAt, [UpdatedAt] = @UpdatedAt, [DeletedAt] = @DeletedAt WHERE [Id] = @Id";
+            const string sql = "UPDATE [Students] SET [Grade] = @Grade, [FirstName] = @FirstName, [LastName] = @LastName, [Timestamp] = @Timestamp, [CreationDate] = @CreationDate, [ModificationDate] = @ModificationDate, [DeletionDate] = @DeletionDate WHERE [Id] = @Id";
 
             conn.Mocks.When(cmd => cmd.CommandText == sql && cmd.Parameters.Count() == 8)
                 .ReturnsRow(1);
@@ -86,8 +86,8 @@ namespace JoyMoe.Common.Data.Dapper.Tests
                 nameof(Tests.Student.Id), nameof(Tests.Student.FirstName), nameof(Tests.Student.LastName),
                 nameof(Tests.Student.Grade),
                 nameof(Tests.Student.Timestamp),
-                nameof(Tests.Student.CreatedAt), nameof(Tests.Student.UpdatedAt),
-                nameof(Tests.Student.DeletedAt));
+                nameof(Tests.Student.CreationDate), nameof(Tests.Student.ModificationDate),
+                nameof(Tests.Student.DeletionDate));
         }
     }
 }

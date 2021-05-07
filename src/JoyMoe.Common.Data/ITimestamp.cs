@@ -4,8 +4,8 @@ namespace JoyMoe.Common.Data
 {
     public interface ITimestamp
     {
-        DateTime CreatedAt { get; set; }
+        DateTime CreationDate { get; set; }
 
-        DateTime UpdatedAt { get; set; }
+        DateTime ModificationDate { get; set; }
     }
 }

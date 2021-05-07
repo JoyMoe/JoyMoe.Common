@@ -43,13 +43,12 @@ namespace JoyMoe.Common.Session.Repository
 
             var entity = new TSession
             {
-                Id = Guid.NewGuid(),
                 User = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
                 Type = ticket.AuthenticationScheme,
                 Value = SerializeToBytes(ticket),
-                ExpiresAt = ticket.Properties.ExpiresUtc?.UtcDateTime,
-                CreatedAt = ticket.Properties.IssuedUtc?.UtcDateTime ?? now,
-                UpdatedAt = now
+                ExpirationDate = ticket.Properties.ExpiresUtc?.UtcDateTime,
+                CreationDate = ticket.Properties.IssuedUtc?.UtcDateTime ?? now,
+                ModificationDate = now
             };
 
             await repository.AddAsync(entity).ConfigureAwait(false);
@@ -75,8 +74,8 @@ namespace JoyMoe.Common.Session.Repository
             if (entity == null) return;
 
             entity.Value = SerializeToBytes(ticket);
-            entity.ExpiresAt = ticket.Properties.ExpiresUtc?.UtcDateTime;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.ExpirationDate = ticket.Properties.ExpiresUtc?.UtcDateTime;
+            entity.ModificationDate = DateTime.UtcNow;
 
             await repository.UpdateAsync(entity).ConfigureAwait(false);
             await repository.CommitAsync().ConfigureAwait(false);
@@ -93,17 +92,17 @@ namespace JoyMoe.Common.Session.Repository
             var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
             if (entity == null) return null;
 
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.ModificationDate = DateTime.UtcNow;
 
             await repository.UpdateAsync(entity).ConfigureAwait(false);
             await repository.CommitAsync().ConfigureAwait(false);
 
             var ticket = DeserializeFromBytes(entity.Value);
 
-            ticket.Properties.ExpiresUtc = entity.ExpiresAt != null
-                ? DateTime.SpecifyKind(entity.ExpiresAt.Value, DateTimeKind.Utc)
+            ticket.Properties.ExpiresUtc = entity.ExpirationDate != null
+                ? DateTime.SpecifyKind(entity.ExpirationDate.Value, DateTimeKind.Utc)
                 : null;
-            ticket.Properties.IssuedUtc = DateTime.SpecifyKind(entity.CreatedAt, DateTimeKind.Utc);
+            ticket.Properties.IssuedUtc = DateTime.SpecifyKind(entity.CreationDate, DateTimeKind.Utc);
 
             return ticket;
         }
