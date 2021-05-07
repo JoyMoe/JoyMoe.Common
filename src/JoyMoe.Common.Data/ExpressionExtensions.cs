@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace JoyMoe.Common.Data
@@ -25,17 +24,17 @@ namespace JoyMoe.Common.Data
             this Expression<Func<TEntity, bool>>? left,
             Expression<Func<TEntity, bool>>? right)
         {
-            return CombineLambdas(left, right, ExpressionType.AndAlso);
+            return CombinePredicates(left, right, ExpressionType.AndAlso);
         }
 
         public static Expression<Func<TEntity, bool>>? Or<TEntity>(
             this Expression<Func<TEntity, bool>>? left,
             Expression<Func<TEntity, bool>>? right)
         {
-            return CombineLambdas(left, right, ExpressionType.OrElse);
+            return CombinePredicates(left, right, ExpressionType.OrElse);
         }
 
-        private static Expression<Func<T, bool>>? CombineLambdas<T>(
+        private static Expression<Func<T, bool>>? CombinePredicates<T>(
             this Expression<Func<T, bool>>? left,
             Expression<Func<T, bool>>? right,
             ExpressionType expressionType)
@@ -49,35 +48,12 @@ namespace JoyMoe.Common.Data
                 return right;
             }
 
-            var parameter = left.Parameters[0];
+            var lp = left.Parameters[0];
+            var rp = right.Parameters[0];
 
-            ParameterVisitor visitor = new(right.Parameters[0], parameter);
+            var body = Expression.MakeBinary(expressionType, left.Body, rp ?? lp);
 
-            var rb = visitor.Visit(right.Body);
-
-            if (rb == null)
-            {
-                throw new ArgumentNullException(nameof(right));
-            }
-
-            var body = Expression.MakeBinary(expressionType, left.Body, rb);
-
-            return Expression.Lambda<Func<T, bool>>(body, parameter);
-        }
-
-        private class ParameterVisitor : ExpressionVisitor
-        {
-            private readonly KeyValuePair<Expression, Expression> _substitute;
-
-            public ParameterVisitor(Expression parameter, Expression substitute )
-            {
-                _substitute = new KeyValuePair<Expression, Expression>(parameter, substitute);
-            }
-
-            protected override Expression VisitParameter(ParameterExpression node)
-            {
-                return _substitute.Key == node ? _substitute.Value : node;
-            }
+            return Expression.Lambda<Func<T, bool>>(body, lp);
         }
     }
 }
