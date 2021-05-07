@@ -17,9 +17,9 @@ namespace JoyMoe.Common.Session.Repository
 
         public DateTime? ExpirationDate { get; set; }
 
-        public DateTime CreationDate { get; set; }
+        public DateTime? CreationDate { get; set; }
 
-        public DateTime ModificationDate { get; set; }
+        public DateTime? ModificationDate { get; set; }
 
         public TicketStoreSession()
         {

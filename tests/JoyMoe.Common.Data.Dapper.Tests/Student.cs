@@ -12,9 +12,9 @@ namespace JoyMoe.Common.Data.Dapper.Tests
 
         public virtual Guid Timestamp { get; set; }
 
-        public virtual DateTime CreationDate { get; set; }
+        public virtual DateTime? CreationDate { get; set; }
 
-        public virtual DateTime ModificationDate { get; set; }
+        public virtual DateTime? ModificationDate { get; set; }
 
         public virtual DateTime? DeletionDate { get; set; }
     }

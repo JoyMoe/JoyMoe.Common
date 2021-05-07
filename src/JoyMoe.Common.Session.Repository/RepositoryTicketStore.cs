@@ -102,7 +102,9 @@ namespace JoyMoe.Common.Session.Repository
             ticket.Properties.ExpiresUtc = entity.ExpirationDate != null
                 ? DateTime.SpecifyKind(entity.ExpirationDate.Value, DateTimeKind.Utc)
                 : null;
-            ticket.Properties.IssuedUtc = DateTime.SpecifyKind(entity.CreationDate, DateTimeKind.Utc);
+            ticket.Properties.IssuedUtc = entity.CreationDate != null
+                ? DateTime.SpecifyKind(entity.CreationDate.Value, DateTimeKind.Utc)
+                : null;
 
             return ticket;
         }
