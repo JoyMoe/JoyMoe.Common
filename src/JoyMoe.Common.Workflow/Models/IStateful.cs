@@ -2,12 +2,12 @@ namespace JoyMoe.Common.Workflow.Models
 {
     public interface IStateful
     {
-        public string State { get; set; }
+        string? State { get; set; }
 
-        public string Note { get; set; }
+        string? Note { get; set; }
 
-        public long? LastUpdatedById { get; set; }
+        long? LastUpdatedById { get; set; }
 
-        public string LastUpdatedBy { get; set; }
+        string? LastUpdatedBy { get; set; }
     }
 }

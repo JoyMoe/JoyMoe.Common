@@ -10,7 +10,7 @@ namespace JoyMoe.Common.Data.Dapper.Tests
 
         public virtual string LastName { get; set; } = null!;
 
-        public virtual Guid Timestamp { get; set; }
+        public virtual Guid? Timestamp { get; set; }
 
         public virtual DateTime? CreationDate { get; set; }
 
