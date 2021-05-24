@@ -19,14 +19,9 @@ namespace JoyMoe.Common.Storage.S3
 
         private bool _disposed;
 
-        public S3Storage(IOptions<S3StorageOptions> optionsAccessor)
+        public S3Storage(IOptions<S3StorageOptions>? options)
         {
-            if (optionsAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(optionsAccessor));
-            }
-
-            Options = optionsAccessor.Value;
+            Options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
             _client = new S3WebClient(Options);
         }
@@ -45,7 +40,7 @@ namespace JoyMoe.Common.Storage.S3
                 throw new IOException();
             }
 
-            using var file = File.OpenWrite(target);
+            await using var file = File.OpenWrite(target);
             await response.Content.CopyToAsync(file).ConfigureAwait(false);
 
             return target;
@@ -131,18 +126,13 @@ namespace JoyMoe.Common.Storage.S3
 
         public Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentNullException(nameof(path));
-            }
-
             var protocol = Options.UseHttps ? "https" : "http";
 
             var prefix = Options.UseCName && cname
                 ? $"{protocol}://{Options.BucketName}"
                 : $"{protocol}://{Options.Endpoint}/{Options.BucketName}";
 
-            return Task.FromResult($"{prefix}/{path.TrimStart('/')}");
+            return Task.FromResult($"{prefix}/{path}".TrimStart('/'));
         }
 
         public void Dispose()
