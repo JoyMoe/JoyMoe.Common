@@ -1,4 +1,4 @@
-namespace JoyMoe.Common.Data
+namespace JoyMoe.Common.Abstractions
 {
     public interface IDataEntity : IIdentifier, ITimestamp
     {

@@ -10,7 +10,7 @@ namespace JoyMoe.Common.Storage
 #pragma warning disable CA1308 // Normalize strings to uppercase
             return BitConverter.ToString(bytes)
                 .ToLowerInvariant()
-                .Replace("-", string.Empty, StringComparison.InvariantCulture);
+                .Replace("-", string.Empty);
 #pragma warning restore CA1308 // Normalize strings to uppercase
         }
     }

@@ -1,4 +1,4 @@
-namespace JoyMoe.Common.Workflow.Models
+namespace JoyMoe.Common.Abstractions
 {
     public interface IStateful
     {

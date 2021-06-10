@@ -6,8 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common Object Storage client</Description>
-    <PackageTags>object;storage;oss</PackageTags>
+    <Description>Abstractions used by JoyMoe.Common libraries.</Description>
   </PropertyGroup>
 
 </Project>

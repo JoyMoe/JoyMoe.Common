@@ -1,6 +1,6 @@
 using AutoMapper;
 using AutoMapper.Configuration;
-using JoyMoe.Common.Data;
+using JoyMoe.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JoyMoe.Common.Mvc.Api

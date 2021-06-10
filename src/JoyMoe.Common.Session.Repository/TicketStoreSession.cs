@@ -1,5 +1,5 @@
 using System;
-using JoyMoe.Common.Data;
+using JoyMoe.Common.Abstractions;
 
 namespace JoyMoe.Common.Session.Repository
 {

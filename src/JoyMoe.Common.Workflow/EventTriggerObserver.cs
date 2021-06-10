@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Automatonymous;
-using JoyMoe.Common.Workflow.Models;
+using JoyMoe.Common.Abstractions;
 
-namespace JoyMoe.Common.Workflow.Observers
+namespace JoyMoe.Common.Workflow
 {
     public class EventTriggerObserver<TI> : EventObserver<TI> where TI : class, IStateful
     {

@@ -1,7 +1,6 @@
 using System;
 using Automatonymous;
-using JoyMoe.Common.Workflow.Models;
-using JoyMoe.Common.Workflow.Observers;
+using JoyMoe.Common.Abstractions;
 
 namespace JoyMoe.Common.Workflow
 {

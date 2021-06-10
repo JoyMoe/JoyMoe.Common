@@ -14,4 +14,8 @@
     <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Abstractions\JoyMoe.Common.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

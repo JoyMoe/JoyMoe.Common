@@ -1,11 +1,9 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 
-namespace JoyMoe.Common.Data
+namespace JoyMoe.Common.Abstractions
 {
     public interface IConcurrency
     {
-        [Timestamp]
         Guid? Timestamp { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using JoyMoe.Common.Abstractions;
 using JoyMoe.Common.Data;
 using JoyMoe.Common.Session;
 using JoyMoe.Common.Session.Repository;

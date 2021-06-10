@@ -40,7 +40,7 @@ namespace JoyMoe.Common.Storage.S3
                 throw new IOException();
             }
 
-            await using var file = File.OpenWrite(target);
+            using var file = File.OpenWrite(target);
             await response.Content.CopyToAsync(file).ConfigureAwait(false);
 
             return target;

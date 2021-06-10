@@ -1,5 +1,5 @@
 using AutoMapper.Configuration;
-using JoyMoe.Common.Data;
+using JoyMoe.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
