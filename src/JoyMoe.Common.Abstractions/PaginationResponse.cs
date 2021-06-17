@@ -11,11 +11,11 @@ namespace JoyMoe.Common.Abstractions
 
         public long? Last { get; set; }
 
-        public IEnumerable<T>? Data { get; set; }
+        public ICollection<T>? Data { get; set; }
 
         public PaginationResponse() { }
 
-        public PaginationResponse(IList<T>? data, long? before = null)
+        public PaginationResponse(ICollection<T>? data, long? before = null)
         {
             Before = before;
             Size = data?.Count ?? 0;

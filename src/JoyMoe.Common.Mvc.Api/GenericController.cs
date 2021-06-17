@@ -201,11 +201,11 @@ namespace JoyMoe.Common.Mvc.Api
             throw new NotSupportedException();
         }
 
-        private IEnumerable<TResponse> _mapResponse(IEnumerable<TEntity> entities)
+        private ICollection<TResponse> _mapResponse(ICollection<TEntity> entities)
         {
-            if (typeof(TEntity) != typeof(TResponse)) return entities.Select(e => _mapper.Map<TResponse>(e));
+            if (typeof(TEntity) != typeof(TResponse)) return _mapper.Map<ICollection<TResponse>>(entities);
 
-            if (entities is IEnumerable<TResponse> responses)
+            if (entities is ICollection<TResponse> responses)
             {
                 return responses;
             }
@@ -217,7 +217,7 @@ namespace JoyMoe.Common.Mvc.Api
         {
             if (typeof(TEntity) != typeof(TResponse))
             {
-                var data = Enumerable.Empty<TResponse>();
+                ICollection<TResponse>? data = null;
 
                 if (result.Data != null)
                 {
