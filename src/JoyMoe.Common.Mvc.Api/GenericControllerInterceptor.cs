@@ -12,8 +12,8 @@ namespace JoyMoe.Common.Mvc.Api
     public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
         where TEntity : class, IDataEntity
     {
-        public virtual Task<ActionResult<IEnumerable<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
-            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<IEnumerable<TEntity>>>> query)
+        public virtual Task<ActionResult<PaginationResponse<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
+            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<TEntity>>>> query)
         {
             if (query == null)
             {

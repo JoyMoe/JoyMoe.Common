@@ -30,7 +30,7 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TResponse>>> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
+        public async Task<ActionResult<PaginationResponse<TResponse>>> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
         {
             if (!ModelState.IsValid)
             {
@@ -42,13 +42,13 @@ namespace JoyMoe.Common.Mvc.Api
             return _mapResponse(result);
         }
 
-        private async Task<ActionResult<IEnumerable<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
+        private async Task<ActionResult<PaginationResponse<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
         {
             var entities = await _repository
                 .PaginateAsync(e => e.Id, before, size, predicate)
                 .ConfigureAwait(false);
 
-            return entities.ToArray();
+            return new PaginationResponse<TEntity>(entities.ToArray(), before);
         }
 
         [HttpGet("{id}")]
@@ -213,6 +213,34 @@ namespace JoyMoe.Common.Mvc.Api
             throw new NotSupportedException();
         }
 
+        private PaginationResponse<TResponse> _mapResponse(PaginationResponse<TEntity> result)
+        {
+            if (typeof(TEntity) != typeof(TResponse))
+            {
+                var data = Enumerable.Empty<TResponse>();
+
+                if (result.Data != null)
+                {
+                    data = _mapResponse(result.Data);
+                }
+
+                return new PaginationResponse<TResponse>
+                {
+                    Before = result.Before,
+                    Size = result.Size,
+                    Last = result.Last,
+                    Data = data,
+                };
+            }
+
+            if (result is PaginationResponse<TResponse> response)
+            {
+                return response;
+            }
+
+            throw new NotSupportedException();
+        }
+
         private ActionResult<TResponse> _mapResponse(ActionResult<TEntity> result)
         {
             if (result.Result == null) return new ActionResult<TResponse>(_mapResponse(result.Value));
@@ -225,15 +253,18 @@ namespace JoyMoe.Common.Mvc.Api
 
         }
 
-        private ActionResult<IEnumerable<TResponse>> _mapResponse(ActionResult<IEnumerable<TEntity>> result)
+        private ActionResult<PaginationResponse<TResponse>> _mapResponse(ActionResult<PaginationResponse<TEntity>> result)
         {
-            if (result.Result == null) return new ActionResult<IEnumerable<TResponse>>(_mapResponse(result.Value));
+            if (result.Result == null)
+            {
+                return new ActionResult<PaginationResponse<TResponse>>(_mapResponse(result.Value));
+            }
 
-            if (!(result.Result is ObjectResult or) || !(or.Value is IEnumerable<TEntity> entities)) return result.Result;
+            if (!(result.Result is ObjectResult or) || !(or.Value is PaginationResponse<TEntity> entities)) return result.Result;
 
             or.Value = _mapResponse(entities);
 
-            return new ActionResult<IEnumerable<TResponse>>(or);
+            return new ActionResult<PaginationResponse<TResponse>>(or);
         }
     }
 }
