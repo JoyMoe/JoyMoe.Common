@@ -88,7 +88,7 @@ namespace JoyMoe.Common.Storage.S3
         {
             var now = DateTimeOffset.UtcNow;
             var date = $"{now:yyyyMMdd}";
-            var timestamp = $"{now:O}";
+            var timestamp = $"{now:yyyyMMddTHHmmssZ}";
 
             var uri = await GetUrlAsync(string.Empty, true, ct).ConfigureAwait(false);
 
@@ -106,7 +106,7 @@ namespace JoyMoe.Common.Storage.S3
             };
 
             arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(@$"{{
-  ""expiration"": ""{now.AddMinutes(30):yyyyMMddTHHmmssZ}"",
+  ""expiration"": ""{now.AddMinutes(30):yyyy-MM-ddTHH:mm:ss.fffZ}"",
   ""conditions"": [
     {{""acl"": ""{arguments.Data["acl"]}""}},
     {{""bucket"": ""{Options.BucketName}""}},
@@ -132,7 +132,7 @@ namespace JoyMoe.Common.Storage.S3
                 ? $"{protocol}://{Options.BucketName}"
                 : $"{protocol}://{Options.Endpoint}/{Options.BucketName}";
 
-            return Task.FromResult($"{prefix}/{path}".TrimStart('/'));
+            return Task.FromResult($"{prefix}/{path.TrimStart('/')}");
         }
 
         public void Dispose()
