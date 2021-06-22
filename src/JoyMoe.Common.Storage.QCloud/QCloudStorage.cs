@@ -142,7 +142,7 @@ namespace JoyMoe.Common.Storage.QCloud
   ]
 }}";
 
-            arguments.Data["q-signature"] = _client.CalculateSignature(arguments.Data["policy"], keyTime);
+            arguments.Data["q-signature"] = _client.CalculateSignature(arguments.Data["policy"].Sha1().ToHex(), keyTime);
             arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(arguments.Data["policy"]));
 
             return arguments;
