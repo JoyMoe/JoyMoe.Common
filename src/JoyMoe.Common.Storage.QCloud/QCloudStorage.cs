@@ -98,7 +98,7 @@ namespace JoyMoe.Common.Storage.QCloud
             var expiration = now.AddSeconds(1800);
             var keyTime = $"{now.ToUnixTimeSeconds()};{expiration.ToUnixTimeSeconds()}";
 
-            var uri = await GetUrlAsync(path, true, ct).ConfigureAwait(false);
+            var uri = await GetUrlAsync(string.Empty, true, ct).ConfigureAwait(false);
 
             var arguments = new ObjectStorageFrontendUploadArguments
             {
@@ -114,7 +114,7 @@ namespace JoyMoe.Common.Storage.QCloud
             };
 
             arguments.Data["policy"] = @$"{{
-  ""expiration"": ""{expiration:yyyyMMddTHHmmssZ}"",
+  ""expiration"": ""{expiration:yyyy-MM-ddTHH:mm:ss.fffZ}"",
   ""conditions"": [
     {{""acl"": ""{arguments.Data["acl"]}""}},
     {{""bucket"": ""{Options.BucketName}""}},
@@ -128,18 +128,13 @@ namespace JoyMoe.Common.Storage.QCloud
 }}";
 
             arguments.Data["q-signature"] = _client.CalculateSignature(arguments.Data["policy"], keyTime);
-            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(arguments.Data["q-signature"]));
+            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(arguments.Data["policy"]));
 
             return arguments;
         }
 
         public Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentNullException(nameof(path));
-            }
-
             var protocol = Options.UseHttps ? "https" : "http";
 
             var prefix = !string.IsNullOrWhiteSpace(Options.CanonicalName) && cname
