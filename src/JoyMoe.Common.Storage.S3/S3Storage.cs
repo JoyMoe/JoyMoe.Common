@@ -84,7 +84,7 @@ namespace JoyMoe.Common.Storage.S3
             return request.RequestUri.ToString();
         }
 
-        public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default)
+        public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, int? contentLength = null, string? contentType = null, CancellationToken ct = default)
         {
             var now = DateTimeOffset.UtcNow;
             var date = $"{now:yyyyMMdd}";
@@ -105,19 +105,36 @@ namespace JoyMoe.Common.Storage.S3
                 }
             };
 
-            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(@$"{{
+            arguments.Data["policy"] = @$"{{
   ""expiration"": ""{now.AddMinutes(30):yyyy-MM-ddTHH:mm:ss.fffZ}"",
   ""conditions"": [
     {{""acl"": ""{arguments.Data["acl"]}""}},
-    {{""bucket"": ""{Options.BucketName}""}},
-    [""content-length-range"", 4096, 1048576],
-    [""starts-with"", ""$Content-Type"", ""image/""],
+    {{""bucket"": ""{Options.BucketName}""}},";
+
+            if (contentLength.HasValue)
+            {
+                arguments.Data["policy"] += @$"
+    [""content-length-range"", 0, {contentLength}],";
+            }
+
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                arguments.Data["policy"] += contentType!.EndsWith("/")
+                    ? @$"
+    [""starts-with"", ""$Content-Type"", ""{contentType}""],"
+                    : @$"
+    {{""Content-Type"": ""{contentType}""}},";
+            }
+
+            arguments.Data["policy"] += @$"
     {{""key"": ""{arguments.Data["key"]}""}},
     {{""x-amz-algorithm"": ""{arguments.Data["x-amz-algorithm"]}""}},
     {{""x-amz-credential"": ""{arguments.Data["x-amz-credential"]}""}},
     {{""x-amz-date"": ""{arguments.Data["x-amz-date"]}""}}
   ]
-}}"));
+}}";
+
+            arguments.Data["policy"] = Convert.ToBase64String(Encoding.UTF8.GetBytes(arguments.Data["policy"]));
 
             arguments.Data["x-amz-signature"] = _client.CalculateSignature(arguments.Data["policy"], date);
 

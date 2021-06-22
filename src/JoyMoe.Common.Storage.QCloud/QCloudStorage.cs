@@ -92,7 +92,7 @@ namespace JoyMoe.Common.Storage.QCloud
             return request.RequestUri.ToString();
         }
 
-        public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, CancellationToken ct = default)
+        public async Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(string path, bool everyone = false, int? contentLength = null, string? contentType = null, CancellationToken ct = default)
         {
             var now = DateTimeOffset.UtcNow;
             var expiration = now.AddSeconds(1800);
@@ -117,9 +117,24 @@ namespace JoyMoe.Common.Storage.QCloud
   ""expiration"": ""{expiration:yyyy-MM-ddTHH:mm:ss.fffZ}"",
   ""conditions"": [
     {{""acl"": ""{arguments.Data["acl"]}""}},
-    {{""bucket"": ""{Options.BucketName}""}},
-    [""content-length-range"", 4096, 1048576],
-    [""starts-with"", ""$Content-Type"", ""image/""],
+    {{""bucket"": ""{Options.BucketName}""}},";
+
+            if (contentLength.HasValue)
+            {
+                arguments.Data["policy"] += @$"
+    [""content-length-range"", 0, {contentLength}],";
+            }
+
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                arguments.Data["policy"] += contentType!.EndsWith("/")
+                    ? @$"
+    [""starts-with"", ""$Content-Type"", ""{contentType}""],"
+                    : @$"
+    {{""Content-Type"": ""{contentType}""}},";
+            }
+
+            arguments.Data["policy"] += @$"
     {{""key"": ""{arguments.Data["key"]}""}},
     {{""q-ak"": ""{arguments.Data["q-ak"]}""}},
     {{""q-sign-algorithm"": ""{arguments.Data["q-sign-algorithm"]}""}},
