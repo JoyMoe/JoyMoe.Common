@@ -90,7 +90,9 @@ namespace JoyMoe.Common.Data
             {
                 var key = selector.GetColumn();
 
-                var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+                var parameter = predicate == null
+                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+                    : predicate.Parameters[0];
 
                 var property = Expression.Property(parameter, key.Member.Name);
                 var less = Expression.LessThan(property, Expression.Constant(before));
