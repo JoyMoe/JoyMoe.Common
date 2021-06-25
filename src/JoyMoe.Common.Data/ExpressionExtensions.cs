@@ -48,12 +48,9 @@ namespace JoyMoe.Common.Data
                 return right;
             }
 
-            var lp = left.Parameters[0];
-            var rp = right.Parameters[0];
+            var body = Expression.MakeBinary(expressionType, left.Body, right.Body);
 
-            var body = Expression.MakeBinary(expressionType, left.Body, rp ?? lp);
-
-            return Expression.Lambda<Func<T, bool>>(body, lp);
+            return Expression.Lambda<Func<T, bool>>(body, left.Parameters[0]);
         }
     }
 }
