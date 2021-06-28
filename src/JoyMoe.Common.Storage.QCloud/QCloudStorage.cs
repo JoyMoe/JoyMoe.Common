@@ -125,14 +125,12 @@ namespace JoyMoe.Common.Storage.QCloud
     [""content-length-range"", 0, {contentLength}],";
             }
 
-            if (!string.IsNullOrWhiteSpace(contentType))
-            {
-                arguments.Data["policy"] += contentType!.EndsWith("/")
-                    ? @$"
-    [""starts-with"", ""$Content-Type"", ""{contentType}""],"
-                    : @$"
-    {{""Content-Type"": ""{contentType}""}},";
-            }
+            contentType ??= string.Empty;
+            arguments.Data["policy"] += string.IsNullOrWhiteSpace(contentType) || contentType.EndsWith("*")
+                ? @$"
+[""starts-with"", ""$Content-Type"", ""{contentType.TrimEnd('*')}""],"
+                : @$"
+{{""Content-Type"": ""{contentType}""}},";
 
             arguments.Data["policy"] += @$"
     {{""key"": ""{arguments.Data["key"]}""}},
