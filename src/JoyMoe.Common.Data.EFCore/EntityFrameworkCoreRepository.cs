@@ -8,213 +8,217 @@ using System.Threading.Tasks;
 using JoyMoe.Common.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
-namespace JoyMoe.Common.Data.EFCore
+namespace JoyMoe.Common.Data.EFCore;
+
+public class EntityFrameworkCoreRepository<TEntity> : EntityFrameworkCoreRepository<DbContext, TEntity>
+    where TEntity : class
 {
-    public class EntityFrameworkCoreRepository<TEntity> : EntityFrameworkCoreRepository<DbContext, TEntity>
-        where TEntity : class
+    public EntityFrameworkCoreRepository(DbContext context) : base(context)
     {
-        public EntityFrameworkCoreRepository(DbContext context) : base(context)
-        { }
+    }
+}
+
+public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<TEntity>
+    where TContext : DbContext
+    where TEntity : class
+{
+    protected TContext Context { get; }
+
+    public EntityFrameworkCoreRepository(TContext context)
+    {
+        Context = context;
     }
 
-    public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<TEntity>
-        where TContext : DbContext
-        where TEntity : class
+    public override async IAsyncEnumerable<TEntity> ListAsync(
+        Expression<Func<TEntity, bool>>?           predicate,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
-        protected TContext Context { get; }
+        predicate = FilteringQuery(predicate);
 
-        public EntityFrameworkCoreRepository(TContext context)
+        var enumerable = BuildQuery(Context, predicate)
+                        .AsAsyncEnumerable()
+                        .WithCancellation(ct);
+
+        await foreach (var entity in enumerable)
         {
-            Context = context;
+            yield return entity;
+        }
+    }
+
+    public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
+        Expression<Func<TEntity, bool>>?           predicate,
+        Expression<Func<TEntity, TKey>>?           ordering,
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        predicate = FilteringQuery(predicate);
+
+        var query = BuildQuery(Context, predicate);
+
+        if (ordering != null)
+        {
+            query = query.OrderByDescending(ordering);
         }
 
-        public override async IAsyncEnumerable<TEntity> ListAsync(
-            Expression<Func<TEntity, bool>>? predicate,
-            [EnumeratorCancellation] CancellationToken ct = default)
+        var enumerable = query
+                        .AsAsyncEnumerable()
+                        .WithCancellation(ct);
+
+        await foreach (var entity in enumerable)
         {
-            predicate = FilteringQuery(predicate);
+            yield return entity;
+        }
+    }
 
-            var enumerable = BuildQuery(Context, predicate)
-                .AsAsyncEnumerable()
-                .WithCancellation(ct);
+    public override async Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+        Expression<Func<TEntity, TKey>>  selector,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        TKey?                            cursor    = null,
+        int                              size      = 20,
+        CancellationToken                ct        = default)
+    {
+        var func = selector.Compile();
 
-            await foreach (var entity in enumerable)
-            {
-                yield return entity;
-            }
+        predicate = FilteringQuery(predicate);
+
+        var key = selector.GetColumn();
+
+        var parameter = predicate == null
+            ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+            : predicate.Parameters[0];
+
+        var property = Expression.Property(parameter, key.Member.Name);
+
+        Expression<Func<TEntity, bool>>? filtering = null;
+        if (cursor.HasValue)
+        {
+            var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
+            filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
         }
 
-        public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
-            Expression<Func<TEntity, bool>>? predicate,
-            Expression<Func<TEntity, TKey>>? ordering,
-            [EnumeratorCancellation] CancellationToken ct = default)
+        var query = BuildQuery(Context, predicate.And(filtering));
+
+        var data = await query
+                        .OrderByDescending(selector)
+                        .Take(size + 1)
+                        .ToArrayAsync(ct);
+
+        TEntity? prev  = null;
+        var      first = data.FirstOrDefault();
+        if (first != null)
         {
-            predicate = FilteringQuery(predicate);
+            var than    = Expression.GreaterThan(property, Expression.Constant(func(first)));
+            var greater = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
 
-            var query = BuildQuery(Context, predicate);
-
-            if (ordering != null)
-            {
-                query = query.OrderByDescending(ordering);
-            }
-
-            var enumerable = query
-                .AsAsyncEnumerable()
-                .WithCancellation(ct);
-
-            await foreach (var entity in enumerable)
-            {
-                yield return entity;
-            }
+            prev = await BuildQuery(Context, predicate.And(greater))
+                        .OrderBy(selector)
+                        .Take(size)
+                        .LastOrDefaultAsync(ct);
         }
 
-        public override async Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
-            Expression<Func<TEntity, TKey>> selector,
-            Expression<Func<TEntity, bool>>? predicate = null,
-            TKey? cursor = null,
-            int size = 20,
-            CancellationToken ct = default)
+        return new PaginationResponse<TKey, TEntity>
         {
-            var func = selector.Compile();
+            Prev = prev != null ? func(prev) : null,
+            Next = data?.Length > size ? func(data.Last()) : null,
+            Data = data?.Length > size ? data[..size] : data
+        };
+    }
 
-            predicate = FilteringQuery(predicate);
+    public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
+                                                             CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
 
-            var key = selector.GetColumn();
+        return await BuildQuery(Context, predicate)
+                    .FirstOrDefaultAsync(ct)
+                    .ConfigureAwait(false);
+    }
 
-            var parameter = predicate == null
-                ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
-                : predicate.Parameters[0];
+    public override async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
+                                                              CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
 
-            var property = Expression.Property(parameter, key.Member.Name);
+        return await BuildQuery(Context, predicate)
+                    .SingleOrDefaultAsync(ct)
+                    .ConfigureAwait(false);
+    }
 
-            Expression<Func<TEntity, bool>>? filtering = null;
-            if (cursor.HasValue)
-            {
-                var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
-                filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
-            }
+    public override async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate,
+                                              CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
 
-            var query = BuildQuery(Context, predicate.And(filtering));
+        return await BuildQuery(Context, predicate)
+                    .AnyAsync(ct)
+                    .ConfigureAwait(false);
+    }
 
-            var data = await query
-                .OrderByDescending(selector)
-                .Take(size + 1)
-                .ToArrayAsync(ct);
+    public override async Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate,
+                                                CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
 
-            TEntity? prev = null;
-            var first = data.FirstOrDefault();
-            if (first != null)
-            {
-                var than = Expression.GreaterThan(property, Expression.Constant(func(first)));
-                var greater = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
+        return await BuildQuery(Context, predicate)
+                    .LongCountAsync(ct)
+                    .ConfigureAwait(false);
+    }
 
-                prev = await BuildQuery(Context, predicate.And(greater))
-                    .OrderBy(selector)
-                    .Take(size)
-                    .LastOrDefaultAsync(ct);
-            }
-
-            return new PaginationResponse<TKey, TEntity>
-            {
-                Prev = prev != null ? func(prev) : null,
-                Next = data?.Length > size ? func(data.Last()) : null,
-                Data = data?.Length > size ? data[..size] : data
-            };
+    public override async Task AddAsync(TEntity entity, CancellationToken ct = default)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
         }
 
-        public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
-        {
-            predicate = FilteringQuery(predicate);
+        await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
 
-            return await BuildQuery(Context, predicate)
-                .FirstOrDefaultAsync(ct)
-                .ConfigureAwait(false);
+        await Context.AddAsync(entity, ct).ConfigureAwait(false);
+    }
+
+    public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
         }
 
-        public override async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
-        {
-            predicate = FilteringQuery(predicate);
+        await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
 
-            return await BuildQuery(Context, predicate)
-                .SingleOrDefaultAsync(ct)
-                .ConfigureAwait(false);
+        Context.Entry(entity).State = EntityState.Detached;
+        Context.Update(entity);
+    }
+
+    public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
         }
 
-        public override async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
+        if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
         {
-            predicate = FilteringQuery(predicate);
-
-            return await BuildQuery(Context, predicate)
-                .AnyAsync(ct)
-                .ConfigureAwait(false);
+            Context.Remove(entity);
+            return;
         }
 
-        public override async Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)
-        {
-            predicate = FilteringQuery(predicate);
+        Context.Entry(entity).State = EntityState.Detached;
+        Context.Update(entity);
+    }
 
-            return await BuildQuery(Context, predicate)
-                .LongCountAsync(ct)
-                .ConfigureAwait(false);
+    public override async Task<int> CommitAsync(CancellationToken ct = default)
+    {
+        return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
         }
 
-        public override async Task AddAsync(TEntity entity, CancellationToken ct = default)
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            await OnBeforeAddAsync(entity, ct).ConfigureAwait(false);
-
-            await Context.AddAsync(entity, ct).ConfigureAwait(false);
-        }
-
-        public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default)
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            await OnBeforeUpdateAsync(entity, ct).ConfigureAwait(false);
-
-            Context.Entry(entity).State = EntityState.Detached;
-            Context.Update(entity);
-        }
-
-        public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default)
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (await OnBeforeRemoveAsync(entity, ct).ConfigureAwait(false))
-            {
-                Context.Remove(entity);
-                return;
-            }
-
-            Context.Entry(entity).State = EntityState.Detached;
-            Context.Update(entity);
-        }
-
-        public override async Task<int> CommitAsync(CancellationToken ct = default)
-        {
-            return await Context.SaveChangesAsync(ct).ConfigureAwait(false);
-        }
-
-        private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate)
-        {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            return predicate != null
-                ? context.Set<TEntity>().Where(predicate)
-                : context.Set<TEntity>();
-        }
+        return predicate != null
+            ? context.Set<TEntity>().Where(predicate)
+            : context.Set<TEntity>();
     }
 }

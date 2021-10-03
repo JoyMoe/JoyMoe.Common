@@ -1,19 +1,18 @@
-namespace JoyMoe.Common.Storage.QCloud
+namespace JoyMoe.Common.Storage.QCloud;
+
+public class QCloudStorageOptions
 {
-    public class QCloudStorageOptions
-    {
-        public string SecretId { get; set; } = null!;
+    public string SecretId { get; set; } = null!;
 
-        public string SecretKey { get; set; } = null!;
+    public string SecretKey { get; set; } = null!;
 
-        public string Region { get; set; } = null!;
+    public string Region { get; set; } = null!;
 
-        public string BucketName { get; set; } = null!;
+    public string BucketName { get; set; } = null!;
 
-        public string? CanonicalName { get; set; }
+    public string? CanonicalName { get; set; }
 
-        public bool UseHttps { get; set; } = true;
+    public bool UseHttps { get; set; } = true;
 
-        public virtual string Endpoint => $"{BucketName}.cos.{Region}.myqcloud.com";
-    }
+    public virtual string Endpoint => $"{BucketName}.cos.{Region}.myqcloud.com";
 }

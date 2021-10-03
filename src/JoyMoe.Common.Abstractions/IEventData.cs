@@ -1,11 +1,10 @@
-namespace JoyMoe.Common.Abstractions
+namespace JoyMoe.Common.Abstractions;
+
+public interface IEventData
 {
-    public interface IEventData
-    {
-        string Note { get; set; }
+    string Note { get; set; }
 
-        long JockeyId { get; set; }
+    long JockeyId { get; set; }
 
-        string Jockey { get; set; }
-    }
+    string Jockey { get; set; }
 }

@@ -5,26 +5,25 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 // ReSharper disable once CheckNamespace
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class CachedTicketStoreServiceCollectionExtensions
 {
-    public static class CachedTicketStoreServiceCollectionExtensions
+    /// <summary>
+    /// Add a <see cref="CachedTicketStore" /> to preserve identity information
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddCachedTicketStore(this IServiceCollection services)
     {
-        /// <summary>
-        /// Add a <see cref="CachedTicketStore" /> to preserve identity information
-        /// </summary>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        public static IServiceCollection AddCachedTicketStore(this IServiceCollection services)
+        if (services == null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            services.TryAddSingleton<ITicketStore, CachedTicketStore>();
-            services.TryAddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, SessionStoreOptions>();
-
-            return services;
+            throw new ArgumentNullException(nameof(services));
         }
+
+        services.TryAddSingleton<ITicketStore, CachedTicketStore>();
+        services.TryAddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, SessionStoreOptions>();
+
+        return services;
     }
 }

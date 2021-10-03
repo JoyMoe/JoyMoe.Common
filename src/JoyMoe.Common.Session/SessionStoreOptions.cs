@@ -2,25 +2,24 @@ using System;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
 
-namespace JoyMoe.Common.Session
+namespace JoyMoe.Common.Session;
+
+public class SessionStoreOptions : IPostConfigureOptions<CookieAuthenticationOptions>
 {
-    public class SessionStoreOptions : IPostConfigureOptions<CookieAuthenticationOptions>
+    private readonly ITicketStore _store;
+
+    public SessionStoreOptions(ITicketStore store)
     {
-        private readonly ITicketStore _store;
+        _store = store;
+    }
 
-        public SessionStoreOptions(ITicketStore store)
+    public void PostConfigure(string name, CookieAuthenticationOptions options)
+    {
+        if (options == null)
         {
-            _store = store;
+            throw new ArgumentNullException(nameof(options));
         }
 
-        public void PostConfigure(string name, CookieAuthenticationOptions options)
-        {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            options.SessionStore = _store;
-        }
+        options.SessionStore = _store;
     }
 }

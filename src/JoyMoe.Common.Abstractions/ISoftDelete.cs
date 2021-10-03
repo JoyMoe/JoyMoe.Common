@@ -1,9 +1,8 @@
 using System;
 
-namespace JoyMoe.Common.Abstractions
+namespace JoyMoe.Common.Abstractions;
+
+public interface ISoftDelete
 {
-    public interface ISoftDelete
-    {
-        DateTime? DeletionDate { get; set; }
-    }
+    DateTime? DeletionDate { get; set; }
 }

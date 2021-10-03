@@ -1,9 +1,8 @@
 using System;
 
-namespace JoyMoe.Common.Abstractions
+namespace JoyMoe.Common.Abstractions;
+
+public interface IConcurrency
 {
-    public interface IConcurrency
-    {
-        Guid? Timestamp { get; set; }
-    }
+    Guid? Timestamp { get; set; }
 }

@@ -1,13 +1,12 @@
-namespace JoyMoe.Common.Abstractions
+namespace JoyMoe.Common.Abstractions;
+
+public interface IStateful
 {
-    public interface IStateful
-    {
-        string? State { get; set; }
+    string? State { get; set; }
 
-        string? Note { get; set; }
+    string? Note { get; set; }
 
-        long? LastUpdatedById { get; set; }
+    long? LastUpdatedById { get; set; }
 
-        string? LastUpdatedBy { get; set; }
-    }
+    string? LastUpdatedBy { get; set; }
 }
