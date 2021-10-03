@@ -3,75 +3,80 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
-namespace JoyMoe.Common.Json
+namespace JoyMoe.Common.Json;
+
+/// <summary>
+/// snake_case_json_naming_policy
+/// </summary>
+public class SnakeCaseNamingPolicy : JsonNamingPolicy
 {
-    /// <summary>
-    /// snake_case_json_naming_policy
-    /// </summary>
-    public class SnakeCaseNamingPolicy : JsonNamingPolicy
+    public static readonly SnakeCaseNamingPolicy Instance = new();
+
+    /// <inheritdoc/>
+    public override string ConvertName(string name)
     {
-        public static readonly SnakeCaseNamingPolicy Instance = new();
+        // Port from https://github.com/efcore/EFCore.NamingConventions/blob/290cc330292d60bd1bad8eb28b46ef755de4b0cb/EFCore.NamingConventions/NamingConventions/Internal/SnakeCaseNameRewriter.cs
 
-        /// <inheritdoc/>
-        public override string ConvertName(string name)
+        if (string.IsNullOrEmpty(name))
         {
-            // Port from https://github.com/efcore/EFCore.NamingConventions/blob/290cc330292d60bd1bad8eb28b46ef755de4b0cb/EFCore.NamingConventions/NamingConventions/Internal/SnakeCaseNameRewriter.cs
+            return name;
+        }
 
-            if (string.IsNullOrEmpty(name))
+        var builder          = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
+        var previousCategory = default(UnicodeCategory?);
+
+        for (var currentIndex = 0; currentIndex < name.Length; currentIndex++)
+        {
+            var currentChar = name[currentIndex];
+            if (currentChar == '_')
             {
-                return name;
+                builder.Append('_');
+                previousCategory = null;
+                continue;
             }
 
-            var builder = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
-            var previousCategory = default(UnicodeCategory?);
-
-            for (var currentIndex = 0; currentIndex < name.Length; currentIndex++)
+            var currentCategory = char.GetUnicodeCategory(currentChar);
+            switch (currentCategory)
             {
-                var currentChar = name[currentIndex];
-                if (currentChar == '_')
-                {
-                    builder.Append('_');
-                    previousCategory = null;
-                    continue;
-                }
-
-                var currentCategory = char.GetUnicodeCategory(currentChar);
-                switch (currentCategory)
-                {
-                    case UnicodeCategory.UppercaseLetter:
-                    case UnicodeCategory.TitlecaseLetter:
-                        if (previousCategory == UnicodeCategory.SpaceSeparator ||
-                            previousCategory == UnicodeCategory.LowercaseLetter ||
-                            previousCategory != null &&
-                            currentIndex > 0 &&
-                            currentIndex + 1 < name.Length &&
-                            char.IsLower(name[currentIndex + 1]))
-                        {
-                            builder.Append('_');
-                        }
+                case UnicodeCategory.UppercaseLetter:
+                case UnicodeCategory.TitlecaseLetter:
+                    if (previousCategory == UnicodeCategory.SpaceSeparator ||
+                        previousCategory == UnicodeCategory.LowercaseLetter ||
+                        previousCategory != null &&
+                        currentIndex > 0 &&
+                        currentIndex + 1 < name.Length &&
+                        char.IsLower(name[currentIndex + 1]))
+                    {
+                        builder.Append('_');
+                    }
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
-                        currentChar = char.ToLowerInvariant(currentChar);
+                    currentChar = char.ToLowerInvariant(currentChar);
 #pragma warning restore CA1308 // Normalize strings to uppercase
-                        break;
+                    break;
 
-                    case UnicodeCategory.LowercaseLetter:
-                    case UnicodeCategory.DecimalDigitNumber:
-                        if (previousCategory == UnicodeCategory.SpaceSeparator)
-                            builder.Append('_');
-                        break;
+                case UnicodeCategory.LowercaseLetter:
+                case UnicodeCategory.DecimalDigitNumber:
+                    if (previousCategory == UnicodeCategory.SpaceSeparator)
+                    {
+                        builder.Append('_');
+                    }
 
-                    default:
-                        if (previousCategory != null)
-                            previousCategory = UnicodeCategory.SpaceSeparator;
-                        continue;
-                }
+                    break;
 
-                builder.Append(currentChar);
-                previousCategory = currentCategory;
+                default:
+                    if (previousCategory != null)
+                    {
+                        previousCategory = UnicodeCategory.SpaceSeparator;
+                    }
+
+                    continue;
             }
 
-            return builder.ToString();
+            builder.Append(currentChar);
+            previousCategory = currentCategory;
         }
+
+        return builder.ToString();
     }
 }

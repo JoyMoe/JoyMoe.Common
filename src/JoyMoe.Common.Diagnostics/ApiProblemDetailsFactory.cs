@@ -6,91 +6,90 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
 
-namespace JoyMoe.Common.Diagnostics
+namespace JoyMoe.Common.Diagnostics;
+
+public class ApiProblemDetailsFactory : ProblemDetailsFactory
 {
-    public class ApiProblemDetailsFactory : ProblemDetailsFactory
+    private readonly ApiBehaviorOptions _options;
+
+    public ApiProblemDetailsFactory(IOptions<ApiBehaviorOptions>? options)
     {
-        private readonly ApiBehaviorOptions _options;
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    }
 
-        public ApiProblemDetailsFactory(IOptions<ApiBehaviorOptions>? options)
+    public override ProblemDetails CreateProblemDetails(
+        HttpContext httpContext,
+        int?        statusCode = null,
+        string?     title      = null,
+        string?     type       = null,
+        string?     detail     = null,
+        string?     instance   = null)
+    {
+        statusCode ??= 500;
+
+        var problemDetails = new ProblemDetails
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            Status   = statusCode,
+            Title    = title,
+            Type     = type,
+            Detail   = detail,
+            Instance = instance
+        };
+
+        ApplyProblemDetailsDefaults(httpContext, problemDetails, statusCode.Value);
+
+        return problemDetails;
+    }
+
+    public override ValidationProblemDetails CreateValidationProblemDetails(
+        HttpContext          httpContext,
+        ModelStateDictionary modelStateDictionary,
+        int?                 statusCode = null,
+        string?              title      = null,
+        string?              type       = null,
+        string?              detail     = null,
+        string?              instance   = null)
+    {
+        if (modelStateDictionary == null)
+        {
+            throw new ArgumentNullException(nameof(modelStateDictionary));
         }
 
-        public override ProblemDetails CreateProblemDetails(
-            HttpContext httpContext,
-            int? statusCode = null,
-            string? title = null,
-            string? type = null,
-            string? detail = null,
-            string? instance = null)
+        statusCode ??= 422;
+
+        var problemDetails = new ValidationProblemDetails(modelStateDictionary)
         {
-            statusCode ??= 500;
+            Status   = statusCode,
+            Type     = type,
+            Detail   = detail,
+            Instance = instance
+        };
 
-            var problemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Type = type,
-                Detail = detail,
-                Instance = instance,
-            };
-
-            ApplyProblemDetailsDefaults(httpContext, problemDetails, statusCode.Value);
-
-            return problemDetails;
+        if (title != null)
+        {
+            // For validation problem details, don't overwrite the default title with null.
+            problemDetails.Title = title;
         }
 
-        public override ValidationProblemDetails CreateValidationProblemDetails(
-            HttpContext httpContext,
-            ModelStateDictionary modelStateDictionary,
-            int? statusCode = null,
-            string? title = null,
-            string? type = null,
-            string? detail = null,
-            string? instance = null)
+        ApplyProblemDetailsDefaults(httpContext, problemDetails, statusCode.Value);
+
+        return problemDetails;
+    }
+
+    private void ApplyProblemDetailsDefaults(HttpContext httpContext, ProblemDetails problemDetails, int statusCode)
+    {
+        problemDetails.Status ??= statusCode;
+
+        if (_options.ClientErrorMapping.TryGetValue(statusCode, out var clientErrorData))
         {
-            if (modelStateDictionary == null)
-            {
-                throw new ArgumentNullException(nameof(modelStateDictionary));
-            }
-
-            statusCode ??= 422;
-
-            var problemDetails = new ValidationProblemDetails(modelStateDictionary)
-            {
-                Status = statusCode,
-                Type = type,
-                Detail = detail,
-                Instance = instance,
-            };
-
-            if (title != null)
-            {
-                // For validation problem details, don't overwrite the default title with null.
-                problemDetails.Title = title;
-            }
-
-            ApplyProblemDetailsDefaults(httpContext, problemDetails, statusCode.Value);
-
-            return problemDetails;
+            problemDetails.Title ??= clientErrorData.Title;
+            problemDetails.Type  ??= clientErrorData.Link;
         }
 
-        private void ApplyProblemDetailsDefaults(HttpContext httpContext, ProblemDetails problemDetails, int statusCode)
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        if (traceId != null)
         {
-            problemDetails.Status ??= statusCode;
-
-            if (_options.ClientErrorMapping.TryGetValue(statusCode, out var clientErrorData))
-            {
-                problemDetails.Title ??= clientErrorData.Title;
-                problemDetails.Type ??= clientErrorData.Link;
-            }
-
-            var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-            if (traceId != null)
-            {
-                problemDetails.Extensions["trace_id"] = traceId;
-            }
+            problemDetails.Extensions["trace_id"] = traceId;
         }
     }
 }

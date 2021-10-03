@@ -2,55 +2,54 @@ using System;
 using Automatonymous;
 using JoyMoe.Common.Abstractions;
 
-namespace JoyMoe.Common.Workflow
+namespace JoyMoe.Common.Workflow;
+
+public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDisposable where TI : class, IStateful
 {
-    public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDisposable where TI : class, IStateful
+    private bool _disposed;
+
+    private readonly IDisposable? _eventObserver;
+    private readonly IDisposable? _stateObserver;
+
+    protected StateMachineBase()
     {
-        private bool _disposed;
+    }
 
-        private readonly IDisposable? _eventObserver;
-        private readonly IDisposable? _stateObserver;
+    protected StateMachineBase(StateObserver<TI> observer)
+    {
+        _eventObserver = this.ConnectEventObserver(new EventTriggerObserver<TI>());
+        _stateObserver = this.ConnectStateObserver(observer);
+    }
 
-        protected StateMachineBase()
+    public State<TI> GetCurrentState(TI instance)
+    {
+        if (instance == null)
         {
+            throw new ArgumentNullException(nameof(instance));
         }
 
-        protected StateMachineBase(StateObserver<TI> observer)
+        return GetState(instance.State);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
         {
-            _eventObserver = this.ConnectEventObserver(new EventTriggerObserver<TI>());
-            _stateObserver = this.ConnectStateObserver(observer);
+            return;
         }
 
-        public State<TI> GetCurrentState(TI instance)
+        if (disposing)
         {
-            if (instance == null)
-            {
-                throw new ArgumentNullException(nameof(instance));
-            }
-
-            return GetState(instance.State);
+            _eventObserver?.Dispose();
+            _stateObserver?.Dispose();
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                _eventObserver?.Dispose();
-                _stateObserver?.Dispose();
-            }
-
-            _disposed = true;
-        }
+        _disposed = true;
     }
 }

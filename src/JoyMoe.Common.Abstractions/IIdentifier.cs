@@ -1,7 +1,6 @@
-namespace JoyMoe.Common.Abstractions
+namespace JoyMoe.Common.Abstractions;
+
+public interface IIdentifier
 {
-    public interface IIdentifier
-    {
-        long Id { get; set; }
-    }
+    long Id { get; set; }
 }

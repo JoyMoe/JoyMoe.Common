@@ -21,30 +21,30 @@ namespace Dapper.Contrib
     /// </summary>
     public static class SqlMapperExtensions
     {
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> KeyProperties = new();
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> TypeProperties = new();
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, PropertyInfo?> VersionProperty = new();
-        private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> TypeTableName = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> KeyProperties   = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, IList<PropertyInfo>> TypeProperties  = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, PropertyInfo?>       VersionProperty = new();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, string>              TypeTableName   = new();
 
         private static readonly ISqlAdapter DefaultAdapter = new SqlServerAdapter();
 
         private static readonly Dictionary<string, ISqlAdapter> AdapterDictionary = new(6)
         {
-            ["sqlconnection"] = new SqlServerAdapter(),
-            ["sqlceconnection"] = new SqlCeServerAdapter(),
+            ["sqlconnection"]    = new SqlServerAdapter(),
+            ["sqlceconnection"]  = new SqlCeServerAdapter(),
             ["npgsqlconnection"] = new PostgresAdapter(),
             ["sqliteconnection"] = new SQLiteAdapter(),
-            ["mysqlconnection"] = new MySqlAdapter(),
-            ["fbconnection"] = new FbAdapter()
+            ["mysqlconnection"]  = new MySqlAdapter(),
+            ["fbconnection"]     = new FbAdapter()
         };
 
-        public static Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection connection,
-            Expression<Func<T, bool>>? predicate,
-            Dictionary<string, string?>? orderings = null,
-            int? size = null,
-            IDbTransaction? transaction = null,
-            int? timeout = null,
-            ISqlAdapter? adapter = null) where T : class
+        public static Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection           connection,
+                                                         Expression<Func<T, bool>>?   predicate,
+                                                         Dictionary<string, string?>? orderings = null,
+                                                         int?                         size = null,
+                                                         IDbTransaction?              transaction = null,
+                                                         int?                         timeout = null,
+                                                         ISqlAdapter?                 adapter = null) where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -71,8 +71,11 @@ namespace Dapper.Contrib
             return connection.QueryAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<T> QueryFirstOrDefaultAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate, IDbTransaction? transaction = null,
-            int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<T> QueryFirstOrDefaultAsync<T>(this IDbConnection connection,
+                                                          Expression<Func<T, bool>>? predicate,
+                                                          IDbTransaction? transaction = null,
+                                                          int? timeout = null, ISqlAdapter? adapter = null)
+            where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -81,8 +84,11 @@ namespace Dapper.Contrib
             return connection.QueryFirstOrDefaultAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<T> QuerySingleOrDefaultAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate, IDbTransaction? transaction = null,
-            int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<T> QuerySingleOrDefaultAsync<T>(this IDbConnection connection,
+                                                           Expression<Func<T, bool>>? predicate,
+                                                           IDbTransaction? transaction = null,
+                                                           int? timeout = null, ISqlAdapter? adapter = null)
+            where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -91,8 +97,9 @@ namespace Dapper.Contrib
             return connection.QuerySingleOrDefaultAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<long> CountAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate, IDbTransaction? transaction = null,
-            int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<long> CountAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate,
+                                               IDbTransaction? transaction = null,
+                                               int? timeout = null, ISqlAdapter? adapter = null) where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -103,7 +110,8 @@ namespace Dapper.Contrib
             return connection.QueryFirstOrDefaultAsync<long>($"SELECT COUNT(*) {sb}", parameters, transaction, timeout);
         }
 
-        private static (StringBuilder, DynamicParameters?) BuildQuery<T>(Expression<Func<T, bool>>? predicate, ISqlAdapter adapter)
+        private static (StringBuilder, DynamicParameters?) BuildQuery<T>(
+            Expression<Func<T, bool>>? predicate, ISqlAdapter adapter)
         {
             var type = typeof(T);
 
@@ -125,8 +133,9 @@ namespace Dapper.Contrib
             return (sb, parameters);
         }
 
-        public static Task<int> InsertAsync<T>(this IDbConnection connection, T entityToInsert, IDbTransaction? transaction = null,
-            int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<int> InsertAsync<T>(this IDbConnection connection, T entityToInsert,
+                                               IDbTransaction? transaction = null,
+                                               int? timeout = null, ISqlAdapter? adapter = null) where T : class
         {
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
@@ -139,7 +148,8 @@ namespace Dapper.Contrib
             {
                 var typeInfo = type.GetTypeInfo();
                 var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                    typeInfo.ImplementedInterfaces.Any(
+                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
                     typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable)
@@ -167,6 +177,7 @@ namespace Dapper.Contrib
                     sb.Append(", ");
                 }
             }
+
             sb.Append(") VALUES (");
             for (var i = 0; i < allProperties.Count; i++)
             {
@@ -177,12 +188,15 @@ namespace Dapper.Contrib
                     sb.Append(", ");
                 }
             }
+
             sb.Append(')');
 
             return connection.ExecuteAsync(sb.ToString(), entityToInsert, transaction, timeout);
         }
 
-        public static async Task<int> UpdateAsync<T>(this IDbConnection connection, T entityToUpdate, IDbTransaction? transaction = null, int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static async Task<int> UpdateAsync<T>(this IDbConnection connection,         T    entityToUpdate,
+                                                     IDbTransaction?    transaction = null, int? timeout = null,
+                                                     ISqlAdapter?       adapter     = null) where T : class
         {
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
@@ -195,7 +209,8 @@ namespace Dapper.Contrib
             {
                 var typeInfo = type.GetTypeInfo();
                 var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                    typeInfo.ImplementedInterfaces.Any(
+                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
                     typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable)
@@ -225,7 +240,7 @@ namespace Dapper.Contrib
                 keyProperties.Add(versionProperty);
             }
 
-            var allProperties = TypePropertiesCache(type!);
+            var allProperties   = TypePropertiesCache(type!);
             var nonIdProperties = allProperties.Except(keyProperties).ToList();
 
             for (var i = 0; i < nonIdProperties.Count; i++)
@@ -250,10 +265,14 @@ namespace Dapper.Contrib
                 }
             }
 
-            return await connection.ExecuteAsync(sb.ToString(), entityToUpdate, commandTimeout: timeout, transaction: transaction).ConfigureAwait(false);
+            return await connection
+                        .ExecuteAsync(sb.ToString(), entityToUpdate, commandTimeout: timeout, transaction: transaction)
+                        .ConfigureAwait(false);
         }
 
-        public static async Task<int> DeleteAsync<T>(this IDbConnection connection, T entityToDelete, IDbTransaction? transaction = null, int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static async Task<int> DeleteAsync<T>(this IDbConnection connection,         T    entityToDelete,
+                                                     IDbTransaction?    transaction = null, int? timeout = null,
+                                                     ISqlAdapter?       adapter     = null) where T : class
         {
             if (entityToDelete == null)
             {
@@ -271,7 +290,8 @@ namespace Dapper.Contrib
             {
                 var typeInfo = type.GetTypeInfo();
                 var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                    typeInfo.ImplementedInterfaces.Any(
+                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
                     typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable)
@@ -302,7 +322,8 @@ namespace Dapper.Contrib
                 }
             }
 
-            return await connection.ExecuteAsync(sb.ToString(), entityToDelete, transaction, timeout).ConfigureAwait(false);
+            return await connection.ExecuteAsync(sb.ToString(), entityToDelete, transaction, timeout)
+                                   .ConfigureAwait(false);
         }
 
         private static IList<PropertyInfo> KeyPropertiesCache(Type type)
@@ -317,7 +338,9 @@ namespace Dapper.Contrib
 
             if (keyProperties.Count == 0)
             {
-                var idProperty = allProperties.FirstOrDefault(p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
+                var idProperty =
+                    allProperties.FirstOrDefault(
+                        p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
                 if (idProperty != null)
                 {
                     keyProperties.Add(idProperty);
@@ -347,7 +370,7 @@ namespace Dapper.Contrib
                 return pi;
             }
 
-            var allProperties = TypePropertiesCache(type);
+            var allProperties   = TypePropertiesCache(type);
             var versionProperty = allProperties.FirstOrDefault(p => p.HasCustomAttribute<TimestampAttribute>(true));
 
             VersionProperty[type.TypeHandle] = versionProperty;
@@ -380,7 +403,9 @@ namespace Dapper.Contrib
                     ? type.Name.Pluralize()
                     : type.Name;
                 if (type.IsInterface && name.StartsWith("I"))
+                {
                     name = name.Substring(1);
+                }
             }
 
             TypeTableName[type.TypeHandle] = name;

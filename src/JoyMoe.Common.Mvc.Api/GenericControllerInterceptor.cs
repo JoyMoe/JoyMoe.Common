@@ -6,64 +6,64 @@ using JoyMoe.Common.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JoyMoe.Common.Mvc.Api
+namespace JoyMoe.Common.Mvc.Api;
+
+public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
+    where TEntity : class, IDataEntity
 {
-    public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
-        where TEntity : class, IDataEntity
+    public virtual Task<ActionResult<PaginationResponse<long, TEntity>>> Query(
+        HttpContext context, ClaimsPrincipal user,
+        Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<long, TEntity>>>> query)
     {
-        public virtual Task<ActionResult<PaginationResponse<long, TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
-            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<long, TEntity>>>> query)
+        if (query == null)
         {
-            if (query == null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return query(null);
+            throw new ArgumentNullException(nameof(query));
         }
 
-        public virtual Task<ActionResult<TEntity>> Find(HttpContext context, ClaimsPrincipal user,
-            Func<Task<ActionResult<TEntity>>> find)
-        {
-            if (find == null)
-            {
-                throw new ArgumentNullException(nameof(find));
-            }
+        return query(null);
+    }
 
-            return find();
+    public virtual Task<ActionResult<TEntity>> Find(HttpContext                       context, ClaimsPrincipal user,
+                                                    Func<Task<ActionResult<TEntity>>> find)
+    {
+        if (find == null)
+        {
+            throw new ArgumentNullException(nameof(find));
         }
 
-        public virtual Task<ActionResult<TEntity>> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<ActionResult<TEntity>>> create)
-        {
-            if (create == null)
-            {
-                throw new ArgumentNullException(nameof(create));
-            }
+        return find();
+    }
 
-            return create(entity);
+    public virtual Task<ActionResult<TEntity>> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
+                                                      Func<TEntity, Task<ActionResult<TEntity>>> create)
+    {
+        if (create == null)
+        {
+            throw new ArgumentNullException(nameof(create));
         }
 
-        public virtual Task<ActionResult<TEntity>> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<ActionResult<TEntity>>> update)
-        {
-            if (update == null)
-            {
-                throw new ArgumentNullException(nameof(update));
-            }
+        return create(entity);
+    }
 
-            return update(entity);
+    public virtual Task<ActionResult<TEntity>> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
+                                                      Func<TEntity, Task<ActionResult<TEntity>>> update)
+    {
+        if (update == null)
+        {
+            throw new ArgumentNullException(nameof(update));
         }
 
-        public virtual Task<ActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
-            Func<TEntity, Task<ActionResult>> remove)
-        {
-            if (remove == null)
-            {
-                throw new ArgumentNullException(nameof(remove));
-            }
+        return update(entity);
+    }
 
-            return remove(entity);
+    public virtual Task<ActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
+                                             Func<TEntity, Task<ActionResult>> remove)
+    {
+        if (remove == null)
+        {
+            throw new ArgumentNullException(nameof(remove));
         }
+
+        return remove(entity);
     }
 }
