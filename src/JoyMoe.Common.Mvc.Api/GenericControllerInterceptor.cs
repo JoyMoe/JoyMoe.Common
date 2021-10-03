@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -12,8 +11,8 @@ namespace JoyMoe.Common.Mvc.Api
     public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
         where TEntity : class, IDataEntity
     {
-        public virtual Task<ActionResult<PaginationResponse<TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
-            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<TEntity>>>> query)
+        public virtual Task<ActionResult<PaginationResponse<long, TEntity>>> Query(HttpContext context, ClaimsPrincipal user,
+            Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<long, TEntity>>>> query)
         {
             if (query == null)
             {

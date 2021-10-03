@@ -60,49 +60,26 @@ namespace JoyMoe.Common.Data
 
             IgnoreQueryFilters = true;
 
-            return ListAsync(predicate, selector, null, ct);
+            return ListAsync(predicate, selector, ct);
         }
 
-        public virtual IAsyncEnumerable<TEntity> ListAsync<TKey>(
+        public abstract IAsyncEnumerable<TEntity> ListAsync(
             Expression<Func<TEntity, bool>>? predicate,
-            CancellationToken ct = default)
-            where TKey : struct
-        {
-            return ListAsync<TKey>(predicate, null, null, ct);
-        }
+            CancellationToken ct = default);
 
         public abstract IAsyncEnumerable<TEntity> ListAsync<TKey>(
             Expression<Func<TEntity, bool>>? predicate,
             Expression<Func<TEntity, TKey>>? ordering,
-            int? limitation,
             CancellationToken ct = default)
             where TKey : struct;
 
-        public virtual async Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
+        public abstract Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
-            TKey? before = null,
-            int size = 10,
             Expression<Func<TEntity, bool>>? predicate = null,
+            TKey? cursor = null,
+            int size = 20,
             CancellationToken ct = default)
-            where TKey : struct, IComparable
-        {
-            if (before != null)
-            {
-                var key = selector.GetColumn();
-
-                var parameter = predicate == null
-                    ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
-                    : predicate.Parameters[0];
-
-                var property = Expression.Property(parameter, key.Member.Name);
-                var less = Expression.LessThan(property, Expression.Constant(before));
-                var lambda = Expression.Lambda<Func<TEntity, bool>>(less, parameter);
-
-                predicate = predicate.And(lambda);
-            }
-
-            return await ListAsync(predicate, selector, size, ct).ToListAsync(ct).ConfigureAwait(false);
-        }
+            where TKey : struct;
 
         public abstract Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
 

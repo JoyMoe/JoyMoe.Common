@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using JoyMoe.Common.Abstractions;
 using JoyMoe.Common.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -30,25 +29,23 @@ namespace JoyMoe.Common.Mvc.Api
         }
 
         [HttpGet]
-        public async Task<ActionResult<PaginationResponse<TResponse>>> Query([FromQuery] long? before = null, [FromQuery] int size = 10)
+        public async Task<ActionResult<PaginationResponse<long, TResponse>>> Query([FromQuery] long? cursor, [FromQuery] int size = 10)
         {
             if (!ModelState.IsValid)
             {
                 return UnprocessableEntity(ModelState);
             }
 
-            var result = await _interceptor.Query(HttpContext, User, predicate => _query(before, size, predicate)).ConfigureAwait(false);
+            var result = await _interceptor.Query(HttpContext, User, predicate => _query(cursor, size, predicate)).ConfigureAwait(false);
 
             return _mapResponse(result);
         }
 
-        private async Task<ActionResult<PaginationResponse<TEntity>>> _query(long? before, int size, Expression<Func<TEntity, bool>>? predicate)
+        private async Task<ActionResult<PaginationResponse<long, TEntity>>> _query(long? cursor, int size, Expression<Func<TEntity, bool>>? predicate)
         {
-            var entities = await _repository
-                .PaginateAsync(e => e.Id, before, size, predicate)
+            return await _repository
+                .PaginateAsync(e => e.Id,predicate, cursor, size)
                 .ConfigureAwait(false);
-
-            return new PaginationResponse<TEntity>(entities.ToArray(), before);
         }
 
         [HttpGet("{id}")]
@@ -213,7 +210,7 @@ namespace JoyMoe.Common.Mvc.Api
             throw new NotSupportedException();
         }
 
-        private PaginationResponse<TResponse> _mapResponse(PaginationResponse<TEntity> result)
+        private PaginationResponse<long, TResponse> _mapResponse(PaginationResponse<long, TEntity> result)
         {
             if (typeof(TEntity) != typeof(TResponse))
             {
@@ -224,16 +221,15 @@ namespace JoyMoe.Common.Mvc.Api
                     data = _mapResponse(result.Data);
                 }
 
-                return new PaginationResponse<TResponse>
+                return new PaginationResponse<long, TResponse>
                 {
-                    Before = result.Before,
-                    Size = result.Size,
-                    Last = result.Last,
-                    Data = data,
+                    Prev = result.Prev,
+                    Next = result.Next,
+                    Data = data
                 };
             }
 
-            if (result is PaginationResponse<TResponse> response)
+            if (result is PaginationResponse<long, TResponse> response)
             {
                 return response;
             }
@@ -253,18 +249,18 @@ namespace JoyMoe.Common.Mvc.Api
 
         }
 
-        private ActionResult<PaginationResponse<TResponse>> _mapResponse(ActionResult<PaginationResponse<TEntity>> result)
+        private ActionResult<PaginationResponse<long, TResponse>> _mapResponse(ActionResult<PaginationResponse<long, TEntity>> result)
         {
             if (result.Result == null)
             {
-                return new ActionResult<PaginationResponse<TResponse>>(_mapResponse(result.Value));
+                return new ActionResult<PaginationResponse<long, TResponse>>(_mapResponse(result.Value));
             }
 
-            if (!(result.Result is ObjectResult or) || !(or.Value is PaginationResponse<TEntity> entities)) return result.Result;
+            if (!(result.Result is ObjectResult or) || !(or.Value is PaginationResponse<long, TEntity> entities)) return result.Result;
 
             or.Value = _mapResponse(entities);
 
-            return new ActionResult<PaginationResponse<TResponse>>(or);
+            return new ActionResult<PaginationResponse<long, TResponse>>(or);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JoyMoe.Common.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace JoyMoe.Common.Data.EFCore
@@ -13,8 +14,7 @@ namespace JoyMoe.Common.Data.EFCore
         where TEntity : class
     {
         public EntityFrameworkCoreRepository(DbContext context) : base(context)
-        {
-        }
+        { }
     }
 
     public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<TEntity>
@@ -28,10 +28,25 @@ namespace JoyMoe.Common.Data.EFCore
             Context = context;
         }
 
+        public override async IAsyncEnumerable<TEntity> ListAsync(
+            Expression<Func<TEntity, bool>>? predicate,
+            [EnumeratorCancellation] CancellationToken ct = default)
+        {
+            predicate = FilteringQuery(predicate);
+
+            var enumerable = BuildQuery(Context, predicate)
+                .AsAsyncEnumerable()
+                .WithCancellation(ct);
+
+            await foreach (var entity in enumerable)
+            {
+                yield return entity;
+            }
+        }
+
         public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
             Expression<Func<TEntity, bool>>? predicate,
             Expression<Func<TEntity, TKey>>? ordering,
-            int? limitation,
             [EnumeratorCancellation] CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
@@ -43,11 +58,6 @@ namespace JoyMoe.Common.Data.EFCore
                 query = query.OrderByDescending(ordering);
             }
 
-            if (limitation.HasValue)
-            {
-                query = query.Take(limitation.Value);
-            }
-
             var enumerable = query
                 .AsAsyncEnumerable()
                 .WithCancellation(ct);
@@ -56,6 +66,60 @@ namespace JoyMoe.Common.Data.EFCore
             {
                 yield return entity;
             }
+        }
+
+        public override async Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            Expression<Func<TEntity, bool>>? predicate = null,
+            TKey? cursor = null,
+            int size = 20,
+            CancellationToken ct = default)
+        {
+            var func = selector.Compile();
+
+            predicate = FilteringQuery(predicate);
+
+            var key = selector.GetColumn();
+
+            var parameter = predicate == null
+                ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+                : predicate.Parameters[0];
+
+            var property = Expression.Property(parameter, key.Member.Name);
+
+            Expression<Func<TEntity, bool>>? filtering = null;
+            if (cursor.HasValue)
+            {
+                var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
+                filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
+            }
+
+            var query = BuildQuery(Context, predicate.And(filtering));
+
+            var data = await query
+                .OrderByDescending(selector)
+                .Take(size + 1)
+                .ToArrayAsync(ct);
+
+            TEntity? prev = null;
+            var first = data.FirstOrDefault();
+            if (first != null)
+            {
+                var than = Expression.GreaterThan(property, Expression.Constant(func(first)));
+                var greater = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
+
+                prev = await BuildQuery(Context, predicate.And(greater))
+                    .OrderBy(selector)
+                    .Take(size)
+                    .LastOrDefaultAsync(ct);
+            }
+
+            return new PaginationResponse<TKey, TEntity>
+            {
+                Prev = prev != null ? func(prev) : null,
+                Next = data?.Length > size ? func(data.Last()) : null,
+                Data = data?.Length > size ? data[..size] : data
+            };
         }
 
         public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)

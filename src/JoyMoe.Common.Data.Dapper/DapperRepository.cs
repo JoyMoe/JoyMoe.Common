@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using Dapper.Contrib;
+using JoyMoe.Common.Abstractions;
 
 namespace JoyMoe.Common.Data.Dapper
 {
@@ -21,21 +23,99 @@ namespace JoyMoe.Common.Data.Dapper
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
-        public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
+        public override async IAsyncEnumerable<TEntity> ListAsync(
             Expression<Func<TEntity, bool>>? predicate,
-            Expression<Func<TEntity, TKey>>? ordering,
-            int? limitation,
             [EnumeratorCancellation] CancellationToken ct = default)
         {
             predicate = FilteringQuery(predicate);
 
-            var entities = await Connection.QueryAsync(predicate, ordering?.GetColumn().Member.Name, limitation).ConfigureAwait(false);
+            var entities = await Connection.QueryAsync(predicate).ConfigureAwait(false);
             if (entities == null) yield break;
 
             foreach (var entity in entities)
             {
                 yield return entity;
             }
+        }
+
+        public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
+            Expression<Func<TEntity, bool>>? predicate,
+            Expression<Func<TEntity, TKey>>? ordering,
+            [EnumeratorCancellation] CancellationToken ct = default)
+        {
+            predicate = FilteringQuery(predicate);
+
+            Dictionary<string, string?>? orderings = null;
+            if (!string.IsNullOrWhiteSpace(ordering?.GetColumn().Member.Name))
+            {
+                orderings = new Dictionary<string, string?>
+                {
+                    [ordering.GetColumn().Member.Name] = null
+                };
+            }
+
+            var entities = await Connection.QueryAsync(predicate, orderings).ConfigureAwait(false);
+            if (entities == null) yield break;
+
+            foreach (var entity in entities)
+            {
+                yield return entity;
+            }
+        }
+
+        public override async Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+            Expression<Func<TEntity, TKey>> selector,
+            Expression<Func<TEntity, bool>>? predicate = null,
+            TKey? cursor = null,
+            int size = 20,
+            CancellationToken ct = default)
+        {
+            var func = selector.Compile();
+
+            predicate = FilteringQuery(predicate);
+
+            var key = selector.GetColumn();
+
+            var parameter = predicate == null
+                ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+                : predicate.Parameters[0];
+
+            var property = Expression.Property(parameter, key.Member.Name);
+
+            Expression<Func<TEntity, bool>>? filtering = null;
+            if (cursor.HasValue)
+            {
+                var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
+                filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
+            }
+
+            var entities = await Connection.QueryAsync(predicate.And(filtering), new Dictionary<string, string?>
+            {
+                [selector.GetColumn().Member.Name] = "DESC"
+            }, size + 1).ConfigureAwait(false);
+            var data = entities.ToArray();
+
+            TEntity? prev = null;
+            var first = data.FirstOrDefault();
+            if (first != null)
+            {
+                var than = Expression.GreaterThan(property, Expression.Constant(func(first)));
+                var greater = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
+
+                entities = await Connection.QueryAsync(predicate.And(greater), new Dictionary<string, string?>
+                {
+                    [selector.GetColumn().Member.Name] = null
+                }, size).ConfigureAwait(false);
+
+                prev = entities.LastOrDefault();
+            }
+
+            return new PaginationResponse<TKey, TEntity>
+            {
+                Prev = prev != null ? func(prev) : null,
+                Next = data.Length > size ? func(data.Last()) : null,
+                Data = data.Length > size ? data[..size] : data
+            };
         }
 
         public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default)

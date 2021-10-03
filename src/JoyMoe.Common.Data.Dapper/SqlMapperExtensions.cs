@@ -38,23 +38,34 @@ namespace Dapper.Contrib
             ["fbconnection"] = new FbAdapter()
         };
 
-        public static Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate, string? ordering = null, int? limitation = null,
-            IDbTransaction? transaction = null, int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection connection,
+            Expression<Func<T, bool>>? predicate,
+            Dictionary<string, string?>? orderings = null,
+            int? size = null,
+            IDbTransaction? transaction = null,
+            int? timeout = null,
+            ISqlAdapter? adapter = null) where T : class
         {
             adapter ??= GetFormatter(connection);
 
             var (sb, parameters) = BuildQuery(predicate, adapter);
 
-            if (!string.IsNullOrWhiteSpace(ordering))
+            if (orderings != null)
             {
                 sb.Append(" ORDER BY ");
-                adapter.AppendColumnName(sb, ordering);
-                sb.Append(" DESC");
+                foreach (var (column, modifier) in orderings)
+                {
+                    adapter.AppendColumnName(sb, column);
+                    if (!string.IsNullOrWhiteSpace(modifier))
+                    {
+                        sb.AppendFormat(" {0}", modifier);
+                    }
+                }
             }
 
-            if (limitation.HasValue)
+            if (size.HasValue)
             {
-                sb.AppendFormat(" LIMIT {0}", limitation);
+                sb.AppendFormat(" LIMIT {0}", size);
             }
 
             return connection.QueryAsync<T>(sb.ToString(), parameters, transaction, timeout);

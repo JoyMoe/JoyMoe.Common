@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using JoyMoe.Common.Abstractions;
 
 namespace JoyMoe.Common.Data
 {
@@ -22,25 +23,23 @@ namespace JoyMoe.Common.Data
             CancellationToken ct = default)
             where TKey : struct;
 
-        IAsyncEnumerable<TEntity> ListAsync<TKey>(
+        IAsyncEnumerable<TEntity> ListAsync(
             Expression<Func<TEntity, bool>>? predicate,
-            CancellationToken ct = default)
-            where TKey : struct;
+            CancellationToken ct = default);
 
         IAsyncEnumerable<TEntity> ListAsync<TKey>(
             Expression<Func<TEntity, bool>>? predicate,
             Expression<Func<TEntity, TKey>>? ordering,
-            int? limitation,
             CancellationToken ct = default)
             where TKey : struct;
 
-        Task<IEnumerable<TEntity>> PaginateAsync<TKey>(
+        Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
             Expression<Func<TEntity, TKey>> selector,
-            TKey? before = null,
-            int size = 10,
             Expression<Func<TEntity, bool>>? predicate = null,
+            TKey? cursor = null,
+            int size = 10,
             CancellationToken ct = default)
-            where TKey : struct, IComparable;
+            where TKey : struct;
 
         Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
         Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
