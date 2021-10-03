@@ -156,7 +156,7 @@ public class S3WebClient : IDisposable
                 });
         }
 
-        var uri = Uri.EscapeDataString(message.RequestUri!.AbsolutePath)
+        var uri = Uri.EscapeDataString(message.RequestUri.AbsolutePath)
                      .Replace("%2F", "/");
         var query = string.Join("&", message.RequestUri!
                                             .ToQueryKeyValuePairs()

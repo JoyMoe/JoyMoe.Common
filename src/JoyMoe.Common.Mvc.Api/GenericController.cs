@@ -243,9 +243,9 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
 
     private ActionResult<TResponse> _mapResponse(ActionResult<TEntity> result)
     {
-        if (result.Result == null) return new ActionResult<TResponse>(_mapResponse(result.Value));
+        if (result.Result == null) return new ActionResult<TResponse>(_mapResponse(result.Value!));
 
-        if (!(result.Result is ObjectResult or) || !(or.Value is TEntity entity)) return result.Result;
+        if (result.Result is not ObjectResult { Value: TEntity entity } or) return result.Result;
 
         or.Value = _mapResponse(entity);
 
@@ -257,11 +257,13 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     {
         if (result.Result == null)
         {
-            return new ActionResult<PaginationResponse<long, TResponse>>(_mapResponse(result.Value));
+            return new ActionResult<PaginationResponse<long, TResponse>>(_mapResponse(result.Value!));
         }
 
-        if (!(result.Result is ObjectResult or) || !(or.Value is PaginationResponse<long, TEntity> entities))
+        if (result.Result is not ObjectResult { Value: PaginationResponse<long, TEntity> entities } or)
+        {
             return result.Result;
+        }
 
         or.Value = _mapResponse(entities);
 

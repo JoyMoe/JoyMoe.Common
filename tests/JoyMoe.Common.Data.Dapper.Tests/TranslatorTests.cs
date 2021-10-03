@@ -103,7 +103,7 @@ public class TranslatorTests
         Assert.Equal("( NOT (\"Id\" = ANY(@__p0)) AND ((\"FirstName\" LIKE @__p1) OR (\"LastName\" = @__p2)))", clause);
         Assert.NotNull(parameters);
         Assert.Equal("Caro%", parameters!.Get<string>("@__p1"));
-        Assert.Equal("Sophia", parameters!.Get<string>("@__p2"));
+        Assert.Equal("Sophia", parameters.Get<string>("@__p2"));
     }
 
     private static (string?, DynamicParameters?) Translate(Expression<Func<Student, bool>> expression)
