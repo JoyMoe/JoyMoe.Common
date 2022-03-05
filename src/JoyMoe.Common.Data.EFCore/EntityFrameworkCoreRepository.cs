@@ -142,7 +142,18 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
                     .ConfigureAwait(false);
     }
 
-    public override async Task<long> CountAsync(
+    public override async Task<int> CountAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
+
+        return await BuildQuery(Context, predicate)
+                    .CountAsync(ct)
+                    .ConfigureAwait(false);
+    }
+
+    public override async Task<long> LongCountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default)
     {

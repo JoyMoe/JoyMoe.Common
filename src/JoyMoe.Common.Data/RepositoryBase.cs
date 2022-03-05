@@ -89,9 +89,17 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default);
 
-    public abstract Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+    public abstract Task<bool> AnyAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default);
 
-    public abstract Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
+    public abstract Task<int> CountAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default);
+
+    public abstract Task<long> LongCountAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default);
 
     public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
     {

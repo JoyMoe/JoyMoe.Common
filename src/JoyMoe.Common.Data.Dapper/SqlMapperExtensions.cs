@@ -100,7 +100,7 @@ namespace Dapper.Contrib
             return connection.QuerySingleOrDefaultAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<long> CountAsync<T>(
+        public static Task<TResult> CountAsync<T, TResult>(
             this IDbConnection connection, Expression<Func<T, bool>>? predicate,
             IDbTransaction?    transaction = null,
             int?               timeout     = null, ISqlAdapter? adapter = null) where T : class
@@ -111,7 +111,12 @@ namespace Dapper.Contrib
 
             sb.Remove(0, 8);
 
-            return connection.QueryFirstOrDefaultAsync<long>($"SELECT COUNT(*) {sb}", parameters, transaction, timeout);
+            return connection.QueryFirstOrDefaultAsync<TResult>(
+                $"SELECT COUNT(*) {sb}",
+                parameters,
+                transaction,
+                timeout
+            );
         }
 
         private static (StringBuilder, DynamicParameters?) BuildQuery<T>(

@@ -129,14 +129,24 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         return count > 0;
     }
 
-    public override async Task<long> CountAsync(
+    public override async Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default)
     {
         predicate = FilteringQuery(predicate);
 
-        return await Connection.CountAsync(predicate).ConfigureAwait(false);
+        return await Connection.CountAsync<TEntity, int>(predicate).ConfigureAwait(false);
     }
+
+    public override async Task<long> LongCountAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
+    {
+        predicate = FilteringQuery(predicate);
+
+        return await Connection.CountAsync<TEntity, long>(predicate).ConfigureAwait(false);
+    }
+
 
     public override async Task AddAsync(TEntity entity, CancellationToken ct = default)
     {
