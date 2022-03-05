@@ -5,8 +5,7 @@ namespace JoyMoe.Common.Diagnostics;
 
 public class RfcHealthCheckWriterPostConfigureOptions : IPostConfigureOptions<HealthCheckOptions>
 {
-    public void PostConfigure(string name, HealthCheckOptions options)
-    {
+    public void PostConfigure(string name, HealthCheckOptions options) {
         options.ResponseWriter = RfcHealthCheckWriter.WriteResponse;
     }
 }

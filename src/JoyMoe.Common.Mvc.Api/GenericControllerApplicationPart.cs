@@ -13,28 +13,21 @@ public class GenericControllerFeatureProvider : IApplicationFeatureProvider<Cont
     private readonly Type _requestType;
     private readonly Type _responseType;
 
-    public GenericControllerFeatureProvider(Type entityType, Type requestType, Type responseType)
-    {
+    public GenericControllerFeatureProvider(Type entityType, Type requestType, Type responseType) {
         _entityType   = entityType;
         _requestType  = requestType;
         _responseType = responseType;
     }
 
-    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
-    {
-        if (feature == null) throw new ArgumentNullException(nameof(feature));
-
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature) {
         var typeName = _entityType.Name.Pluralize() + "Controller";
 
         // Check to see if there is a "real" controller for this class
         if (feature.Controllers.Any(t => t.Name == typeName)) return;
 
         // Create a generic controller for this type
-        var controllerType = typeof(GenericController<,,>).MakeGenericType(
-            _entityType,
-            _requestType,
-            _responseType
-        ).GetTypeInfo();
+        var controllerType = typeof(GenericController<,,>).MakeGenericType(_entityType, _requestType, _responseType)
+                                                          .GetTypeInfo();
 
         feature.Controllers.Add(controllerType);
     }

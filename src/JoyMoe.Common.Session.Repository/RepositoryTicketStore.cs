@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
-#nullable disable
 namespace JoyMoe.Common.Session.Repository;
 
 /// <summary>
@@ -19,31 +18,22 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public RepositoryTicketStore(IServiceProvider serviceProvider)
-    {
+    public RepositoryTicketStore(IServiceProvider serviceProvider) {
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<string> StoreAsync(AuthenticationTicket ticket)
-    {
-        if (ticket == null)
-        {
-            throw new ArgumentNullException(nameof(ticket));
-        }
-
+    public async Task<string> StoreAsync(AuthenticationTicket ticket) {
         using var scope = _serviceProvider.CreateScope();
 
-        var repository = scope.ServiceProvider.GetService<TRepository>();
-        if (repository == null) throw new InvalidOperationException();
+        var repository = scope.ServiceProvider.GetRequiredService<TRepository>();
 
-        var manager = scope.ServiceProvider.GetService<UserManager<TUser>>();
-        if (manager == null) throw new InvalidOperationException();
+        var manager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
 
         var now = DateTime.UtcNow;
 
         var entity = new TSession
         {
-            User             = await manager.GetUserAsync(ticket.Principal).ConfigureAwait(false),
+            User             = await manager.GetUserAsync(ticket.Principal),
             Type             = ticket.AuthenticationScheme,
             Value            = SerializeToBytes(ticket),
             ExpirationDate   = ticket.Properties.ExpiresUtc?.UtcDateTime,
@@ -51,53 +41,45 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
             ModificationDate = now
         };
 
-        await repository.AddAsync(entity).ConfigureAwait(false);
-        await repository.CommitAsync().ConfigureAwait(false);
+        await repository.AddAsync(entity);
+        await repository.CommitAsync();
 
         return entity.Id.ToString();
     }
 
-    public async Task RenewAsync(string key, AuthenticationTicket ticket)
-    {
-        if (ticket == null)
-        {
-            throw new ArgumentNullException(nameof(ticket));
-        }
-
+    public async Task RenewAsync(string key, AuthenticationTicket ticket) {
         if (!Guid.TryParse(key, out var id)) return;
 
         using var scope      = _serviceProvider.CreateScope();
-        var       repository = scope.ServiceProvider.GetService<TRepository>();
-        if (repository == null) throw new InvalidOperationException();
+        var       repository = scope.ServiceProvider.GetRequiredService<TRepository>();
 
-        var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
+        var entity = await repository.FindAsync(e => e.Id, id);
         if (entity == null) return;
 
         entity.Value            = SerializeToBytes(ticket);
         entity.ExpirationDate   = ticket.Properties.ExpiresUtc?.UtcDateTime;
         entity.ModificationDate = DateTime.UtcNow;
 
-        await repository.UpdateAsync(entity).ConfigureAwait(false);
-        await repository.CommitAsync().ConfigureAwait(false);
+        await repository.UpdateAsync(entity);
+        await repository.CommitAsync();
     }
 
-    public async Task<AuthenticationTicket> RetrieveAsync(string key)
-    {
+    public async Task<AuthenticationTicket?> RetrieveAsync(string key) {
         if (!Guid.TryParse(key, out var id)) return null;
 
         using var scope      = _serviceProvider.CreateScope();
-        var       repository = scope.ServiceProvider.GetService<TRepository>();
-        if (repository == null) throw new InvalidOperationException();
+        var       repository = scope.ServiceProvider.GetRequiredService<TRepository>();
 
-        var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
+        var entity = await repository.FindAsync(e => e.Id, id);
         if (entity == null) return null;
 
         entity.ModificationDate = DateTime.UtcNow;
 
-        await repository.UpdateAsync(entity).ConfigureAwait(false);
-        await repository.CommitAsync().ConfigureAwait(false);
+        await repository.UpdateAsync(entity);
+        await repository.CommitAsync();
 
         var ticket = DeserializeFromBytes(entity.Value);
+        if (ticket == null) return null;
 
         ticket.Properties.ExpiresUtc = entity.ExpirationDate != null
             ? DateTime.SpecifyKind(entity.ExpirationDate.Value, DateTimeKind.Utc)
@@ -109,29 +91,24 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
         return ticket;
     }
 
-    public async Task RemoveAsync(string key)
-    {
+    public async Task RemoveAsync(string key) {
         if (!Guid.TryParse(key, out var id)) return;
 
         using var scope      = _serviceProvider.CreateScope();
-        var       repository = scope.ServiceProvider.GetService<TRepository>();
-        if (repository == null) throw new InvalidOperationException();
+        var       repository = scope.ServiceProvider.GetRequiredService<TRepository>();
 
-        var entity = await repository.FindAsync(e => e.Id, id).ConfigureAwait(false);
+        var entity = await repository.FindAsync(e => e.Id, id);
         if (entity == null) return;
 
-        await repository.RemoveAsync(entity).ConfigureAwait(false);
-        await repository.CommitAsync().ConfigureAwait(false);
+        await repository.RemoveAsync(entity);
+        await repository.CommitAsync();
     }
 
-    private static byte[] SerializeToBytes(AuthenticationTicket source)
-    {
+    private static byte[] SerializeToBytes(AuthenticationTicket source) {
         return TicketSerializer.Default.Serialize(source);
     }
 
-    private static AuthenticationTicket DeserializeFromBytes(byte[] source)
-    {
+    private static AuthenticationTicket? DeserializeFromBytes(byte[]? source) {
         return source == null ? null : TicketSerializer.Default.Deserialize(source);
     }
 }
-#nullable restore

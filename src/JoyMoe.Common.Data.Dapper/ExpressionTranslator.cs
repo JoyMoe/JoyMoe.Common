@@ -15,17 +15,12 @@ public class ExpressionTranslator : ExpressionVisitor
     private string? _stringConstantPrefix;
     private string? _stringConstantSuffix;
 
-    public ExpressionTranslator(ISqlAdapter adapter)
-    {
+    public ExpressionTranslator(ISqlAdapter adapter) {
         _adapter = adapter;
     }
 
-    public (string?, DynamicParameters?) Translate(Expression? expression)
-    {
-        if (expression == null)
-        {
-            return (null, null);
-        }
+    public (string?, DynamicParameters?) Translate(Expression? expression) {
+        if (expression == null) return (null, null);
 
         Visit(expression);
 
@@ -34,23 +29,18 @@ public class ExpressionTranslator : ExpressionVisitor
         if (_values.Count == 0) return (clause, null);
 
         var parameters = new DynamicParameters();
-        for (var i = 0; i < _values.Count; i++)
-        {
-            parameters.Add($"@__p{i}", _values[i]);
-        }
+        for (var i = 0; i < _values.Count; i++) parameters.Add($"@__p{i}", _values[i]);
 
         return (clause, parameters);
     }
 
-    protected override Expression VisitMethodCall(MethodCallExpression m)
-    {
+    protected override Expression VisitMethodCall(MethodCallExpression m) {
         _sb.Append('(');
 
         switch (m.Method.Name)
         {
             case "Contains":
-                if (m.Object?.NodeType == ExpressionType.MemberAccess &&
-                    m.Object?.Type == typeof(string))
+                if (m.Object?.NodeType == ExpressionType.MemberAccess && m.Object?.Type == typeof(string))
                 {
                     goto case "StringContains";
                 }
@@ -95,10 +85,7 @@ public class ExpressionTranslator : ExpressionVisitor
                 goto case "StringLikes";
 
             case "StringLikes":
-                if (m.Object?.NodeType != ExpressionType.MemberAccess)
-                {
-                    goto default;
-                }
+                if (m.Object?.NodeType != ExpressionType.MemberAccess) goto default;
 
                 Visit(m.Object);
                 _sb.Append(" LIKE ");
@@ -179,8 +166,7 @@ public class ExpressionTranslator : ExpressionVisitor
         return m;
     }
 
-    protected override Expression VisitUnary(UnaryExpression u)
-    {
+    protected override Expression VisitUnary(UnaryExpression u) {
         switch (u.NodeType)
         {
             case ExpressionType.Not:
@@ -198,8 +184,7 @@ public class ExpressionTranslator : ExpressionVisitor
         return u;
     }
 
-    protected override Expression VisitBinary(BinaryExpression b)
-    {
+    protected override Expression VisitBinary(BinaryExpression b) {
         _sb.Append('(');
 
         Visit(b.Left);
@@ -253,8 +238,7 @@ public class ExpressionTranslator : ExpressionVisitor
         return b;
     }
 
-    protected override Expression VisitConstant(ConstantExpression c)
-    {
+    protected override Expression VisitConstant(ConstantExpression c) {
         if (c.Value == null)
         {
             _sb.Append("NULL");
@@ -288,8 +272,7 @@ public class ExpressionTranslator : ExpressionVisitor
         return c;
     }
 
-    protected override Expression VisitMember(MemberExpression m)
-    {
+    protected override Expression VisitMember(MemberExpression m) {
         if (m.Expression == null)
         {
             throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
@@ -297,9 +280,7 @@ public class ExpressionTranslator : ExpressionVisitor
 
         if (m.NodeType == ExpressionType.MemberAccess && m.Expression.NodeType != ExpressionType.Parameter)
         {
-            var item = Expression.Lambda<Func<object>>(Expression.Convert(m, typeof(object)))
-                                 .Compile()
-                                 .Invoke();
+            var item = Expression.Lambda<Func<object>>(Expression.Convert(m, typeof(object))).Compile().Invoke();
 
             Visit(Expression.Constant(item));
 
@@ -317,8 +298,7 @@ public class ExpressionTranslator : ExpressionVisitor
         return m;
     }
 
-    private void AppendParameter(object item)
-    {
+    private void AppendParameter(object item) {
         _sb.AppendFormat("@__p{0}", _values.Count);
 
         if (item is string @string)
@@ -335,8 +315,7 @@ public class ExpressionTranslator : ExpressionVisitor
         _stringConstantSuffix = null;
     }
 
-    private static bool IsNullConstant(Expression exp)
-    {
+    private static bool IsNullConstant(Expression exp) {
         return exp.NodeType == ExpressionType.Constant && ((ConstantExpression)exp).Value == null;
     }
 }

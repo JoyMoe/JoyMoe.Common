@@ -12,26 +12,15 @@ public class DomainFilter : Attribute, IResourceFilter
 {
     private readonly Regex _regex;
 
-    public DomainFilter(string regex)
-    {
+    public DomainFilter(string regex) {
         _regex = new Regex(regex);
     }
 
-    public void OnResourceExecuted(ResourceExecutedContext context)
-    {
+    public void OnResourceExecuted(ResourceExecutedContext context) {
         //
     }
 
-    public void OnResourceExecuting(ResourceExecutingContext context)
-    {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
-        if (!_regex.IsMatch(context.HttpContext.Request.Host.Host))
-        {
-            context.Result = new NotFoundResult();
-        }
+    public void OnResourceExecuting(ResourceExecutingContext context) {
+        if (!_regex.IsMatch(context.HttpContext.Request.Host.Host)) context.Result = new NotFoundResult();
     }
 }

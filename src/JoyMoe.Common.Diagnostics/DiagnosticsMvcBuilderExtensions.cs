@@ -10,25 +10,13 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DiagnosticsMvcBuilderExtensions
 {
-    public static IServiceCollection AddApiProblemDetailsFactory(this IServiceCollection services)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
+    public static IServiceCollection AddApiProblemDetailsFactory(this IServiceCollection services) {
         services.TryAddSingleton<ProblemDetailsFactory, ApiProblemDetailsFactory>();
 
         return services;
     }
 
-    public static IHealthChecksBuilder AddRfcHealthChecks(this IServiceCollection services)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
+    public static IHealthChecksBuilder AddRfcHealthChecks(this IServiceCollection services) {
         services.TryAddSingleton<IPostConfigureOptions<HealthCheckOptions>, RfcHealthCheckWriterPostConfigureOptions>();
 
         return services.AddHealthChecks();

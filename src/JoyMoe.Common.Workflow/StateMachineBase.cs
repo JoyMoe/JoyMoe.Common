@@ -11,38 +11,24 @@ public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDi
     private readonly IDisposable? _eventObserver;
     private readonly IDisposable? _stateObserver;
 
-    protected StateMachineBase()
-    {
-    }
+    protected StateMachineBase() { }
 
-    protected StateMachineBase(StateObserver<TI> observer)
-    {
+    protected StateMachineBase(StateObserver<TI> observer) {
         _eventObserver = this.ConnectEventObserver(new EventTriggerObserver<TI>());
         _stateObserver = this.ConnectStateObserver(observer);
     }
 
-    public State<TI> GetCurrentState(TI instance)
-    {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
-
+    public State<TI> GetCurrentState(TI instance) {
         return GetState(instance.State);
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
+    protected virtual void Dispose(bool disposing) {
+        if (_disposed) return;
 
         if (disposing)
         {

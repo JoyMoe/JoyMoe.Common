@@ -5,8 +5,7 @@ namespace JoyMoe.Common.Json.Tests;
 public class SnakeCaseNamingPolicyTests
 {
     [Fact]
-    public void ConvertNameTest()
-    {
+    public void ConvertNameTest() {
         var policy = new SnakeCaseNamingPolicy();
 
         Assert.Equal("foo", policy.ConvertName("Foo"));

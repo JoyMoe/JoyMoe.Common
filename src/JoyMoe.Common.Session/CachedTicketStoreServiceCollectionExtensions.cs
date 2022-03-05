@@ -14,13 +14,7 @@ public static class CachedTicketStoreServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddCachedTicketStore(this IServiceCollection services)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
+    public static IServiceCollection AddCachedTicketStore(this IServiceCollection services) {
         services.TryAddSingleton<ITicketStore, CachedTicketStore>();
         services.TryAddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, SessionStoreOptions>();
 

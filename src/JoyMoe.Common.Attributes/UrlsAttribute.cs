@@ -12,17 +12,12 @@ public sealed class UrlsAttribute : DataTypeAttribute
 {
     private readonly UrlAttribute _url = new();
 
-    public UrlsAttribute() : base(DataType.Url)
-    {
+    public UrlsAttribute() : base(DataType.Url) {
         ErrorMessage = "The {0} field is not a valid fully-qualified http, https, or ftp URL.";
     }
 
-    public override bool IsValid(object? value)
-    {
-        if (!(value is string[] valueAsStringArray))
-        {
-            return true;
-        }
+    public override bool IsValid(object? value) {
+        if (!(value is string[] valueAsStringArray)) return true;
 
         return valueAsStringArray.All(valueAsString => _url.IsValid(valueAsString));
     }

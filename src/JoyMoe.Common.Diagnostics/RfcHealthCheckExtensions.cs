@@ -5,8 +5,7 @@ namespace Microsoft.Extensions.Diagnostics.HealthChecks;
 
 public static class RfcHealthCheckExtensions
 {
-    public static string ToRfcStatusString(this HealthStatus status)
-    {
+    public static string ToRfcStatusString(this HealthStatus status) {
         return status switch
         {
             HealthStatus.Unhealthy => "fail",

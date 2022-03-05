@@ -13,14 +13,10 @@ public class SnakeCaseNamingPolicy : JsonNamingPolicy
     public static readonly SnakeCaseNamingPolicy Instance = new();
 
     /// <inheritdoc/>
-    public override string ConvertName(string name)
-    {
+    public override string ConvertName(string name) {
         // Port from https://github.com/efcore/EFCore.NamingConventions/blob/290cc330292d60bd1bad8eb28b46ef755de4b0cb/EFCore.NamingConventions/NamingConventions/Internal/SnakeCaseNameRewriter.cs
 
-        if (string.IsNullOrEmpty(name))
-        {
-            return name;
-        }
+        if (string.IsNullOrEmpty(name)) return name;
 
         var builder          = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
         var previousCategory = default(UnicodeCategory?);
@@ -57,18 +53,12 @@ public class SnakeCaseNamingPolicy : JsonNamingPolicy
 
                 case UnicodeCategory.LowercaseLetter:
                 case UnicodeCategory.DecimalDigitNumber:
-                    if (previousCategory == UnicodeCategory.SpaceSeparator)
-                    {
-                        builder.Append('_');
-                    }
+                    if (previousCategory == UnicodeCategory.SpaceSeparator) builder.Append('_');
 
                     break;
 
                 default:
-                    if (previousCategory != null)
-                    {
-                        previousCategory = UnicodeCategory.SpaceSeparator;
-                    }
+                    if (previousCategory != null) previousCategory = UnicodeCategory.SpaceSeparator;
 
                     continue;
             }

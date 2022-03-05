@@ -7,18 +7,11 @@ namespace JoyMoe.Common.Workflow;
 
 public class EventTriggerObserver<TI> : EventObserver<TI> where TI : class, IStateful
 {
-    public Task PreExecute(EventContext<TI> context)
-    {
+    public virtual Task PreExecute(EventContext<TI> context) {
         return Task.CompletedTask;
     }
 
-    public Task PreExecute<T>(EventContext<TI, T> context)
-    {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
+    public Task PreExecute<T>(EventContext<TI, T> context) {
         if (context.Data is IEventData data)
         {
             if (string.IsNullOrWhiteSpace(data.Jockey) || data.JockeyId == 0)
@@ -41,23 +34,19 @@ public class EventTriggerObserver<TI> : EventObserver<TI> where TI : class, ISta
         return Task.CompletedTask;
     }
 
-    public Task PostExecute(EventContext<TI> context)
-    {
+    public virtual Task PostExecute(EventContext<TI> context) {
         return Task.CompletedTask;
     }
 
-    public Task PostExecute<T>(EventContext<TI, T> context)
-    {
+    public virtual Task PostExecute<T>(EventContext<TI, T> context) {
         return Task.CompletedTask;
     }
 
-    public Task ExecuteFault(EventContext<TI> context, Exception exception)
-    {
+    public virtual Task ExecuteFault(EventContext<TI> context, Exception exception) {
         return Task.CompletedTask;
     }
 
-    public Task ExecuteFault<T>(EventContext<TI, T> context, Exception exception)
-    {
+    public virtual Task ExecuteFault<T>(EventContext<TI, T> context, Exception exception) {
         return Task.CompletedTask;
     }
 }

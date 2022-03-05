@@ -30,13 +30,7 @@ public class ThrottleAttribute : ActionFilterAttribute
     public int Seconds { get; set; }
 
     /// <inheritdoc />
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
+    public override void OnActionExecuting(ActionExecutingContext context) {
         var ctx = context.HttpContext;
 
         var cache = ctx.RequestServices.GetService<IDistributedCache>();
@@ -46,10 +40,7 @@ public class ThrottleAttribute : ActionFilterAttribute
         var resetKey = $"{key}-reset";
         var timesKey = $"{key}-times";
 
-        if (!int.TryParse(cache.GetString(timesKey), out var times))
-        {
-            times = 0;
-        }
+        if (!int.TryParse(cache.GetString(timesKey), out var times)) times = 0;
 
         times++;
 
@@ -68,19 +59,11 @@ public class ThrottleAttribute : ActionFilterAttribute
             {
                 var expiration = DateTimeOffset.UtcNow.AddSeconds(Seconds);
 
-                cache.SetString(timesKey, "1", new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpiration = expiration
-                });
+                cache.SetString(timesKey, "1", new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
 
-                cache.SetString(
-                    resetKey,
-                    expiration.ToString(CultureInfo.InvariantCulture),
-                    new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpiration = expiration
-                    }
-                );
+                cache.SetString(resetKey,
+                                expiration.ToString(CultureInfo.InvariantCulture),
+                                new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
             }
             else
             {

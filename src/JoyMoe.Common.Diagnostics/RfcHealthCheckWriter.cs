@@ -9,14 +9,10 @@ namespace JoyMoe.Common.Diagnostics;
 
 public static class RfcHealthCheckWriter
 {
-    public static async Task WriteResponse(HttpContext context, HealthReport result)
-    {
+    public static async Task WriteResponse(HttpContext context, HealthReport result) {
         context.Response.ContentType = "application/json";
 
-        var options = new JsonWriterOptions
-        {
-            Indented = true
-        };
+        var options = new JsonWriterOptions { Indented = true };
 
         await using var stream = new MemoryStream();
         await using var writer = new Utf8JsonWriter(stream, options);

@@ -12,62 +12,40 @@ public class GenericControllerInterceptor<TEntity> : IGenericControllerIntercept
     where TEntity : class, IDataEntity
 {
     public virtual Task<ActionResult<CursorPaginationResponse<long, TEntity>>> Query(
-        HttpContext context, ClaimsPrincipal user,
-        Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<CursorPaginationResponse<long, TEntity>>>> query)
-    {
-        if (query == null)
-        {
-            throw new ArgumentNullException(nameof(query));
-        }
-
+        HttpContext                                                                                         context,
+        ClaimsPrincipal                                                                                     user,
+        Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<CursorPaginationResponse<long, TEntity>>>> query) {
         return query(null);
     }
 
     public virtual Task<ActionResult<TEntity>> Find(
-        HttpContext                       context, ClaimsPrincipal user,
-        Func<Task<ActionResult<TEntity>>> find)
-    {
-        if (find == null)
-        {
-            throw new ArgumentNullException(nameof(find));
-        }
-
+        HttpContext                       context,
+        ClaimsPrincipal                   user,
+        Func<Task<ActionResult<TEntity>>> find) {
         return find();
     }
 
     public virtual Task<ActionResult<TEntity>> Create(
-        HttpContext                                context, ClaimsPrincipal user, TEntity entity,
-        Func<TEntity, Task<ActionResult<TEntity>>> create)
-    {
-        if (create == null)
-        {
-            throw new ArgumentNullException(nameof(create));
-        }
-
+        HttpContext                                context,
+        ClaimsPrincipal                            user,
+        TEntity                                    entity,
+        Func<TEntity, Task<ActionResult<TEntity>>> create) {
         return create(entity);
     }
 
     public virtual Task<ActionResult<TEntity>> Update(
-        HttpContext                                context, ClaimsPrincipal user, TEntity entity,
-        Func<TEntity, Task<ActionResult<TEntity>>> update)
-    {
-        if (update == null)
-        {
-            throw new ArgumentNullException(nameof(update));
-        }
-
+        HttpContext                                context,
+        ClaimsPrincipal                            user,
+        TEntity                                    entity,
+        Func<TEntity, Task<ActionResult<TEntity>>> update) {
         return update(entity);
     }
 
     public virtual Task<ActionResult> Remove(
-        HttpContext                       context, ClaimsPrincipal user, TEntity entity,
-        Func<TEntity, Task<ActionResult>> remove)
-    {
-        if (remove == null)
-        {
-            throw new ArgumentNullException(nameof(remove));
-        }
-
+        HttpContext                       context,
+        ClaimsPrincipal                   user,
+        TEntity                           entity,
+        Func<TEntity, Task<ActionResult>> remove) {
         return remove(entity);
     }
 }

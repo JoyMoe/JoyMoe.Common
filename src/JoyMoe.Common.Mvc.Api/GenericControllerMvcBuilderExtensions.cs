@@ -8,18 +8,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class GenericControllerMvcBuilderExtensions
 {
-    public static IMvcBuilder AddGenericControllers(this IMvcBuilder mvc, Action<GenericControllerBuilder> configure)
-    {
-        if (mvc == null)
-        {
-            throw new ArgumentNullException(nameof(mvc));
-        }
-
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
+    public static IMvcBuilder AddGenericControllers(this IMvcBuilder mvc, Action<GenericControllerBuilder> configure) {
         mvc.Services.TryAddScoped(typeof(IGenericControllerInterceptor<>), typeof(GenericControllerInterceptor<>));
 
         var builder = new GenericControllerBuilder(mvc);
@@ -27,7 +16,7 @@ public static class GenericControllerMvcBuilderExtensions
 
         var config = new MapperConfiguration(builder.Mapper);
         var mapper = config.CreateMapper();
-        mvc.Services.TryAddSingleton<IMapper>(mapper);
+        mvc.Services.TryAddSingleton(mapper);
 
         return mvc;
     }

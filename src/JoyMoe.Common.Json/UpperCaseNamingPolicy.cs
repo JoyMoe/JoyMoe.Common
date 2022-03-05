@@ -10,8 +10,7 @@ public class UpperCaseNamingPolicy : JsonNamingPolicy
     public static readonly UpperCaseNamingPolicy Instance = new();
 
     /// <inheritdoc/>
-    public override string ConvertName(string name)
-    {
+    public override string ConvertName(string name) {
         return string.IsNullOrEmpty(name) ? name : name.ToUpperInvariant();
     }
 }

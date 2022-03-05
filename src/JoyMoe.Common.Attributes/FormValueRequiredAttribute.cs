@@ -12,41 +12,29 @@ public sealed class FormValueRequiredAttribute : ActionMethodSelectorAttribute
 {
     private readonly string _name;
 
-    public FormValueRequiredAttribute(string name)
-    {
+    public FormValueRequiredAttribute(string name) {
         _name = name;
     }
 
-    public override bool IsValidForRequest(RouteContext routeContext, ActionDescriptor action)
-    {
-        if (routeContext == null)
-        {
-            throw new ArgumentNullException(nameof(routeContext));
-        }
+    public override bool IsValidForRequest(RouteContext routeContext, ActionDescriptor action) {
+        var ctx = routeContext.HttpContext;
 
-        if (string.Equals(routeContext.HttpContext.Request.Method, "GET",
-                          StringComparison.InvariantCultureIgnoreCase) ||
-            string.Equals(routeContext.HttpContext.Request.Method, "HEAD",
-                          StringComparison.InvariantCultureIgnoreCase) ||
-            string.Equals(routeContext.HttpContext.Request.Method, "DELETE",
-                          StringComparison.InvariantCultureIgnoreCase) ||
-            string.Equals(routeContext.HttpContext.Request.Method, "TRACE",
-                          StringComparison.InvariantCultureIgnoreCase))
+        if (string.Equals(ctx.Request.Method, "GET", StringComparison.InvariantCultureIgnoreCase) ||
+            string.Equals(ctx.Request.Method, "HEAD", StringComparison.InvariantCultureIgnoreCase) ||
+            string.Equals(ctx.Request.Method, "DELETE", StringComparison.InvariantCultureIgnoreCase) ||
+            string.Equals(ctx.Request.Method, "TRACE", StringComparison.InvariantCultureIgnoreCase))
         {
             return false;
         }
 
-        if (string.IsNullOrEmpty(routeContext.HttpContext.Request.ContentType))
+        if (string.IsNullOrEmpty(ctx.Request.ContentType)) return false;
+
+        if (!ctx.Request.ContentType.StartsWith("application/x-www-form-urlencoded",
+                                                StringComparison.InvariantCultureIgnoreCase))
         {
             return false;
         }
 
-        if (!routeContext.HttpContext.Request.ContentType.StartsWith("application/x-www-form-urlencoded",
-                                                                     StringComparison.InvariantCultureIgnoreCase))
-        {
-            return false;
-        }
-
-        return !string.IsNullOrEmpty(routeContext.HttpContext.Request.Form[_name]);
+        return !string.IsNullOrEmpty(ctx.Request.Form[_name]);
     }
 }

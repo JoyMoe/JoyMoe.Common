@@ -8,18 +8,11 @@ public class SessionStoreOptions : IPostConfigureOptions<CookieAuthenticationOpt
 {
     private readonly ITicketStore _store;
 
-    public SessionStoreOptions(ITicketStore store)
-    {
+    public SessionStoreOptions(ITicketStore store) {
         _store = store;
     }
 
-    public void PostConfigure(string name, CookieAuthenticationOptions options)
-    {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
+    public void PostConfigure(string name, CookieAuthenticationOptions options) {
         options.SessionStore = _store;
     }
 }

@@ -14,12 +14,18 @@ public interface IObjectStorage : IDisposable
 
     Task DeleteAsync(string path, CancellationToken ct = default);
 
-    Task UploadAsync(string path, Stream data, string mime, bool everyone = false, CancellationToken ct = default);
+    Task UploadAsync(
+        string            path,
+        Stream            data,
+        string            mime,
+        bool              everyone = false,
+        CancellationToken ct       = default);
 
     Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default);
 
     Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(
-        string            path, bool everyone = false,
+        string            path,
+        bool              everyone      = false,
         int?              contentLength = null,
         string?           contentType   = null,
         CancellationToken ct            = default);

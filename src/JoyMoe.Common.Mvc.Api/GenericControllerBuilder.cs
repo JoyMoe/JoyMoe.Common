@@ -6,14 +6,12 @@ namespace JoyMoe.Common.Mvc.Api;
 
 public class GenericControllerBuilder
 {
-    public GenericControllerBuilder(IMvcBuilder mvc, MapperConfigurationExpression mapper)
-    {
+    public GenericControllerBuilder(IMvcBuilder mvc, MapperConfigurationExpression mapper) {
         Mvc    = mvc;
         Mapper = mapper;
     }
 
-    public GenericControllerBuilder(IMvcBuilder mvc)
-    {
+    public GenericControllerBuilder(IMvcBuilder mvc) {
         Mvc    = mvc;
         Mapper = new MapperConfigurationExpression();
     }
@@ -22,33 +20,27 @@ public class GenericControllerBuilder
 
     public IMvcBuilder Mvc { get; }
 
-    public GenericControllerBuilder Add(Profile profile)
-    {
+    public GenericControllerBuilder Add(Profile profile) {
         Mapper.AddProfile(profile);
 
         return this;
     }
 
-    public GenericControllerTypeBuilder<TEntity, TEntity, TEntity> Add<TEntity>()
-        where TEntity : class, IDataEntity
-    {
+    public GenericControllerTypeBuilder<TEntity, TEntity, TEntity> Add<TEntity>() where TEntity : class, IDataEntity {
         return Add<TEntity, TEntity, TEntity>();
     }
 
     public GenericControllerTypeBuilder<TEntity, TRequest, TResponse> Add<TEntity, TRequest, TResponse>()
         where TEntity : class, IDataEntity
         where TRequest : class, IIdentifier
-        where TResponse : class, IIdentifier
-    {
+        where TResponse : class, IIdentifier {
         if (typeof(TRequest) != typeof(TEntity)) Mapper.CreateMap<TRequest, TEntity>();
 
         if (typeof(TEntity) != typeof(TResponse)) Mapper.CreateMap<TEntity, TResponse>();
 
-        Mvc.ConfigureApplicationPartManager(manager =>
-        {
+        Mvc.ConfigureApplicationPartManager(manager => {
             manager.FeatureProviders.Add(
-                new GenericControllerFeatureProvider(
-                    typeof(TEntity), typeof(TRequest), typeof(TResponse)));
+                new GenericControllerFeatureProvider(typeof(TEntity), typeof(TRequest), typeof(TResponse)));
         });
 
         return new GenericControllerTypeBuilder<TEntity, TRequest, TResponse>(Mvc, Mapper);

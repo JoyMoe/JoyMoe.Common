@@ -15,84 +15,69 @@ public class S3WebClient : IDisposable
 
     private bool _disposed;
 
-    public S3WebClient(S3StorageOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+    public S3WebClient(S3StorageOptions options) {
+        _options = options;
 
         var version = GetType().Assembly.GetName().Version;
 
         _client.DefaultRequestHeaders.Add("UserAgent", $"JoyMoe.Common.Storage.S3/{version}");
     }
 
-    public void SetHttpClient(HttpClient client)
-    {
+    public void SetHttpClient(HttpClient client) {
         _client = client;
     }
 
     public async Task<HttpResponseMessage> GetAsync(
-        Uri             url, Dictionary<string, string>? headers = null,
-        DateTimeOffset? time = null)
-    {
-        return await SendAsync(url, headers, time).ConfigureAwait(false);
+        Uri                         url,
+        Dictionary<string, string>? headers = null,
+        DateTimeOffset?             time    = null) {
+        return await SendAsync(url, headers, time);
     }
 
     public async Task<HttpResponseMessage> PostAsync(
-        Uri                         url, HttpContent content,
+        Uri                         url,
+        HttpContent                 content,
         Dictionary<string, string>? headers = null,
-        DateTimeOffset?             time    = null)
-    {
-        return await SendAsync(url, headers, time, HttpMethod.Post, content).ConfigureAwait(false);
+        DateTimeOffset?             time    = null) {
+        return await SendAsync(url, headers, time, HttpMethod.Post, content);
     }
 
     public async Task<HttpResponseMessage> PutAsync(
-        Uri                         url, HttpContent content,
+        Uri                         url,
+        HttpContent                 content,
         Dictionary<string, string>? headers = null,
-        DateTimeOffset?             time    = null)
-    {
-        return await SendAsync(url, headers, time, HttpMethod.Put, content).ConfigureAwait(false);
+        DateTimeOffset?             time    = null) {
+        return await SendAsync(url, headers, time, HttpMethod.Put, content);
     }
 
     public async Task<HttpResponseMessage> DeleteAsync(
-        Uri             url, Dictionary<string, string>? headers = null,
-        DateTimeOffset? time = null)
-    {
-        return await SendAsync(url, headers, time, HttpMethod.Delete).ConfigureAwait(false);
+        Uri                         url,
+        Dictionary<string, string>? headers = null,
+        DateTimeOffset?             time    = null) {
+        return await SendAsync(url, headers, time, HttpMethod.Delete);
     }
 
     private async Task<HttpResponseMessage> SendAsync(
-        Uri             url,            Dictionary<string, string>? headers = null,
-        DateTimeOffset? time    = null, HttpMethod?                 method  = null,
-        HttpContent?    content = null)
-    {
+        Uri                         url,
+        Dictionary<string, string>? headers = null,
+        DateTimeOffset?             time    = null,
+        HttpMethod?                 method  = null,
+        HttpContent?                content = null) {
         method ??= HttpMethod.Get;
 
-        using var message = new HttpRequestMessage
-        {
-            Content    = content,
-            Method     = method,
-            RequestUri = url
-        };
+        using var message = new HttpRequestMessage { Content = content, Method = method, RequestUri = url };
 
         if (headers != null)
         {
-            foreach (var h in headers)
-            {
-                message.Headers.Add(h.Key, h.Value);
-            }
+            foreach (var h in headers) message.Headers.Add(h.Key, h.Value);
         }
 
-        await PrepareRequestAsync(message, true, time).ConfigureAwait(false);
+        await PrepareRequestAsync(message, true, time);
 
-        return await _client.SendAsync(message).ConfigureAwait(false);
+        return await _client.SendAsync(message);
     }
 
-    public async Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null)
-    {
-        if (message == null)
-        {
-            throw new ArgumentNullException(nameof(message));
-        }
-
+    public async Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null) {
         if (message.RequestUri == null)
         {
             throw new NullReferenceException();
@@ -113,7 +98,7 @@ public class S3WebClient : IDisposable
         }
         else if (message.Content != null)
         {
-            var payload = await message.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            var payload = await message.Content.ReadAsByteArrayAsync();
             hash = payload.Sha256().ToHex();
         }
 
@@ -129,46 +114,34 @@ public class S3WebClient : IDisposable
 #pragma warning disable CA1308 // Normalize strings to uppercase
         var hd = new SortedDictionary<string, string>();
 
-        foreach (var h in message.Headers)
-        {
-            hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
-        }
+        foreach (var h in message.Headers) hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
 
         if (message.Content?.Headers != null)
         {
-            foreach (var h in message.Content.Headers)
-            {
-                hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
-            }
+            foreach (var h in message.Content.Headers) hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
         }
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
-        var signed = string.Join(";", hd
-                                    .Select(h => h.Key));
-        var headers = string.Join("", hd
-                                     .Select(h => $"{h.Key}:{h.Value}\n"));
+        var signed  = string.Join(";", hd.Select(h => h.Key));
+        var headers = string.Join("", hd.Select(h => $"{h.Key}:{h.Value}\n"));
 
         if (!header)
         {
-            message.RequestUri = message.RequestUri.AddQueryParameters(
-                new Dictionary<string, string>
-                {
-                    ["X-Amz-Algorithm"]     = algorithm,
-                    ["X-Amz-Credential"]    = credential,
-                    ["X-Amz-Date"]          = timestamp,
-                    ["X-Amz-Expires"]       = "86400",
-                    ["X-Amz-SignedHeaders"] = signed
-                });
+            message.RequestUri = message.RequestUri.AddQueryParameters(new Dictionary<string, string>
+            {
+                ["X-Amz-Algorithm"]     = algorithm,
+                ["X-Amz-Credential"]    = credential,
+                ["X-Amz-Date"]          = timestamp,
+                ["X-Amz-Expires"]       = "86400",
+                ["X-Amz-SignedHeaders"] = signed
+            });
         }
 
-        var uri = Uri.EscapeDataString(message.RequestUri.AbsolutePath)
-                     .Replace("%2F", "/");
-        var query = string.Join("&", message.RequestUri!
-                                            .ToQueryKeyValuePairs()
-                                            .OrderBy(q => q.Key)
-                                            .Select(
-                                                 q =>
-                                                     $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
+        var uri = Uri.EscapeDataString(message.RequestUri.AbsolutePath).Replace("%2F", "/");
+        var query = string.Join("&",
+                                message.RequestUri!.ToQueryKeyValuePairs()
+                                       .OrderBy(q => q.Key)
+                                       .Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
 
         var canonical = $"{message.Method}\n{uri}\n{query}\n{headers}\n{signed}\n{hash}";
 
@@ -190,37 +163,27 @@ public class S3WebClient : IDisposable
         }
     }
 
-    public string CalculateSignature(string cipher, string date)
-    {
+    public string CalculateSignature(string cipher, string date) {
         var key = DeriveKeys(date);
         return cipher.HmacSha256(key).ToHex();
     }
 
-    public byte[] DeriveKeys(string date)
-    {
+    public byte[] DeriveKeys(string date) {
         var dateKey    = date.HmacSha256($"AWS4{_options.SecretKey}");
         var regionKey  = _options.Region.HmacSha256(dateKey);
         var serviceKey = "s3".HmacSha256(regionKey);
         return "aws4_request".HmacSha256(serviceKey);
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
+    protected virtual void Dispose(bool disposing) {
+        if (_disposed) return;
 
-        if (disposing)
-        {
-            _client.Dispose();
-        }
+        if (disposing) _client.Dispose();
 
         _disposed = true;
     }

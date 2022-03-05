@@ -5,12 +5,8 @@ namespace System;
 
 public static class Pluralizer
 {
-    public static string Pluralize(this string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return text;
-        }
+    public static string Pluralize(this string text) {
+        if (string.IsNullOrWhiteSpace(text)) return text;
 
         var exceptions = new Dictionary<string, string>()
         {
@@ -24,10 +20,7 @@ public static class Pluralizer
         };
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
-        if (exceptions.ContainsKey(text.ToLowerInvariant()))
-        {
-            return exceptions[text.ToLowerInvariant()];
-        }
+        if (exceptions.ContainsKey(text.ToLowerInvariant())) return exceptions[text.ToLowerInvariant()];
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
         if (text.EndsWith("y", StringComparison.OrdinalIgnoreCase) &&
@@ -46,15 +39,9 @@ public static class Pluralizer
             return text + "es";
         }
 
-        if (text.EndsWith("ss", StringComparison.OrdinalIgnoreCase))
-        {
-            return text + "es";
-        }
+        if (text.EndsWith("ss", StringComparison.OrdinalIgnoreCase)) return text + "es";
 
-        if (text.EndsWith("s", StringComparison.OrdinalIgnoreCase))
-        {
-            return text;
-        }
+        if (text.EndsWith("s", StringComparison.OrdinalIgnoreCase)) return text;
 
         if (text.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
             text.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||

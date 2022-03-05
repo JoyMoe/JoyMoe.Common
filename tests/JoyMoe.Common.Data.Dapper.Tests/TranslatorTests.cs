@@ -9,8 +9,7 @@ namespace JoyMoe.Common.Data.Dapper.Tests;
 public class TranslatorTests
 {
     [Fact]
-    public void TranslateNumberEquals()
-    {
+    public void TranslateNumberEquals() {
         var (clause, parameters) = Translate(s => s.Id == 1);
         Assert.Equal("(\"Id\" = 1)", clause);
         Assert.Null(parameters);
@@ -22,8 +21,7 @@ public class TranslatorTests
     }
 
     [Fact]
-    public void TranslateStringEquals()
-    {
+    public void TranslateStringEquals() {
         var (clause, parameters) = Translate(s => s.LastName == "Sophia");
         Assert.Equal("(\"LastName\" = @__p0)", clause);
         Assert.NotNull(parameters);
@@ -52,8 +50,7 @@ public class TranslatorTests
     }
 
     [Fact]
-    public void TranslateContains()
-    {
+    public void TranslateContains() {
         var values = new List<long> { 1L, 2L, 3L };
 
         var (clause, parameters) = Translate(s => values.Contains(s.Id));
@@ -68,8 +65,7 @@ public class TranslatorTests
     }
 
     [Fact]
-    public void TranslateStringLikes()
-    {
+    public void TranslateStringLikes() {
         // Caroline Sophia
 
         var (clause, parameters) = Translate(s => s.LastName.StartsWith("Sop"));
@@ -89,8 +85,7 @@ public class TranslatorTests
     }
 
     [Fact]
-    public void TranslateLogicality()
-    {
+    public void TranslateLogicality() {
         var values = new List<long> { 1L, 2L, 3L };
 
         var (clause, parameters) = Translate(s => !values.Contains(s.Id) && s.LastName == "Sophia");
@@ -106,8 +101,7 @@ public class TranslatorTests
         Assert.Equal("Sophia", parameters.Get<string>("@__p2"));
     }
 
-    private static (string?, DynamicParameters?) Translate(Expression<Func<Student, bool>> expression)
-    {
+    private static (string?, DynamicParameters?) Translate(Expression<Func<Student, bool>> expression) {
         var translator = new ExpressionTranslator(new PostgresAdapter());
         return translator.Translate(expression);
     }

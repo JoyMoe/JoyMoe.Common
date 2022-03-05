@@ -21,8 +21,7 @@ public class TicketStoreSession<TUser> : ITimestamp where TUser : class
 
     public DateTime? ModificationDate { get; set; }
 
-    public TicketStoreSession()
-    {
+    public TicketStoreSession() {
         Id = Guid.NewGuid();
     }
 }

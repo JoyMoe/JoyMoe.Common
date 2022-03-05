@@ -13,13 +13,7 @@ public static class S3StorageServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddS3Storage(this IServiceCollection services)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
+    public static IServiceCollection AddS3Storage(this IServiceCollection services) {
         services.TryAddScoped<IObjectStorage, S3Storage>();
 
         return services;
@@ -33,18 +27,7 @@ public static class S3StorageServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddS3Storage(
         this IServiceCollection  services,
-        Action<S3StorageOptions> configure)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
+        Action<S3StorageOptions> configure) {
         services.Configure(configure);
 
         services.AddS3Storage();

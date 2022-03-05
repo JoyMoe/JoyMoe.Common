@@ -17,8 +17,7 @@ public static class RepositoryTicketStoreServiceCollectionExtensions
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddRepositoryTicketStore<TUser>(this IServiceCollection services)
-        where TUser : class
-    {
+        where TUser : class {
         return services.AddRepositoryTicketStore<TUser, TicketStoreSession<TUser>>();
     }
 
@@ -29,8 +28,7 @@ public static class RepositoryTicketStoreServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddRepositoryTicketStore<TUser, TSession>(this IServiceCollection services)
         where TSession : TicketStoreSession<TUser>, new()
-        where TUser : class
-    {
+        where TUser : class {
         return services.AddRepositoryTicketStore<TUser, TSession, IRepository<TSession>>();
     }
 
@@ -40,16 +38,9 @@ public static class RepositoryTicketStoreServiceCollectionExtensions
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddRepositoryTicketStore<TUser, TSession, TRepository>(
-        this IServiceCollection services)
-        where TSession : TicketStoreSession<TUser>, new()
-        where TRepository : IRepository<TSession>
-        where TUser : class
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
+        this IServiceCollection services) where TSession : TicketStoreSession<TUser>, new()
+                                          where TRepository : IRepository<TSession>
+                                          where TUser : class {
         services.TryAddSingleton<ITicketStore, RepositoryTicketStore<TUser, TSession, TRepository>>();
         services.TryAddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, SessionStoreOptions>();
 

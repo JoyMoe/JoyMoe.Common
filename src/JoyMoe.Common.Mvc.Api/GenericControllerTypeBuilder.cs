@@ -10,13 +10,10 @@ public class GenericControllerTypeBuilder<TEntity, TRequest, TResponse> : Generi
     where TRequest : class, IIdentifier
     where TResponse : class, IIdentifier
 {
-    public GenericControllerTypeBuilder(IMvcBuilder mvc, MapperConfigurationExpression mapper) : base(mvc, mapper)
-    {
-    }
+    public GenericControllerTypeBuilder(IMvcBuilder mvc, MapperConfigurationExpression mapper) : base(mvc, mapper) { }
 
     public GenericControllerBuilder With<TInterceptor>()
-        where TInterceptor : class, IGenericControllerInterceptor<TEntity>
-    {
+        where TInterceptor : class, IGenericControllerInterceptor<TEntity> {
         Mvc.Services.TryAddScoped<IGenericControllerInterceptor<TEntity>, TInterceptor>();
 
         return this;

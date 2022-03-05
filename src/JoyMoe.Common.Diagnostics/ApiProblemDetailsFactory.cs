@@ -12,9 +12,8 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
 {
     private readonly ApiBehaviorOptions _options;
 
-    public ApiProblemDetailsFactory(IOptions<ApiBehaviorOptions>? options)
-    {
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    public ApiProblemDetailsFactory(IOptions<ApiBehaviorOptions> options) {
+        _options = options.Value;
     }
 
     public override ProblemDetails CreateProblemDetails(
@@ -23,8 +22,7 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         string?     title      = null,
         string?     type       = null,
         string?     detail     = null,
-        string?     instance   = null)
-    {
+        string?     instance   = null) {
         statusCode ??= 500;
 
         var problemDetails = new ProblemDetails
@@ -48,13 +46,7 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         string?              title      = null,
         string?              type       = null,
         string?              detail     = null,
-        string?              instance   = null)
-    {
-        if (modelStateDictionary == null)
-        {
-            throw new ArgumentNullException(nameof(modelStateDictionary));
-        }
-
+        string?              instance   = null) {
         statusCode ??= 422;
 
         var problemDetails = new ValidationProblemDetails(modelStateDictionary)
@@ -76,8 +68,7 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         return problemDetails;
     }
 
-    private void ApplyProblemDetailsDefaults(HttpContext httpContext, ProblemDetails problemDetails, int statusCode)
-    {
+    private void ApplyProblemDetailsDefaults(HttpContext httpContext, ProblemDetails problemDetails, int statusCode) {
         problemDetails.Status ??= statusCode;
 
         if (_options.ClientErrorMapping.TryGetValue(statusCode, out var clientErrorData))
@@ -87,9 +78,6 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         }
 
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        if (traceId != null)
-        {
-            problemDetails.Extensions["trace_id"] = traceId;
-        }
+        if (traceId != null) problemDetails.Extensions["trace_id"] = traceId;
     }
 }

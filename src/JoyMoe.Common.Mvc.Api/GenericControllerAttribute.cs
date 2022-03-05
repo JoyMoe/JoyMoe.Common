@@ -3,16 +3,10 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace JoyMoe.Common.Mvc.Api;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Class)]
 public class GenericControllerAttribute : Attribute, IControllerModelConvention
 {
-    public void Apply(ControllerModel controller)
-    {
-        if (controller == null)
-        {
-            throw new ArgumentNullException(nameof(controller));
-        }
-
+    public void Apply(ControllerModel controller) {
         if (!controller.ControllerType.IsGenericType ||
             controller.ControllerType.GetGenericTypeDefinition() != typeof(GenericController<,,>))
         {

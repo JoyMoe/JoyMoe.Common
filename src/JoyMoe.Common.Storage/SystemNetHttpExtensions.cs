@@ -7,8 +7,7 @@ namespace System.Net.Http;
 
 public static class HttpHeadersExtensions
 {
-    private static string AppendParameter(string query, KeyValuePair<string, string> pair)
-    {
+    private static string AppendParameter(string query, KeyValuePair<string, string> pair) {
         var kv = string.IsNullOrWhiteSpace(pair.Value)
             ? $"{Uri.EscapeDataString(pair.Key)}"
             : $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}";
@@ -25,13 +24,7 @@ public static class HttpHeadersExtensions
         return query;
     }
 
-    public static Uri AddQueryParameter(this Uri uri, string key, string value)
-    {
-        if (uri == null)
-        {
-            throw new ArgumentNullException(nameof(uri));
-        }
-
+    public static Uri AddQueryParameter(this Uri uri, string key, string value) {
         var url   = uri.GetLeftPart(UriPartial.Path);
         var query = uri.Query.TrimStart('?');
 
@@ -40,18 +33,7 @@ public static class HttpHeadersExtensions
         return new Uri($"{url}?{query}", uri.IsAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
     }
 
-    public static Uri AddQueryParameters(this Uri uri, IEnumerable<KeyValuePair<string, string>> pairs)
-    {
-        if (uri == null)
-        {
-            throw new ArgumentNullException(nameof(uri));
-        }
-
-        if (pairs == null)
-        {
-            throw new ArgumentNullException(nameof(pairs));
-        }
-
+    public static Uri AddQueryParameters(this Uri uri, IEnumerable<KeyValuePair<string, string>> pairs) {
         var url   = uri.GetLeftPart(UriPartial.Path);
         var query = uri.Query.TrimStart('?');
 
@@ -60,19 +42,13 @@ public static class HttpHeadersExtensions
         return new Uri($"{url}?{query}", uri.IsAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
     }
 
-    public static string? FindFirstValue(this HttpHeaders headers, string key)
-    {
+    public static string? FindFirstValue(this HttpHeaders headers, string key) {
         return headers.FirstOrDefault(h => h.Key == key).Value?.FirstOrDefault();
     }
 
-    public static IEnumerable<KeyValuePair<string, string>> ToQueryKeyValuePairs(this Uri uri)
-    {
-        if (uri == null)
-        {
-            throw new ArgumentNullException(nameof(uri));
-        }
-
-        return uri.Query.TrimStart('?').Split('&')
+    public static IEnumerable<KeyValuePair<string, string>> ToQueryKeyValuePairs(this Uri uri) {
+        return uri.Query.TrimStart('?')
+                  .Split('&')
                   .Where(s => s.Trim().Length > 0)
                   .Select(s => s.Split('='))
                   .Select(sp => sp.Length == 2

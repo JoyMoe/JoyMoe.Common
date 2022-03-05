@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 
-#nullable disable
 namespace JoyMoe.Common.Session;
 
 /// <summary>
@@ -15,57 +14,41 @@ public class CachedTicketStore : ITicketStore
     private const    string            KeyPrefix = "AuthSessionStore-";
     private readonly IDistributedCache _cache;
 
-    public CachedTicketStore(IDistributedCache cache)
-    {
+    public CachedTicketStore(IDistributedCache cache) {
         _cache = cache;
     }
 
-    public async Task<string> StoreAsync(AuthenticationTicket ticket)
-    {
+    public async Task<string> StoreAsync(AuthenticationTicket ticket) {
         var guid = Guid.NewGuid();
         var key  = KeyPrefix + guid;
-        await RenewAsync(key, ticket).ConfigureAwait(false);
+        await RenewAsync(key, ticket);
         return key;
     }
 
-    public async Task RenewAsync(string key, AuthenticationTicket ticket)
-    {
-        if (ticket == null)
-        {
-            throw new ArgumentNullException(nameof(ticket));
-        }
-
+    public async Task RenewAsync(string key, AuthenticationTicket ticket) {
         var options    = new DistributedCacheEntryOptions();
         var expiresUtc = ticket.Properties.ExpiresUtc;
-        if (expiresUtc.HasValue)
-        {
-            options.SetAbsoluteExpiration(expiresUtc.Value);
-        }
+        if (expiresUtc.HasValue) options.SetAbsoluteExpiration(expiresUtc.Value);
 
         var val = SerializeToBytes(ticket);
-        await _cache.SetAsync(key, val, options).ConfigureAwait(false);
+        await _cache.SetAsync(key, val, options);
     }
 
-    public async Task<AuthenticationTicket> RetrieveAsync(string key)
-    {
-        var bytes  = await _cache.GetAsync(key).ConfigureAwait(false);
+    public async Task<AuthenticationTicket?> RetrieveAsync(string key) {
+        var bytes  = await _cache.GetAsync(key);
         var ticket = DeserializeFromBytes(bytes);
         return ticket;
     }
 
-    public async Task RemoveAsync(string key)
-    {
-        await _cache.RemoveAsync(key).ConfigureAwait(false);
+    public async Task RemoveAsync(string key) {
+        await _cache.RemoveAsync(key);
     }
 
-    private static byte[] SerializeToBytes(AuthenticationTicket source)
-    {
+    private static byte[] SerializeToBytes(AuthenticationTicket source) {
         return TicketSerializer.Default.Serialize(source);
     }
 
-    private static AuthenticationTicket DeserializeFromBytes(byte[] source)
-    {
+    private static AuthenticationTicket? DeserializeFromBytes(byte[]? source) {
         return source == null ? null : TicketSerializer.Default.Deserialize(source);
     }
 }
-#nullable restore

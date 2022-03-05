@@ -16,9 +16,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
     public Task<TEntity?> FindAsync<TKey>(
         Expression<Func<TEntity, TKey>> selector,
         TKey                            id,
-        CancellationToken               ct = default)
-        where TKey : struct
-    {
+        CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
         var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
@@ -37,14 +35,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
     public IAsyncEnumerable<TEntity> FindAllAsync<TKey>(
         Expression<Func<TEntity, TKey>> selector,
         IEnumerable<TKey>               ids,
-        CancellationToken               ct = default)
-        where TKey : struct
-    {
-        if (ids == null)
-        {
-            throw new ArgumentNullException(nameof(ids));
-        }
-
+        CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
         var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
@@ -70,16 +61,14 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
     public abstract IAsyncEnumerable<TEntity> ListAsync<TKey>(
         Expression<Func<TEntity, bool>>? predicate,
         Expression<Func<TEntity, TKey>>? ordering,
-        CancellationToken                ct = default)
-        where TKey : struct;
+        CancellationToken                ct = default) where TKey : struct;
 
     public abstract Task<CursorPaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
         int                              size      = 20,
-        CancellationToken                ct        = default)
-        where TKey : struct;
+        CancellationToken                ct        = default) where TKey : struct;
 
     public abstract Task<TEntity?> FirstOrDefaultAsync(
         Expression<Func<TEntity, bool>>? predicate,
@@ -89,20 +78,15 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default);
 
-    public abstract Task<bool> AnyAsync(
-        Expression<Func<TEntity, bool>>? predicate,
-        CancellationToken                ct = default);
+    public abstract Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
 
-    public abstract Task<int> CountAsync(
-        Expression<Func<TEntity, bool>>? predicate,
-        CancellationToken                ct = default);
+    public abstract Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
 
     public abstract Task<long> LongCountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default);
 
-    public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default)
-    {
+    public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
         var now = DateTime.UtcNow;
 
         if (entity is ITimestamp stamp)
@@ -111,61 +95,37 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
             stamp.ModificationDate = now;
         }
 
-        if (entity is ISoftDelete soft)
-        {
-            soft.DeletionDate = null;
-        }
+        if (entity is ISoftDelete soft) soft.DeletionDate = null;
 
         return Task.CompletedTask;
     }
 
     public abstract Task AddAsync(TEntity entity, CancellationToken ct = default);
 
-    public virtual Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
-    {
-        if (entities == null)
-        {
-            throw new ArgumentNullException(nameof(entities));
-        }
-
+    public virtual Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default) {
         var tasks = entities.Select(e => AddAsync(e, ct)).ToArray();
 
         return Task.WhenAny(tasks);
     }
 
-    public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default)
-    {
-        if (entity is ITimestamp stamp)
-        {
-            stamp.ModificationDate = DateTime.UtcNow;
-        }
+    public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default) {
+        if (entity is ITimestamp stamp) stamp.ModificationDate = DateTime.UtcNow;
 
         return Task.CompletedTask;
     }
 
     public abstract Task UpdateAsync(TEntity entity, CancellationToken ct = default);
 
-    public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default)
-    {
-        if (entity is ISoftDelete soft)
-        {
-            soft.DeletionDate = DateTime.UtcNow;
+    public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default) {
+        if (entity is not ISoftDelete soft) return Task.FromResult(true);
 
-            return Task.FromResult(false);
-        }
-
-        return Task.FromResult(true);
+        soft.DeletionDate = DateTime.UtcNow;
+        return Task.FromResult(false);
     }
 
     public abstract Task RemoveAsync(TEntity entity, CancellationToken ct = default);
 
-    public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
-    {
-        if (entities == null)
-        {
-            throw new ArgumentNullException(nameof(entities));
-        }
-
+    public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default) {
         var tasks = entities.Select(e => RemoveAsync(e, ct)).ToArray();
 
         return Task.WhenAny(tasks);
@@ -173,8 +133,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 
     public abstract Task<int> CommitAsync(CancellationToken ct = default);
 
-    protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate)
-    {
+    protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate) {
         if (IgnoreQueryFilters)
         {
             IgnoreQueryFilters = false;
@@ -182,10 +141,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
             return predicate;
         }
 
-        if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity)))
-        {
-            return predicate;
-        }
+        if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity))) return predicate;
 
         var parameter = predicate == null
             ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
