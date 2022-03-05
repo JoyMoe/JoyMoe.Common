@@ -73,7 +73,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
         CancellationToken                ct = default)
         where TKey : struct;
 
-    public abstract Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+    public abstract Task<CursorPaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
@@ -81,11 +81,13 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
         CancellationToken                ct        = default)
         where TKey : struct;
 
-    public abstract Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
-                                                       CancellationToken                ct = default);
+    public abstract Task<TEntity?> FirstOrDefaultAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default);
 
-    public abstract Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
-                                                        CancellationToken                ct = default);
+    public abstract Task<TEntity?> SingleOrDefaultAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default);
 
     public abstract Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
 

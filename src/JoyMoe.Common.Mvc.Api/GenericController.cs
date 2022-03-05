@@ -21,8 +21,9 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     private readonly IGenericControllerInterceptor<TEntity> _interceptor;
     private readonly IMapper                                _mapper;
 
-    public GenericController(IRepository<TEntity> repository, IGenericControllerInterceptor<TEntity> interceptor,
-                             IMapper              mapper)
+    public GenericController(
+        IRepository<TEntity> repository, IGenericControllerInterceptor<TEntity> interceptor,
+        IMapper              mapper)
     {
         _repository  = repository;
         _interceptor = interceptor;
@@ -30,8 +31,9 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginationResponse<long, TResponse>>> Query(
-        [FromQuery] long? cursor, [FromQuery] int size = 10)
+    public async Task<ActionResult<CursorPaginationResponse<long, TResponse>>> Query(
+        [FromQuery] long? cursor,
+        [FromQuery] int   size = 10)
     {
         if (!ModelState.IsValid)
         {
@@ -44,7 +46,7 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
         return _mapResponse(result);
     }
 
-    private async Task<ActionResult<PaginationResponse<long, TEntity>>> _query(
+    private async Task<ActionResult<CursorPaginationResponse<long, TEntity>>> _query(
         long? cursor, int size, Expression<Func<TEntity, bool>>? predicate)
     {
         return await _repository
@@ -214,7 +216,7 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
         throw new NotSupportedException();
     }
 
-    private PaginationResponse<long, TResponse> _mapResponse(PaginationResponse<long, TEntity> result)
+    private CursorPaginationResponse<long, TResponse> _mapResponse(CursorPaginationResponse<long, TEntity> result)
     {
         if (typeof(TEntity) != typeof(TResponse))
         {
@@ -225,15 +227,14 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
                 data = _mapResponse(result.Data);
             }
 
-            return new PaginationResponse<long, TResponse>
+            return new CursorPaginationResponse<long, TResponse>
             {
-                Prev = result.Prev,
                 Next = result.Next,
                 Data = data
             };
         }
 
-        if (result is PaginationResponse<long, TResponse> response)
+        if (result is CursorPaginationResponse<long, TResponse> response)
         {
             return response;
         }
@@ -252,21 +253,21 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
         return new ActionResult<TResponse>(or);
     }
 
-    private ActionResult<PaginationResponse<long, TResponse>> _mapResponse(
-        ActionResult<PaginationResponse<long, TEntity>> result)
+    private ActionResult<CursorPaginationResponse<long, TResponse>> _mapResponse(
+        ActionResult<CursorPaginationResponse<long, TEntity>> result)
     {
         if (result.Result == null)
         {
-            return new ActionResult<PaginationResponse<long, TResponse>>(_mapResponse(result.Value!));
+            return new ActionResult<CursorPaginationResponse<long, TResponse>>(_mapResponse(result.Value!));
         }
 
-        if (result.Result is not ObjectResult { Value: PaginationResponse<long, TEntity> entities } or)
+        if (result.Result is not ObjectResult { Value: CursorPaginationResponse<long, TEntity> entities } or)
         {
             return result.Result;
         }
 
         or.Value = _mapResponse(entities);
 
-        return new ActionResult<PaginationResponse<long, TResponse>>(or);
+        return new ActionResult<CursorPaginationResponse<long, TResponse>>(or);
     }
 }

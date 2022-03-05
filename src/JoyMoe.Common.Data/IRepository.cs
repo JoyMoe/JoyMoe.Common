@@ -33,7 +33,7 @@ public interface IRepository<TEntity> where TEntity : class
         CancellationToken                ct = default)
         where TKey : struct;
 
-    Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+    Task<CursorPaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,

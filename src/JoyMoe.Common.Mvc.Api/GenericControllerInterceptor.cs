@@ -11,9 +11,9 @@ namespace JoyMoe.Common.Mvc.Api;
 public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
     where TEntity : class, IDataEntity
 {
-    public virtual Task<ActionResult<PaginationResponse<long, TEntity>>> Query(
+    public virtual Task<ActionResult<CursorPaginationResponse<long, TEntity>>> Query(
         HttpContext context, ClaimsPrincipal user,
-        Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<PaginationResponse<long, TEntity>>>> query)
+        Func<Expression<Func<TEntity, bool>>?, Task<ActionResult<CursorPaginationResponse<long, TEntity>>>> query)
     {
         if (query == null)
         {
@@ -23,8 +23,9 @@ public class GenericControllerInterceptor<TEntity> : IGenericControllerIntercept
         return query(null);
     }
 
-    public virtual Task<ActionResult<TEntity>> Find(HttpContext                       context, ClaimsPrincipal user,
-                                                    Func<Task<ActionResult<TEntity>>> find)
+    public virtual Task<ActionResult<TEntity>> Find(
+        HttpContext                       context, ClaimsPrincipal user,
+        Func<Task<ActionResult<TEntity>>> find)
     {
         if (find == null)
         {
@@ -34,8 +35,9 @@ public class GenericControllerInterceptor<TEntity> : IGenericControllerIntercept
         return find();
     }
 
-    public virtual Task<ActionResult<TEntity>> Create(HttpContext context, ClaimsPrincipal user, TEntity entity,
-                                                      Func<TEntity, Task<ActionResult<TEntity>>> create)
+    public virtual Task<ActionResult<TEntity>> Create(
+        HttpContext                                context, ClaimsPrincipal user, TEntity entity,
+        Func<TEntity, Task<ActionResult<TEntity>>> create)
     {
         if (create == null)
         {
@@ -45,8 +47,9 @@ public class GenericControllerInterceptor<TEntity> : IGenericControllerIntercept
         return create(entity);
     }
 
-    public virtual Task<ActionResult<TEntity>> Update(HttpContext context, ClaimsPrincipal user, TEntity entity,
-                                                      Func<TEntity, Task<ActionResult<TEntity>>> update)
+    public virtual Task<ActionResult<TEntity>> Update(
+        HttpContext                                context, ClaimsPrincipal user, TEntity entity,
+        Func<TEntity, Task<ActionResult<TEntity>>> update)
     {
         if (update == null)
         {
@@ -56,8 +59,9 @@ public class GenericControllerInterceptor<TEntity> : IGenericControllerIntercept
         return update(entity);
     }
 
-    public virtual Task<ActionResult> Remove(HttpContext context, ClaimsPrincipal user, TEntity entity,
-                                             Func<TEntity, Task<ActionResult>> remove)
+    public virtual Task<ActionResult> Remove(
+        HttpContext                       context, ClaimsPrincipal user, TEntity entity,
+        Func<TEntity, Task<ActionResult>> remove)
     {
         if (remove == null)
         {

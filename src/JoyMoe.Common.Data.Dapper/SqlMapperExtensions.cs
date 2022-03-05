@@ -38,13 +38,14 @@ namespace Dapper.Contrib
             ["fbconnection"]     = new FbAdapter()
         };
 
-        public static Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection           connection,
-                                                         Expression<Func<T, bool>>?   predicate,
-                                                         Dictionary<string, string?>? orderings = null,
-                                                         int?                         size = null,
-                                                         IDbTransaction?              transaction = null,
-                                                         int?                         timeout = null,
-                                                         ISqlAdapter?                 adapter = null) where T : class
+        public static Task<IEnumerable<T>> QueryAsync<T>(
+            this IDbConnection           connection,
+            Expression<Func<T, bool>>?   predicate,
+            Dictionary<string, string?>? orderings   = null,
+            int?                         size        = null,
+            IDbTransaction?              transaction = null,
+            int?                         timeout     = null,
+            ISqlAdapter?                 adapter     = null) where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -71,10 +72,11 @@ namespace Dapper.Contrib
             return connection.QueryAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<T> QueryFirstOrDefaultAsync<T>(this IDbConnection connection,
-                                                          Expression<Func<T, bool>>? predicate,
-                                                          IDbTransaction? transaction = null,
-                                                          int? timeout = null, ISqlAdapter? adapter = null)
+        public static Task<T> QueryFirstOrDefaultAsync<T>(
+            this IDbConnection         connection,
+            Expression<Func<T, bool>>? predicate,
+            IDbTransaction?            transaction = null,
+            int?                       timeout     = null, ISqlAdapter? adapter = null)
             where T : class
         {
             adapter ??= GetFormatter(connection);
@@ -84,10 +86,11 @@ namespace Dapper.Contrib
             return connection.QueryFirstOrDefaultAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<T> QuerySingleOrDefaultAsync<T>(this IDbConnection connection,
-                                                           Expression<Func<T, bool>>? predicate,
-                                                           IDbTransaction? transaction = null,
-                                                           int? timeout = null, ISqlAdapter? adapter = null)
+        public static Task<T> QuerySingleOrDefaultAsync<T>(
+            this IDbConnection         connection,
+            Expression<Func<T, bool>>? predicate,
+            IDbTransaction?            transaction = null,
+            int?                       timeout     = null, ISqlAdapter? adapter = null)
             where T : class
         {
             adapter ??= GetFormatter(connection);
@@ -97,9 +100,10 @@ namespace Dapper.Contrib
             return connection.QuerySingleOrDefaultAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }
 
-        public static Task<long> CountAsync<T>(this IDbConnection connection, Expression<Func<T, bool>>? predicate,
-                                               IDbTransaction? transaction = null,
-                                               int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<long> CountAsync<T>(
+            this IDbConnection connection, Expression<Func<T, bool>>? predicate,
+            IDbTransaction?    transaction = null,
+            int?               timeout     = null, ISqlAdapter? adapter = null) where T : class
         {
             adapter ??= GetFormatter(connection);
 
@@ -133,9 +137,10 @@ namespace Dapper.Contrib
             return (sb, parameters);
         }
 
-        public static Task<int> InsertAsync<T>(this IDbConnection connection, T entityToInsert,
-                                               IDbTransaction? transaction = null,
-                                               int? timeout = null, ISqlAdapter? adapter = null) where T : class
+        public static Task<int> InsertAsync<T>(
+            this IDbConnection connection, T entityToInsert,
+            IDbTransaction?    transaction = null,
+            int?               timeout     = null, ISqlAdapter? adapter = null) where T : class
         {
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
@@ -194,9 +199,10 @@ namespace Dapper.Contrib
             return connection.ExecuteAsync(sb.ToString(), entityToInsert, transaction, timeout);
         }
 
-        public static async Task<int> UpdateAsync<T>(this IDbConnection connection,         T    entityToUpdate,
-                                                     IDbTransaction?    transaction = null, int? timeout = null,
-                                                     ISqlAdapter?       adapter     = null) where T : class
+        public static async Task<int> UpdateAsync<T>(
+            this IDbConnection connection,         T    entityToUpdate,
+            IDbTransaction?    transaction = null, int? timeout = null,
+            ISqlAdapter?       adapter     = null) where T : class
         {
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
@@ -270,9 +276,10 @@ namespace Dapper.Contrib
                         .ConfigureAwait(false);
         }
 
-        public static async Task<int> DeleteAsync<T>(this IDbConnection connection,         T    entityToDelete,
-                                                     IDbTransaction?    transaction = null, int? timeout = null,
-                                                     ISqlAdapter?       adapter     = null) where T : class
+        public static async Task<int> DeleteAsync<T>(
+            this IDbConnection connection,         T    entityToDelete,
+            IDbTransaction?    transaction = null, int? timeout = null,
+            ISqlAdapter?       adapter     = null) where T : class
         {
             if (entityToDelete == null)
             {

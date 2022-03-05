@@ -37,9 +37,11 @@ public class ThrottleAttribute : ActionFilterAttribute
             throw new ArgumentNullException(nameof(context));
         }
 
-        var cache = context.HttpContext.RequestServices.GetService<IDistributedCache>();
+        var ctx = context.HttpContext;
 
-        var key = $"Throttle-{Pool}-{context.HttpContext.Request.HttpContext.Connection.RemoteIpAddress}";
+        var cache = ctx.RequestServices.GetService<IDistributedCache>();
+
+        var key = $"Throttle-{Pool}-{ctx.Request.HttpContext.Connection.RemoteIpAddress}";
 
         var resetKey = $"{key}-reset";
         var timesKey = $"{key}-times";
@@ -51,16 +53,14 @@ public class ThrottleAttribute : ActionFilterAttribute
 
         times++;
 
-        var reset = cache.GetString(resetKey);
-        var resetAt = string.IsNullOrWhiteSpace(reset)
+        var rst = cache.GetString(resetKey);
+        var reset = string.IsNullOrWhiteSpace(rst)
             ? DateTimeOffset.UtcNow
-            : DateTimeOffset.Parse(reset, CultureInfo.InvariantCulture);
+            : DateTimeOffset.Parse(rst, CultureInfo.InvariantCulture);
 
-        context.HttpContext.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
-        context.HttpContext.Response.Headers.Add("X-RateLimit-Reset",
-                                                 resetAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
-        context.HttpContext.Response.Headers.Add("X-RateLimit-Remaining",
-                                                 (Times - times).ToString(CultureInfo.InvariantCulture));
+        ctx.Response.Headers.Add("X-RateLimit-Limit", Times.ToString(CultureInfo.InvariantCulture));
+        ctx.Response.Headers.Add("X-RateLimit-Reset", reset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
+        ctx.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString(CultureInfo.InvariantCulture));
 
         if (times < Times)
         {
@@ -73,11 +73,14 @@ public class ThrottleAttribute : ActionFilterAttribute
                     AbsoluteExpiration = expiration
                 });
 
-                cache.SetString(resetKey, expiration.ToString(CultureInfo.InvariantCulture),
-                                new DistributedCacheEntryOptions
-                                {
-                                    AbsoluteExpiration = expiration
-                                });
+                cache.SetString(
+                    resetKey,
+                    expiration.ToString(CultureInfo.InvariantCulture),
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpiration = expiration
+                    }
+                );
             }
             else
             {

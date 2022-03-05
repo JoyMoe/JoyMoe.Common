@@ -52,8 +52,9 @@ public class S3Storage : IObjectStorage
         await _client.DeleteAsync(new Uri(url)).ConfigureAwait(false);
     }
 
-    public async Task UploadAsync(string            path, Stream data, string mime, bool everyone = false,
-                                  CancellationToken ct = default)
+    public async Task UploadAsync(
+        string            path, Stream data, string mime, bool everyone = false,
+        CancellationToken ct = default)
     {
         if (data == null)
         {

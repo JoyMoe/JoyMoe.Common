@@ -63,14 +63,14 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         }
     }
 
-    public override async Task<PaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
+    public override async Task<CursorPaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
         int                              size      = 20,
         CancellationToken                ct        = default)
     {
-        var func = selector.Compile();
+        var converter = selector.Compile();
 
         predicate = FilteringQuery(predicate);
 
@@ -95,55 +95,43 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         }, size + 1).ConfigureAwait(false);
         var data = entities.ToArray();
 
-        TEntity? prev  = null;
-        var      first = data.FirstOrDefault();
-        if (first != null)
+        return new CursorPaginationResponse<TKey, TEntity>
         {
-            var than    = Expression.GreaterThan(property, Expression.Constant(func(first)));
-            var greater = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
-
-            entities = await Connection.QueryAsync(predicate.And(greater), new Dictionary<string, string?>
-            {
-                [selector.GetColumn().Member.Name] = null
-            }, size).ConfigureAwait(false);
-
-            prev = entities.LastOrDefault();
-        }
-
-        return new PaginationResponse<TKey, TEntity>
-        {
-            Prev = prev != null ? func(prev) : null,
-            Next = data.Length > size ? func(data.Last()) : null,
+            Next = data.Length > size ? converter(data.Last()) : null,
             Data = data.Length > size ? data[..size] : data
         };
     }
 
-    public override async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
-                                                             CancellationToken                ct = default)
+    public override async Task<TEntity?> FirstOrDefaultAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
     {
         predicate = FilteringQuery(predicate);
 
         return await Connection.QueryFirstOrDefaultAsync(predicate).ConfigureAwait(false);
     }
 
-    public override async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate,
-                                                              CancellationToken                ct = default)
+    public override async Task<TEntity?> SingleOrDefaultAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
     {
         predicate = FilteringQuery(predicate);
 
         return await Connection.QuerySingleOrDefaultAsync(predicate).ConfigureAwait(false);
     }
 
-    public override async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? predicate,
-                                              CancellationToken                ct = default)
+    public override async Task<bool> AnyAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
     {
         var count = await CountAsync(predicate, ct).ConfigureAwait(false);
 
         return count > 0;
     }
 
-    public override async Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate,
-                                                CancellationToken                ct = default)
+    public override async Task<long> CountAsync(
+        Expression<Func<TEntity, bool>>? predicate,
+        CancellationToken                ct = default)
     {
         predicate = FilteringQuery(predicate);
 

@@ -8,10 +8,10 @@ namespace System.Collections.Generic;
 
 public static class AsyncEnumerableExtensions
 {
-    public static async IAsyncEnumerable<TResult>? Map<TResult, T>(this IAsyncEnumerable<T>?    source,
-                                                                   Expression<Func<T, TResult>> mapper,
-                                                                   [EnumeratorCancellation] CancellationToken ct =
-                                                                       default)
+    public static async IAsyncEnumerable<TResult>? Map<TResult, T>(
+        this IAsyncEnumerable<T>?                  source,
+        Expression<Func<T, TResult>>               mapper,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (mapper == null)
         {

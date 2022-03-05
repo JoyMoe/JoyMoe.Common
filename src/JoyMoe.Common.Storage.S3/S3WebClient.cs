@@ -29,35 +29,40 @@ public class S3WebClient : IDisposable
         _client = client;
     }
 
-    public async Task<HttpResponseMessage> GetAsync(Uri             url, Dictionary<string, string>? headers = null,
-                                                    DateTimeOffset? time = null)
+    public async Task<HttpResponseMessage> GetAsync(
+        Uri             url, Dictionary<string, string>? headers = null,
+        DateTimeOffset? time = null)
     {
         return await SendAsync(url, headers, time).ConfigureAwait(false);
     }
 
-    public async Task<HttpResponseMessage> PostAsync(Uri                         url, HttpContent content,
-                                                     Dictionary<string, string>? headers = null,
-                                                     DateTimeOffset?             time    = null)
+    public async Task<HttpResponseMessage> PostAsync(
+        Uri                         url, HttpContent content,
+        Dictionary<string, string>? headers = null,
+        DateTimeOffset?             time    = null)
     {
         return await SendAsync(url, headers, time, HttpMethod.Post, content).ConfigureAwait(false);
     }
 
-    public async Task<HttpResponseMessage> PutAsync(Uri                         url, HttpContent content,
-                                                    Dictionary<string, string>? headers = null,
-                                                    DateTimeOffset?             time    = null)
+    public async Task<HttpResponseMessage> PutAsync(
+        Uri                         url, HttpContent content,
+        Dictionary<string, string>? headers = null,
+        DateTimeOffset?             time    = null)
     {
         return await SendAsync(url, headers, time, HttpMethod.Put, content).ConfigureAwait(false);
     }
 
-    public async Task<HttpResponseMessage> DeleteAsync(Uri             url, Dictionary<string, string>? headers = null,
-                                                       DateTimeOffset? time = null)
+    public async Task<HttpResponseMessage> DeleteAsync(
+        Uri             url, Dictionary<string, string>? headers = null,
+        DateTimeOffset? time = null)
     {
         return await SendAsync(url, headers, time, HttpMethod.Delete).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendAsync(Uri             url, Dictionary<string, string>? headers = null,
-                                                      DateTimeOffset? time    = null, HttpMethod? method = null,
-                                                      HttpContent?    content = null)
+    private async Task<HttpResponseMessage> SendAsync(
+        Uri             url,            Dictionary<string, string>? headers = null,
+        DateTimeOffset? time    = null, HttpMethod?                 method  = null,
+        HttpContent?    content = null)
     {
         method ??= HttpMethod.Get;
 
