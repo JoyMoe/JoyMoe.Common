@@ -1,4 +1,4 @@
-using AutoMapper.Configuration;
+using AutoMapper;
 using JoyMoe.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
