@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Chino Chang</Authors>
+    <Description>JoyMoe.Common repository for linq2db</Description>
+    <PackageTags>linq2db;LinqToDB;repository;timestamp</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="linq2db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
+  </ItemGroup>
+
+</Project>
