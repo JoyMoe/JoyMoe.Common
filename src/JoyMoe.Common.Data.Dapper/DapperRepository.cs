@@ -116,7 +116,8 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         }
         else
         {
-            throw new ArgumentNullException(nameof(offset));
+            page   = 1;
+            offset = 0;
         }
 
         var entities = await Connection.QueryAsync(predicate,

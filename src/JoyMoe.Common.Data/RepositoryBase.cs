@@ -235,7 +235,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         return predicate.And(lambda);
     }
 
-    private Expression<Func<TEntity, bool>>? ConvertPredicate<T>(Expression<Func<T, bool>>? predicate) {
+    private static Expression<Func<TEntity, bool>>? ConvertPredicate<T>(Expression<Func<T, bool>>? predicate) {
         return predicate switch
         {
             null                              => null,

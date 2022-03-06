@@ -11,11 +11,6 @@ using LinqToDB;
 
 namespace JoyMoe.Common.Data.LinqToDB;
 
-public class LinQ2DbRepository<TEntity> : LinQ2DbRepository<DataContext, TEntity> where TEntity : class
-{
-    public LinQ2DbRepository(DataContext context) : base(context) { }
-}
-
 public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> where TContext : DataContext
                                                                             where TEntity : class
 {
@@ -133,7 +128,8 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
         }
         else
         {
-            throw new ArgumentNullException(nameof(offset));
+            page   = 1;
+            offset = 0;
         }
 
         var data = await query.Skip(offset.Value).Take(size).ToArrayAsync(ct);

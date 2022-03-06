@@ -10,12 +10,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JoyMoe.Common.Data.EFCore;
 
-public class EntityFrameworkCoreRepository<TEntity> : EntityFrameworkCoreRepository<DbContext, TEntity>
-    where TEntity : class
-{
-    public EntityFrameworkCoreRepository(DbContext context) : base(context) { }
-}
-
 public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<TEntity> where TContext : DbContext
     where TEntity : class
 {
@@ -131,7 +125,8 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
         }
         else
         {
-            throw new ArgumentNullException(nameof(offset));
+            page   = 1;
+            offset = 0;
         }
 
         var data = await query.Skip(offset.Value).Take(size).ToArrayAsync(ct);
