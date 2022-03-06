@@ -3,15 +3,76 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JoyMoe.Common.Abstractions;
 
 namespace JoyMoe.Common.Data;
 
-public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEntity : class
+public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity> where TEntity : class
 {
     public bool IgnoreQueryFilters { get; set; }
+
+    #region IRepository
+
+    public async IAsyncEnumerable<object> ListAsync<T>(
+        Expression<Func<T, bool>>?                 predicate,
+        [EnumeratorCancellation] CancellationToken ct = default) {
+        var q = ConvertPredicate(predicate);
+        await foreach (var item in ((IRepository<TEntity>)this).ListAsync(q, ct))
+        {
+            yield return item;
+        }
+    }
+
+    public async Task<object?> FirstOrDefaultAsync<T>(
+        Expression<Func<T, bool>>? predicate,
+        CancellationToken          ct = default) {
+        var q = ConvertPredicate(predicate);
+        return await ((IRepository<TEntity>)this).FirstOrDefaultAsync(q, ct);
+    }
+
+    public async Task<object?> SingleOrDefaultAsync<T>(
+        Expression<Func<T, bool>>? predicate,
+        CancellationToken          ct = default) {
+        var q = ConvertPredicate(predicate);
+        return await ((IRepository<TEntity>)this).SingleOrDefaultAsync(q, ct);
+    }
+
+    public async Task<bool> AnyAsync<T>(Expression<Func<T, bool>>? predicate, CancellationToken ct = default) {
+        var q = ConvertPredicate(predicate);
+        return await ((IRepository<TEntity>)this).AnyAsync(q, ct);
+    }
+
+    public async Task<int> CountAsync<T>(Expression<Func<T, bool>>? predicate, CancellationToken ct = default) {
+        var q = ConvertPredicate(predicate);
+        return await ((IRepository<TEntity>)this).CountAsync(q, ct);
+    }
+
+    public async Task<long> LongCountAsync<T>(Expression<Func<T, bool>>? predicate, CancellationToken ct = default) {
+        var q = ConvertPredicate(predicate);
+        return await ((IRepository<TEntity>)this).LongCountAsync(q, ct);
+    }
+
+    public async Task AddAsync(object entity, CancellationToken ct = default) {
+        if (entity is not TEntity e) return;
+        await ((IRepository<TEntity>)this).AddAsync(e, ct);
+    }
+
+    public async Task UpdateAsync(object entity, CancellationToken ct = default) {
+        if (entity is not TEntity e) return;
+        await ((IRepository<TEntity>)this).UpdateAsync(e, ct);
+    }
+
+    public async Task RemoveAsync(object entity, CancellationToken ct = default) {
+        if (entity is not TEntity e) return;
+        await ((IRepository<TEntity>)this).RemoveAsync(e, ct);
+    }
+
+    #endregion
+
+    #region IRepository<TEntity>
 
     public Expression<Func<TEntity, bool>>? Query(Expression<Func<TEntity, bool>>? predicate = null) {
         return predicate;
@@ -148,6 +209,10 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 
     public abstract Task<int> CommitAsync(CancellationToken ct = default);
 
+    #endregion
+
+    #region Helpers
+
     protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate) {
         if (IgnoreQueryFilters)
         {
@@ -169,4 +234,15 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 
         return predicate.And(lambda);
     }
+
+    private Expression<Func<TEntity, bool>>? ConvertPredicate<T>(Expression<Func<T, bool>>? predicate) {
+        return predicate switch
+        {
+            null                              => null,
+            Expression<Func<TEntity, bool>> e => e,
+            _                                 => throw new InvalidOperationException()
+        };
+    }
+
+    #endregion
 }
