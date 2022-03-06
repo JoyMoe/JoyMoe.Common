@@ -39,8 +39,8 @@ public static class ExpressionExtensions
             return right;
         }
 
-        var body = Expression.MakeBinary(expressionType, left.Body, right.Body);
+        var body = Expression.MakeBinary(expressionType, left.Body, Expression.Invoke(right, left.Parameters));
 
-        return Expression.Lambda<Func<T, bool>>(body, left.Parameters[0]);
+        return Expression.Lambda<Func<T, bool>>(body, left.Parameters);
     }
 }
