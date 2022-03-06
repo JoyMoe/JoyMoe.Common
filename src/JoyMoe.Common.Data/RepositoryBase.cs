@@ -13,6 +13,10 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 {
     public bool IgnoreQueryFilters { get; set; }
 
+    public Expression<Func<TEntity, bool>>? Query(Expression<Func<TEntity, bool>>? predicate = null) {
+        return predicate;
+    }
+
     public Task<TEntity?> FindAsync<TKey>(
         Expression<Func<TEntity, TKey>> selector,
         TKey                            id,

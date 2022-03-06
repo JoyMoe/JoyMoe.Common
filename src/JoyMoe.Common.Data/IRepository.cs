@@ -11,6 +11,8 @@ public interface IRepository<TEntity> where TEntity : class
 {
     bool IgnoreQueryFilters { get; set; }
 
+    Expression<Func<TEntity, bool>>? Query(Expression<Func<TEntity, bool>>? predicate = null);
+
     Task<TEntity?> FindAsync<TKey>(Expression<Func<TEntity, TKey>> selector, TKey id, CancellationToken ct = default)
         where TKey : struct;
 
