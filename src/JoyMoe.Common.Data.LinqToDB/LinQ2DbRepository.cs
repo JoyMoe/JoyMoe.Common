@@ -39,13 +39,19 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
 
     public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
         Expression<Func<TEntity, bool>>?           predicate,
-        Expression<Func<TEntity, TKey>>?           ordering,
-        [EnumeratorCancellation] CancellationToken ct = default) {
+        Expression<Func<TEntity, TKey>>?           sort,
+        Ordering                                   ordering = Ordering.Descending,
+        [EnumeratorCancellation] CancellationToken ct       = default) {
         predicate = FilteringQuery(predicate);
 
         var query = BuildQuery(Context, predicate);
 
-        if (ordering != null) query = query.OrderByDescending(ordering);
+        query = ordering switch
+        {
+            Ordering.Descending when sort != null => query.OrderByDescending(sort),
+            Ordering.Ascending when sort != null => query.OrderBy(sort),
+            _ => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+        };
 
         var enumerable = query.AsAsyncEnumerable().WithCancellation(ct);
 
@@ -56,7 +62,8 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
-        int                              size      = 20,
+        int                              size      = 10,
+        Ordering                         ordering  = Ordering.Descending,
         CancellationToken                ct        = default) {
         var converter = selector.Compile();
 
@@ -79,13 +86,59 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
 
         var query = BuildQuery(Context, predicate.And(filtering));
 
-        var data = await query.OrderByDescending(selector).Take(size + 1).ToArrayAsync(ct);
+        query = ordering switch
+        {
+            Ordering.Descending => query.OrderByDescending(selector),
+            Ordering.Ascending  => query.OrderBy(selector),
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+        };
+
+        var data = await query.Take(size + 1).ToArrayAsync(ct);
 
         return new CursorPaginationResponse<TKey, TEntity>
         {
             Next = data.Length > size ? converter(data.Last()) : null,
             Data = data.Length > size ? data[..size] : data
         };
+    }
+
+    public override async Task<OffsetPaginationResponse<TEntity>> PaginateAsync<TKey>(
+        Expression<Func<TEntity, TKey>>  selector,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        int?                             page      = null,
+        int?                             offset    = null,
+        int                              size      = 20,
+        Ordering                         ordering  = Ordering.Descending,
+        CancellationToken                ct        = default) {
+        predicate = FilteringQuery(predicate);
+
+        var query = BuildQuery(Context, predicate);
+
+        var count = await query.CountAsync(ct);
+
+        query = ordering switch
+        {
+            Ordering.Descending => query.OrderByDescending(selector),
+            Ordering.Ascending  => query.OrderBy(selector),
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+        };
+
+        if (page.HasValue)
+        {
+            offset = (page - 1) * size;
+        }
+        else if (offset.HasValue)
+        {
+            page = offset / size + 1;
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(offset));
+        }
+
+        var data = await query.Skip(offset.Value).Take(size).ToArrayAsync(ct);
+
+        return new OffsetPaginationResponse<TEntity> { Size = count, Page = page.Value, Data = data };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(

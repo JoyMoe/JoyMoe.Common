@@ -51,7 +51,7 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 
         IgnoreQueryFilters = true;
 
-        return ListAsync(predicate, selector, ct);
+        return ListAsync(predicate, selector, ct: ct);
     }
 
     public abstract IAsyncEnumerable<TEntity> ListAsync(
@@ -60,14 +60,25 @@ public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEnti
 
     public abstract IAsyncEnumerable<TEntity> ListAsync<TKey>(
         Expression<Func<TEntity, bool>>? predicate,
-        Expression<Func<TEntity, TKey>>? ordering,
-        CancellationToken                ct = default) where TKey : struct;
+        Expression<Func<TEntity, TKey>>? sort,
+        Ordering                         ordering = Ordering.Descending,
+        CancellationToken                ct       = default) where TKey : struct;
 
     public abstract Task<CursorPaginationResponse<TKey, TEntity>> PaginateAsync<TKey>(
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
+        int                              size      = 10,
+        Ordering                         ordering  = Ordering.Descending,
+        CancellationToken                ct        = default) where TKey : struct;
+
+    public abstract Task<OffsetPaginationResponse<TEntity>> PaginateAsync<TKey>(
+        Expression<Func<TEntity, TKey>>  selector,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        int?                             page      = null,
+        int?                             offset    = null,
         int                              size      = 20,
+        Ordering                         ordering  = Ordering.Descending,
         CancellationToken                ct        = default) where TKey : struct;
 
     public abstract Task<TEntity?> FirstOrDefaultAsync(

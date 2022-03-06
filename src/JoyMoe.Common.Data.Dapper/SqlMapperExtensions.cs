@@ -42,7 +42,8 @@ namespace Dapper.Contrib
             this IDbConnection           connection,
             Expression<Func<T, bool>>?   predicate,
             Dictionary<string, string?>? orderings   = null,
-            int?                         size        = null,
+            int?                         limit       = null,
+            int?                         offset      = null,
             IDbTransaction?              transaction = null,
             int?                         timeout     = null,
             ISqlAdapter?                 adapter     = null) where T : class {
@@ -60,7 +61,8 @@ namespace Dapper.Contrib
                 }
             }
 
-            if (size.HasValue) sb.AppendFormat(" LIMIT {0}", size);
+            if (limit.HasValue) sb.AppendFormat(" LIMIT {0}", limit);
+            if (offset.HasValue) sb.AppendFormat(" OFFSET {0}", offset);
 
             return connection.QueryAsync<T>(sb.ToString(), parameters, transaction, timeout);
         }

@@ -35,14 +35,15 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
 
     public override async IAsyncEnumerable<TEntity> ListAsync<TKey>(
         Expression<Func<TEntity, bool>>?           predicate,
-        Expression<Func<TEntity, TKey>>?           ordering,
-        [EnumeratorCancellation] CancellationToken ct = default) {
+        Expression<Func<TEntity, TKey>>?           sort,
+        Ordering                                   ordering = Ordering.Descending,
+        [EnumeratorCancellation] CancellationToken ct       = default) {
         predicate = FilteringQuery(predicate);
 
         Dictionary<string, string?>? orderings = null;
-        if (!string.IsNullOrWhiteSpace(ordering?.GetColumn().Member.Name))
+        if (!string.IsNullOrWhiteSpace(sort?.GetColumn().Member.Name))
         {
-            orderings = new Dictionary<string, string?> { [ordering.GetColumn().Member.Name] = null };
+            orderings = new Dictionary<string, string?> { [sort.GetColumn().Member.Name] = OrderingToString(ordering) };
         }
 
         var entities = await Connection.QueryAsync(predicate, orderings);
@@ -54,7 +55,8 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         Expression<Func<TEntity, TKey>>  selector,
         Expression<Func<TEntity, bool>>? predicate = null,
         TKey?                            cursor    = null,
-        int                              size      = 20,
+        int                              size      = 10,
+        Ordering                         ordering  = Ordering.Descending,
         CancellationToken                ct        = default) {
         var converter = selector.Compile();
 
@@ -78,7 +80,7 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         var entities = await Connection.QueryAsync(predicate.And(filtering),
                                                    new Dictionary<string, string?>
                                                    {
-                                                       [selector.GetColumn().Member.Name] = "DESC"
+                                                       [key.Member.Name] = OrderingToString(ordering)
                                                    },
                                                    size + 1);
         var data = entities.ToArray();
@@ -88,6 +90,46 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
             Next = data.Length > size ? converter(data.Last()) : null,
             Data = data.Length > size ? data[..size] : data
         };
+    }
+
+    public override async Task<OffsetPaginationResponse<TEntity>> PaginateAsync<TKey>(
+        Expression<Func<TEntity, TKey>>  selector,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        int?                             page      = null,
+        int?                             offset    = null,
+        int                              size      = 20,
+        Ordering                         ordering  = Ordering.Descending,
+        CancellationToken                ct        = default) {
+        predicate = FilteringQuery(predicate);
+
+        var key = selector.GetColumn();
+
+        var count = await CountAsync(predicate, ct);
+
+        if (page.HasValue)
+        {
+            offset = (page - 1) * size;
+        }
+        else if (offset.HasValue)
+        {
+            page = offset / size + 1;
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(offset));
+        }
+
+        var entities = await Connection.QueryAsync(predicate,
+                                                   new Dictionary<string, string?>
+                                                   {
+                                                       [key.Member.Name] = OrderingToString(ordering)
+                                                   },
+                                                   size,
+                                                   offset.Value);
+
+        var data = entities.ToArray();
+
+        return new OffsetPaginationResponse<TEntity> { Size = count, Page = page.Value, Data = data };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(
@@ -186,5 +228,14 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         if (Connection.State == ConnectionState.Closed) await Connection.OpenAsync();
 
         Transaction = await Connection.BeginTransactionAsync();
+    }
+
+    private string OrderingToString(Ordering ordering) {
+        return ordering switch
+        {
+            Ordering.Descending => "DESC",
+            Ordering.Ascending  => "ASC",
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+        };
     }
 }
