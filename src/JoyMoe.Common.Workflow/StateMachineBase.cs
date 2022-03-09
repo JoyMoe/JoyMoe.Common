@@ -14,8 +14,12 @@ public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDi
     protected StateMachineBase() { }
 
     protected StateMachineBase(StateObserver<TI> observer) {
-        _eventObserver = this.ConnectEventObserver(new EventTriggerObserver<TI>());
         _stateObserver = this.ConnectStateObserver(observer);
+    }
+
+    protected StateMachineBase(EventObserver<TI> eventObserver, StateObserver<TI> stateObserver) {
+        _eventObserver = this.ConnectEventObserver(eventObserver);
+        _stateObserver = this.ConnectStateObserver(stateObserver);
     }
 
     public State<TI> GetCurrentState(TI instance) {

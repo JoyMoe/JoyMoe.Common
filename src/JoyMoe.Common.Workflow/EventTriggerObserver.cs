@@ -19,7 +19,6 @@ public class EventTriggerObserver<TI> : EventObserver<TI> where TI : class, ISta
                 throw new EventExecutionException();
             }
 
-            context.Instance.Note            = data.Note;
             context.Instance.LastUpdatedById = data.JockeyId;
             context.Instance.LastUpdatedBy   = data.Jockey;
         }
