@@ -84,7 +84,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
-        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}");
 
         var property = Expression.Property(parameter, key.Member.Name);
 
@@ -103,7 +103,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
-        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}");
+        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}");
 
         var property = Expression.Property(parameter, key.Member.Name);
 
@@ -163,7 +163,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken                ct = default);
 
     public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         if (entity is ITimestamp stamp)
         {
@@ -185,7 +185,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     }
 
     public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default) {
-        if (entity is ITimestamp stamp) stamp.ModificationDate = DateTime.UtcNow;
+        if (entity is ITimestamp stamp) stamp.ModificationDate = DateTimeOffset.UtcNow;
 
         return Task.CompletedTask;
     }
@@ -195,7 +195,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default) {
         if (entity is not ISoftDelete soft) return Task.FromResult(true);
 
-        soft.DeletionDate = DateTime.UtcNow;
+        soft.DeletionDate = DateTimeOffset.UtcNow;
         return Task.FromResult(false);
     }
 
@@ -224,7 +224,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity))) return predicate;
 
         var parameter = predicate == null
-            ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTime.Now.ToFileTime()}")
+            ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTimeOffset.UtcNow.ToFileTime()}")
             : predicate.Parameters[0];
 
         var property  = Expression.Property(parameter, nameof(ISoftDelete.DeletionDate));

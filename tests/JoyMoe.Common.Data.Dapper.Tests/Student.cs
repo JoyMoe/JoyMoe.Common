@@ -13,11 +13,11 @@ public record Person : IDataEntity, IConcurrency, ISoftDelete
 
     public virtual Guid? Timestamp { get; set; }
 
-    public virtual DateTime? CreationDate { get; set; }
+    public virtual DateTimeOffset? CreationDate { get; set; }
 
-    public virtual DateTime? ModificationDate { get; set; }
+    public virtual DateTimeOffset? ModificationDate { get; set; }
 
-    public virtual DateTime? DeletionDate { get; set; }
+    public virtual DateTimeOffset? DeletionDate { get; set; }
 }
 
 public record Student : Person

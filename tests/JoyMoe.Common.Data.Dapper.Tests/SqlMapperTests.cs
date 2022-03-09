@@ -15,8 +15,8 @@ public class SqlMapperTests
         FirstName        = "Carolyne",
         LastName         = "Sophia",
         Timestamp        = Guid.NewGuid(),
-        CreationDate     = DateTime.UtcNow,
-        ModificationDate = DateTime.UtcNow
+        CreationDate     = DateTimeOffset.UtcNow,
+        ModificationDate = DateTimeOffset.UtcNow
     };
 
     [Fact]

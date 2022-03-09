@@ -4,7 +4,7 @@ namespace JoyMoe.Common.Abstractions;
 
 public interface ITimestamp
 {
-    DateTime? CreationDate { get; set; }
+    DateTimeOffset? CreationDate { get; set; }
 
-    DateTime? ModificationDate { get; set; }
+    DateTimeOffset? ModificationDate { get; set; }
 }

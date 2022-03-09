@@ -67,7 +67,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
         var key = selector.GetColumn();
 
         var parameter = predicate == null
-            ? Expression.Parameter(typeof(TEntity), $"__de_{DateTime.Now.ToFileTime()}")
+            ? Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}")
             : predicate.Parameters[0];
 
         var property = Expression.Property(parameter, key.Member.Name);

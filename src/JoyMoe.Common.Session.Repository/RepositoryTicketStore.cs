@@ -29,7 +29,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 
         var manager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var entity = new TSession
         {
@@ -58,7 +58,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 
         entity.Value            = SerializeToBytes(ticket);
         entity.ExpirationDate   = ticket.Properties.ExpiresUtc?.UtcDateTime;
-        entity.ModificationDate = DateTime.UtcNow;
+        entity.ModificationDate = DateTimeOffset.UtcNow;
 
         await repository.UpdateAsync(entity);
         await repository.CommitAsync();
@@ -73,7 +73,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
         var entity = await repository.FindAsync(e => e.Id, id);
         if (entity == null) return null;
 
-        entity.ModificationDate = DateTime.UtcNow;
+        entity.ModificationDate = DateTimeOffset.UtcNow;
 
         await repository.UpdateAsync(entity);
         await repository.CommitAsync();
@@ -81,12 +81,8 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
         var ticket = DeserializeFromBytes(entity.Value);
         if (ticket == null) return null;
 
-        ticket.Properties.ExpiresUtc = entity.ExpirationDate != null
-            ? DateTime.SpecifyKind(entity.ExpirationDate.Value, DateTimeKind.Utc)
-            : null;
-        ticket.Properties.IssuedUtc = entity.CreationDate != null
-            ? DateTime.SpecifyKind(entity.CreationDate.Value, DateTimeKind.Utc)
-            : null;
+        ticket.Properties.ExpiresUtc = entity.ExpirationDate;
+        ticket.Properties.IssuedUtc  = entity.CreationDate;
 
         return ticket;
     }
