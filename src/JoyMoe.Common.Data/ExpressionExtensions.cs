@@ -30,17 +30,44 @@ public static class ExpressionExtensions
     private static Expression<Func<T, bool>>? CombinePredicates<T>(
         this Expression<Func<T, bool>>? left,
         Expression<Func<T, bool>>?      right,
-        ExpressionType                  expressionType) {
-        if (left == null) return right;
-        if (right == null) return left;
+        ExpressionType                  type) {
+        var parameter = Expression.Parameter(typeof(T));
 
-        if (left.Body is ConstantExpression ce && ce.Value.Equals(true))
-        {
-            return right;
+        var l = Replacer.Replace(left, parameter);
+        var r = Replacer.Replace(right, parameter);
+
+        if (l == null) return right;
+        if (r == null) return left;
+
+        var body = Expression.MakeBinary(type, l, r);
+
+        return Expression.Lambda<Func<T, bool>>(body, parameter);
+    }
+
+    private class Replacer : ExpressionVisitor
+    {
+        private readonly Expression _oldValue;
+        private readonly Expression _newValue;
+
+        public static Expression? Replace(LambdaExpression? expression, ParameterExpression parameter) {
+            if (expression == null) return null;
+
+            var visitor = new Replacer(expression.Parameters[0], parameter);
+            return visitor.Visit(expression.Body);
         }
 
-        var body = Expression.MakeBinary(expressionType, left.Body, Expression.Invoke(right, left.Parameters));
+        private Replacer(Expression oldValue, Expression newValue) {
+            _oldValue = oldValue;
+            _newValue = newValue;
+        }
 
-        return Expression.Lambda<Func<T, bool>>(body, left.Parameters);
+        public override Expression? Visit(Expression node) {
+            if (node == _oldValue)
+            {
+                return _newValue;
+            }
+
+            return base.Visit(node);
+        }
     }
 }
