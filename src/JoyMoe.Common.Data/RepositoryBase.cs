@@ -84,7 +84,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
-        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}");
+        var parameter = Expression.Parameter(typeof(TEntity));
 
         var property = Expression.Property(parameter, key.Member.Name);
 
@@ -103,7 +103,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken               ct = default) where TKey : struct {
         var key = selector.GetColumn();
 
-        var parameter = Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}");
+        var parameter = Expression.Parameter(typeof(TEntity));
 
         var property = Expression.Property(parameter, key.Member.Name);
 
@@ -223,9 +223,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
 
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity))) return predicate;
 
-        var parameter = predicate == null
-            ? Expression.Parameter(typeof(ISoftDelete), $"__sd_{DateTimeOffset.UtcNow.ToFileTime()}")
-            : predicate.Parameters[0];
+        var parameter = predicate == null ? Expression.Parameter(typeof(ISoftDelete)) : predicate.Parameters[0];
 
         var property  = Expression.Property(parameter, nameof(ISoftDelete.DeletionDate));
         var equipment = Expression.Equal(property, Expression.Constant(null));
@@ -236,12 +234,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     }
 
     private static Expression<Func<TEntity, bool>>? ConvertPredicate<T>(Expression<Func<T, bool>>? predicate) {
-        return predicate switch
-        {
-            null                              => null,
-            Expression<Func<TEntity, bool>> e => e,
-            _                                 => throw new InvalidOperationException()
-        };
+        return predicate != null ? Expression.Lambda<Func<TEntity, bool>>(predicate.Body, predicate.Parameters) : null;
     }
 
     #endregion

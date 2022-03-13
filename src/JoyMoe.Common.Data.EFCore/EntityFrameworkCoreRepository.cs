@@ -63,9 +63,7 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
 
         var key = selector.GetColumn();
 
-        var parameter = predicate == null
-            ? Expression.Parameter(typeof(TEntity), $"__de_{DateTimeOffset.UtcNow.ToFileTime()}")
-            : predicate.Parameters[0];
+        var parameter = predicate == null ? Expression.Parameter(typeof(TEntity)) : predicate.Parameters[0];
 
         var property = Expression.Property(parameter, key.Member.Name);
 
