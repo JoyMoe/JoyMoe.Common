@@ -132,7 +132,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
 
         var data = await query.Skip(offset.Value).Take(size).ToArrayAsync(ct);
 
-        return new OffsetPaginationResponse<TEntity> { Size = count, Page = page.Value, Data = data };
+        return new OffsetPaginationResponse<TEntity> { Total = count, Page = page.Value, Data = data };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(

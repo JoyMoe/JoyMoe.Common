@@ -128,7 +128,7 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
 
         var data = entities.ToArray();
 
-        return new OffsetPaginationResponse<TEntity> { Size = count, Page = page.Value, Data = data };
+        return new OffsetPaginationResponse<TEntity> { Total = count, Page = page.Value, Data = data };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(
