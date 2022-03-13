@@ -31,20 +31,20 @@ public static class ExpressionExtensions
         this Expression<Func<T, bool>>? left,
         Expression<Func<T, bool>>?      right,
         ExpressionType                  type) {
+        if (left == null) return right;
+        if (right == null) return left;
+
         var parameter = Expression.Parameter(typeof(T));
 
         var l = Replacer.Replace(left, parameter);
         var r = Replacer.Replace(right, parameter);
 
-        if (l == null) return right;
-        if (r == null) return left;
-
-        var body = Expression.MakeBinary(type, l, r);
+        var body = Expression.MakeBinary(type, l!, r!);
 
         return Expression.Lambda<Func<T, bool>>(body, parameter);
     }
 
-    private class Replacer : ExpressionVisitor
+    internal class Replacer : ExpressionVisitor
     {
         private readonly Expression _oldValue;
         private readonly Expression _newValue;

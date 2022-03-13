@@ -234,7 +234,13 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     }
 
     private static Expression<Func<TEntity, bool>>? ConvertPredicate<T>(Expression<Func<T, bool>>? predicate) {
-        return predicate != null ? Expression.Lambda<Func<TEntity, bool>>(predicate.Body, predicate.Parameters) : null;
+        if (predicate == null) return null;
+
+        var parameter = Expression.Parameter(typeof(T));
+
+        var body = ExpressionExtensions.Replacer.Replace(predicate, parameter);
+
+        return Expression.Lambda<Func<TEntity, bool>>(body!, parameter);
     }
 
     #endregion
