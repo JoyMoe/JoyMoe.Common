@@ -76,7 +76,11 @@ public class QCloudWebClient : IDisposable
         return await _client.SendAsync(message);
     }
 
-    public Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null) {
+    public Task PrepareRequestAsync(
+        HttpRequestMessage message,
+        bool               header  = true,
+        DateTimeOffset?    time    = null,
+        TimeSpan?          expires = null) {
         if (message.RequestUri == null)
         {
             throw new NullReferenceException();
@@ -85,7 +89,7 @@ public class QCloudWebClient : IDisposable
         message.Headers.Host = message.RequestUri.Host;
 
         time ??= DateTimeOffset.UtcNow;
-        var keyTime = $"{time.Value.ToUnixTimeSeconds()};{time.Value.AddSeconds(7200).ToUnixTimeSeconds()}";
+        var keyTime = $"{time.Value.ToUnixTimeSeconds()};{time.Value.Add(expires ?? TimeSpan.FromSeconds(7200)).ToUnixTimeSeconds()}";
 
         var uri = Uri.UnescapeDataString(message.RequestUri!.AbsolutePath);
 

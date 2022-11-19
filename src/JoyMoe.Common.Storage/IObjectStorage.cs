@@ -21,13 +21,14 @@ public interface IObjectStorage : IDisposable
         bool              everyone = false,
         CancellationToken ct       = default);
 
-    Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default);
+    Task<string> GetPublicUrlAsync(string path, TimeSpan? expires = null, CancellationToken ct = default);
 
     Task<ObjectStorageFrontendUploadArguments> GetUploadArgumentsAsync(
         string            path,
         bool              everyone      = false,
         int?              contentLength = null,
         string?           contentType   = null,
+        TimeSpan?         expires       = null,
         CancellationToken ct            = default);
 
     Task<string> GetUrlAsync(string path, bool cname = true, CancellationToken ct = default);

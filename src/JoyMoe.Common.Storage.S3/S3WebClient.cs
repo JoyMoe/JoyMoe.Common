@@ -77,7 +77,11 @@ public class S3WebClient : IDisposable
         return await _client.SendAsync(message);
     }
 
-    public async Task PrepareRequestAsync(HttpRequestMessage message, bool header = true, DateTimeOffset? time = null) {
+    public async Task PrepareRequestAsync(
+        HttpRequestMessage message,
+        bool               header  = true,
+        DateTimeOffset?    time    = null,
+        TimeSpan?          expires = null) {
         if (message.RequestUri == null)
         {
             throw new NullReferenceException();
@@ -132,8 +136,8 @@ public class S3WebClient : IDisposable
                 ["X-Amz-Algorithm"]     = algorithm,
                 ["X-Amz-Credential"]    = credential,
                 ["X-Amz-Date"]          = timestamp,
-                ["X-Amz-Expires"]       = "86400",
-                ["X-Amz-SignedHeaders"] = signed
+                ["X-Amz-Expires"]       = expires?.TotalSeconds.ToString("F0") ?? "86400",
+                ["X-Amz-SignedHeaders"] = signed,
             });
         }
 

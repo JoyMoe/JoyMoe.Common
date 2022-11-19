@@ -65,12 +65,12 @@ public class S3Storage : IObjectStorage
                                new Dictionary<string, string> { ["x-amz-acl"] = everyone ? "public-read" : "private" });
     }
 
-    public async Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default) {
+    public async Task<string> GetPublicUrlAsync(string path, TimeSpan? expires = null, CancellationToken ct = default) {
         var url = await GetUrlAsync(path, true, ct);
 
         using var request = new HttpRequestMessage { RequestUri = new Uri(url) };
 
-        await _client.PrepareRequestAsync(request, false);
+        await _client.PrepareRequestAsync(request, false, expires: expires);
 
         return request.RequestUri.ToString();
     }
@@ -80,6 +80,7 @@ public class S3Storage : IObjectStorage
         bool              everyone      = false,
         int?              contentLength = null,
         string?           contentType   = null,
+        TimeSpan?         expires       = null,
         CancellationToken ct            = default) {
         var now       = DateTimeOffset.UtcNow;
         var date      = $"{now:yyyyMMdd}";
@@ -102,7 +103,7 @@ public class S3Storage : IObjectStorage
 
         arguments.Data["policy"] = @$"{{
   ""expiration"": ""{
-      now.AddMinutes(30)
+      now.Add(expires ?? TimeSpan.FromMinutes(30))
       :yyyy-MM-ddTHH:mm:ss.fffZ}"",
   ""conditions"": [
     {{""acl"": ""{

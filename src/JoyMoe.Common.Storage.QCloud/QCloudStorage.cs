@@ -68,12 +68,12 @@ public class QCloudStorage : IObjectStorage
                                new Dictionary<string, string> { ["x-cos-acl"] = everyone ? "public-read" : "private" });
     }
 
-    public async Task<string> GetPublicUrlAsync(string path, CancellationToken ct = default) {
+    public async Task<string> GetPublicUrlAsync(string path, TimeSpan? expires = null, CancellationToken ct = default) {
         var url = await GetUrlAsync(path, true, ct);
 
         using var request = new HttpRequestMessage { RequestUri = new Uri(url) };
 
-        await _client.PrepareRequestAsync(request, false);
+        await _client.PrepareRequestAsync(request, false, expires: expires);
 
         return request.RequestUri.ToString();
     }
@@ -83,9 +83,10 @@ public class QCloudStorage : IObjectStorage
         bool              everyone      = false,
         int?              contentLength = null,
         string?           contentType   = null,
+        TimeSpan?         expires       = null,
         CancellationToken ct            = default) {
         var now        = DateTimeOffset.UtcNow;
-        var expiration = now.AddSeconds(1800);
+        var expiration = now.Add(expires ?? TimeSpan.FromMinutes(30));
         var keyTime    = $"{now.ToUnixTimeSeconds()};{expiration.ToUnixTimeSeconds()}";
 
         var uri = await GetUrlAsync(string.Empty, true, ct);
