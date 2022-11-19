@@ -162,7 +162,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         CancellationToken                ct = default);
 
     public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
 
         if (entity is ITimestamp stamp) {
             stamp.CreationDate     = now;
@@ -183,7 +183,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     }
 
     public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default) {
-        if (entity is ITimestamp stamp) stamp.ModificationDate = DateTimeOffset.UtcNow;
+        if (entity is ITimestamp stamp) stamp.ModificationDate = DateTime.UtcNow;
 
         return Task.CompletedTask;
     }
@@ -193,7 +193,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default) {
         if (entity is not ISoftDelete soft) return Task.FromResult(true);
 
-        soft.DeletionDate = DateTimeOffset.UtcNow;
+        soft.DeletionDate = DateTime.UtcNow;
         return Task.FromResult(false);
     }
 

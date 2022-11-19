@@ -4,5 +4,5 @@ namespace JoyMoe.Common.Abstractions;
 
 public interface ISoftDelete
 {
-    DateTimeOffset? DeletionDate { get; set; }
+    DateTime? DeletionDate { get; set; }
 }

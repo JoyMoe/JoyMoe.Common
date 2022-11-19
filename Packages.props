@@ -9,15 +9,7 @@
     <PackageReference Update="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Update="Moq" Version="4.18.2" />
     <PackageReference Update="System.Text.Json" Version="6.0.7" />
-  </ItemGroup>
-
-  <ItemGroup Condition="('$(TargetFrameworkIdentifier)' == '.NETStandard' And $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '2.1')))">
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="3.1.22" />
-    <PackageReference Update="System.ComponentModel.Annotations" Version="4.7.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="('$(TargetFrameworkIdentifier)' == '.NETCoreApp' And $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0')))">
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="6.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="6.0.11" />
   </ItemGroup>
 
 </Project>

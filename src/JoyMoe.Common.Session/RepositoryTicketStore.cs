@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace JoyMoe.Common.Session.Repository;
+namespace JoyMoe.Common.Session;
 
 /// <summary>
 /// This provides an storage mechanic to preserve identity information in the Repository while only sending a simple identifier key to the client.
@@ -29,7 +29,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 
         var manager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
 
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
 
         var entity = new TSession {
             User             = await manager.GetUserAsync(ticket.Principal),
@@ -57,7 +57,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 
         entity.Value            = SerializeToBytes(ticket);
         entity.ExpirationDate   = ticket.Properties.ExpiresUtc?.UtcDateTime;
-        entity.ModificationDate = DateTimeOffset.UtcNow;
+        entity.ModificationDate = DateTime.UtcNow;
 
         await repository.UpdateAsync(entity);
         await repository.CommitAsync();
@@ -72,7 +72,7 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
         var entity = await repository.FindAsync(e => e.Id, id);
         if (entity == null) return null;
 
-        entity.ModificationDate = DateTimeOffset.UtcNow;
+        entity.ModificationDate = DateTime.UtcNow;
 
         await repository.UpdateAsync(entity);
         await repository.CommitAsync();

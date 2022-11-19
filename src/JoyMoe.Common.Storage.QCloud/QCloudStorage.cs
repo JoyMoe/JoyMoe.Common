@@ -37,7 +37,7 @@ public class QCloudStorage : IObjectStorage
             throw new IOException();
         }
 
-        await using var file = File.OpenWrite(target);
+        using var file = File.OpenWrite(target);
         await response.Content.CopyToAsync(file);
 
         return target;

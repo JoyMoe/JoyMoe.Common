@@ -1,7 +1,5 @@
-using System;
 using JoyMoe.Common.Data;
 using JoyMoe.Common.Session;
-using JoyMoe.Common.Session.Repository;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
