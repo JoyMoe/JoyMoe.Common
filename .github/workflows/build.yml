@@ -31,7 +31,7 @@ jobs:
       - name: Setup NuGet
         uses: nuget/setup-nuget@v1
         with:
-          nuget-version: "5.11.0"
+          nuget-version: "latest"
 
       - name: Set Build ID
         if: ${{ startsWith(github.ref, 'refs/pull/') == false }}
