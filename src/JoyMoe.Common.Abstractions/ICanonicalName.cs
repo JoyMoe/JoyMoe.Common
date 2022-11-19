@@ -1,6 +1,8 @@
 namespace JoyMoe.Common.Abstractions;
 
-public interface INamedEntity : IDataEntity
+public interface ICanonicalName
 {
+    string Name { get; set; }
+
     string CanonicalName { get; set; }
 }
