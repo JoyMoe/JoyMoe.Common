@@ -1,4 +1,3 @@
-using System;
 using JoyMoe.Common.Storage;
 using JoyMoe.Common.Storage.S3;
 using Microsoft.Extensions.DependencyInjection.Extensions;

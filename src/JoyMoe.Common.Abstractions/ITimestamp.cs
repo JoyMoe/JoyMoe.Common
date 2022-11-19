@@ -1,5 +1,3 @@
-using System;
-
 namespace JoyMoe.Common.Abstractions;
 
 public interface ITimestamp

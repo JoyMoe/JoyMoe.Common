@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace JoyMoe.Common.Storage;
 
 public class ObjectStorageFrontendUploadArguments

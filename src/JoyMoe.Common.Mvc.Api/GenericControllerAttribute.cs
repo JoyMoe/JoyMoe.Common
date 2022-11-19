@@ -1,4 +1,3 @@
-using System;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace JoyMoe.Common.Mvc.Api;
