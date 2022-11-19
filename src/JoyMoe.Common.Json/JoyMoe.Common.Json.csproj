@@ -10,7 +10,7 @@
     <PackageTags>int64;iso8601;json;long;snake;case</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="('$(TargetFrameworkIdentifier)' == '.NETStandard')">
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
