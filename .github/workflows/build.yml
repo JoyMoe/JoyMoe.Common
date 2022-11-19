@@ -2,10 +2,18 @@ name: build
 
 on:
   push:
-    branches: [dev, rel/*]
+    branches:
+      - dev
+      - rel/*
     tags: ["*"]
+    paths-ignore:
+      - "**/*.md"
   pull_request:
-    branches: [dev, rel/*]
+    branches:
+      - dev
+      - rel/*
+    paths-ignore:
+      - "**/*.md"
 
 jobs:
   build:
