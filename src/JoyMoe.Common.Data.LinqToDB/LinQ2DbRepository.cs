@@ -3,16 +3,17 @@ using System.Runtime.CompilerServices;
 using System.Transactions;
 using JoyMoe.Common.Abstractions;
 using LinqToDB;
+using LinqToDB.Data;
 
 namespace JoyMoe.Common.Data.LinqToDB;
 
 public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
-    where TContext : DataContext
+    where TContext : DataConnection
     where TEntity : class
 {
-    protected TContext                Context      { get; }
-    protected DataContextTransaction? Transaction  { get; set; }
-    protected int                     RowsAffected { get; set; }
+    protected TContext                   Context      { get; }
+    protected DataConnectionTransaction? Transaction  { get; set; }
+    protected int                        RowsAffected { get; set; }
 
     public LinQ2DbRepository(TContext context) {
         Context = context;
@@ -165,7 +166,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     }
 
     public override async Task AddAsync(TEntity entity, CancellationToken ct = default) {
-        await BeginTransactionAsync();
+        await BeginTransactionAsync(ct);
 
         await OnBeforeAddAsync(entity, ct);
 
@@ -173,7 +174,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     }
 
     public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default) {
-        await BeginTransactionAsync();
+        await BeginTransactionAsync(ct);
 
         await OnBeforeUpdateAsync(entity, ct);
 
@@ -181,7 +182,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     }
 
     public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default) {
-        await BeginTransactionAsync();
+        await BeginTransactionAsync(ct);
 
         if (await OnBeforeRemoveAsync(entity, ct)) {
             RowsAffected += await Context.DeleteAsync(entity, token: ct);
@@ -195,9 +196,9 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         if (Transaction == null) return 0;
 
         try {
-            await Transaction.CommitTransactionAsync(ct);
+            await Transaction.CommitAsync(ct);
         } catch (Exception ex) {
-            await Transaction.RollbackTransactionAsync(ct);
+            await Transaction.RollbackAsync(ct);
 
             throw new TransactionAbortedException(ex.Message, ex);
         }
@@ -214,9 +215,9 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         return predicate != null ? context.GetTable<TEntity>().Where(predicate) : context.GetTable<TEntity>();
     }
 
-    private async Task BeginTransactionAsync() {
+    private async Task BeginTransactionAsync(CancellationToken ct) {
         if (Transaction != null) return;
 
-        Transaction = await Context.BeginTransactionAsync();
+        Transaction = await Context.BeginTransactionAsync(ct);
     }
 }
