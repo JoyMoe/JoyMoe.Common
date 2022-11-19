@@ -42,8 +42,8 @@ public class TranslatorTests
         Assert.NotNull(parameters);
         Assert.Equal("Sophia", parameters!.Get<string>("@__p0"));
 
-        (clause, parameters) =
-            Translate(s => string.Equals(s.LastName, "Sophia", StringComparison.InvariantCultureIgnoreCase));
+        (clause, parameters)
+            = Translate(s => string.Equals(s.LastName, "Sophia", StringComparison.InvariantCultureIgnoreCase));
         Assert.Equal("(UPPER(\"LastName\") = UPPER(@__p0))", clause);
         Assert.NotNull(parameters);
         Assert.Equal("Sophia", parameters!.Get<string>("@__p0"));
@@ -51,7 +51,11 @@ public class TranslatorTests
 
     [Fact]
     public void TranslateContains() {
-        var values = new List<long> { 1L, 2L, 3L };
+        var values = new List<long> {
+            1L,
+            2L,
+            3L,
+        };
 
         var (clause, parameters) = Translate(s => values.Contains(s.Id));
         Assert.Equal("(\"Id\" = ANY(@__p0))", clause);
@@ -86,15 +90,19 @@ public class TranslatorTests
 
     [Fact]
     public void TranslateLogicality() {
-        var values = new List<long> { 1L, 2L, 3L };
+        var values = new List<long> {
+            1L,
+            2L,
+            3L,
+        };
 
         var (clause, parameters) = Translate(s => !values.Contains(s.Id) && s.LastName == "Sophia");
         Assert.Equal("( NOT (\"Id\" = ANY(@__p0)) AND (\"LastName\" = @__p1))", clause);
         Assert.NotNull(parameters);
         Assert.Equal("Sophia", parameters!.Get<string>("@__p1"));
 
-        (clause, parameters) =
-            Translate(s => !values.Contains(s.Id) && (s.FirstName.StartsWith("Caro") || s.LastName == "Sophia"));
+        (clause, parameters) = Translate(s =>
+            !values.Contains(s.Id) && (s.FirstName.StartsWith("Caro") || s.LastName == "Sophia"));
         Assert.Equal("( NOT (\"Id\" = ANY(@__p0)) AND ((\"FirstName\" LIKE @__p1) OR (\"LastName\" = @__p2)))", clause);
         Assert.NotNull(parameters);
         Assert.Equal("Caro%", parameters!.Get<string>("@__p1"));

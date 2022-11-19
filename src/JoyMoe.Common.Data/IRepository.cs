@@ -21,9 +21,9 @@ public interface IRepository
 
     Task<object?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>>?  predicate, CancellationToken ct = default);
     Task<object?> SingleOrDefaultAsync<T>(Expression<Func<T, bool>>? predicate, CancellationToken ct = default);
-    Task<bool> AnyAsync<T>(Expression<Func<T, bool>>?                predicate, CancellationToken ct = default);
-    Task<int> CountAsync<T>(Expression<Func<T, bool>>?               predicate, CancellationToken ct = default);
-    Task<long> LongCountAsync<T>(Expression<Func<T, bool>>?          predicate, CancellationToken ct = default);
+    Task<bool>    AnyAsync<T>(Expression<Func<T, bool>>?             predicate, CancellationToken ct = default);
+    Task<int>     CountAsync<T>(Expression<Func<T, bool>>?           predicate, CancellationToken ct = default);
+    Task<long>    LongCountAsync<T>(Expression<Func<T, bool>>?       predicate, CancellationToken ct = default);
 
     #endregion
 
@@ -85,9 +85,9 @@ public interface IRepository<TEntity> where TEntity : class
 
     Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>>?  predicate, CancellationToken ct = default);
     Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>>? predicate, CancellationToken ct = default);
-    Task<bool> AnyAsync(Expression<Func<TEntity, bool>>?                 predicate, CancellationToken ct = default);
-    Task<int> CountAsync(Expression<Func<TEntity, bool>>?                predicate, CancellationToken ct = default);
-    Task<long> LongCountAsync(Expression<Func<TEntity, bool>>?           predicate, CancellationToken ct = default);
+    Task<bool>     AnyAsync(Expression<Func<TEntity, bool>>?             predicate, CancellationToken ct = default);
+    Task<int>      CountAsync(Expression<Func<TEntity, bool>>?           predicate, CancellationToken ct = default);
+    Task<long>     LongCountAsync(Expression<Func<TEntity, bool>>?       predicate, CancellationToken ct = default);
 
     #endregion
 

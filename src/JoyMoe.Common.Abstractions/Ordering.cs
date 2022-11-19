@@ -1,7 +1,3 @@
 ﻿namespace JoyMoe.Common.Abstractions;
 
-public enum Ordering
-{
-    Ascending,
-    Descending
-}
+public enum Ordering { Ascending, Descending }

@@ -12,22 +12,15 @@ public class EventTriggerObserver<TI> : EventObserver<TI> where TI : class, ISta
     }
 
     public Task PreExecute<T>(EventContext<TI, T> context) {
-        if (context.Data is IEventData data)
-        {
-            if (string.IsNullOrWhiteSpace(data.Jockey) || data.JockeyId == 0)
-            {
+        if (context.Data is IEventData data) {
+            if (string.IsNullOrWhiteSpace(data.Jockey) || data.JockeyId == 0) {
                 throw new EventExecutionException();
             }
 
             context.Instance.LastUpdatedById = data.JockeyId;
             context.Instance.LastUpdatedBy   = data.Jockey;
-        }
-        else
-        {
-            if (context.Event.Name != nameof(AutomatonymousStateMachine<TI>.Initial))
-            {
-                throw new EventExecutionException();
-            }
+        } else if (context.Event.Name != nameof(AutomatonymousStateMachine<TI>.Initial)) {
+            throw new EventExecutionException();
         }
 
         return Task.CompletedTask;

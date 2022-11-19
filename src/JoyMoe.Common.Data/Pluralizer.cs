@@ -8,15 +8,14 @@ public static class Pluralizer
     public static string Pluralize(this string text) {
         if (string.IsNullOrWhiteSpace(text)) return text;
 
-        var exceptions = new Dictionary<string, string>()
-        {
+        var exceptions = new Dictionary<string, string>() {
             { "man", "men" },
             { "woman", "women" },
             { "child", "children" },
             { "tooth", "teeth" },
             { "foot", "feet" },
             { "mouse", "mice" },
-            { "belief", "beliefs" }
+            { "belief", "beliefs" },
         };
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
@@ -28,13 +27,11 @@ public static class Pluralizer
             !text.EndsWith("ey", StringComparison.OrdinalIgnoreCase) &&
             !text.EndsWith("iy", StringComparison.OrdinalIgnoreCase) &&
             !text.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
-            !text.EndsWith("uy", StringComparison.OrdinalIgnoreCase))
-        {
+            !text.EndsWith("uy", StringComparison.OrdinalIgnoreCase)) {
             return text.Substring(0, text.Length - 1) + "ies";
         }
 
-        if (text.EndsWith("us", StringComparison.OrdinalIgnoreCase))
-        {
+        if (text.EndsWith("us", StringComparison.OrdinalIgnoreCase)) {
             // http://en.wikipedia.org/wiki/Plural_form_of_words_ending_in_-us
             return text + "es";
         }
@@ -45,18 +42,15 @@ public static class Pluralizer
 
         if (text.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
             text.EndsWith("ch", StringComparison.OrdinalIgnoreCase) ||
-            text.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-        {
+            text.EndsWith("sh", StringComparison.OrdinalIgnoreCase)) {
             return text + "es";
         }
 
-        if (text.EndsWith("f", StringComparison.OrdinalIgnoreCase) && text.Length > 1)
-        {
+        if (text.EndsWith("f", StringComparison.OrdinalIgnoreCase) && text.Length > 1) {
             return text.Substring(0, text.Length - 1) + "ves";
         }
 
-        if (text.EndsWith("fe", StringComparison.OrdinalIgnoreCase) && text.Length > 2)
-        {
+        if (text.EndsWith("fe", StringComparison.OrdinalIgnoreCase) && text.Length > 2) {
             return text.Substring(0, text.Length - 2) + "ves";
         }
 

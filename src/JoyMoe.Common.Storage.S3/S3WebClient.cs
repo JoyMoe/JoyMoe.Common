@@ -65,10 +65,13 @@ public class S3WebClient : IDisposable
         HttpContent?                content = null) {
         method ??= HttpMethod.Get;
 
-        using var message = new HttpRequestMessage { Content = content, Method = method, RequestUri = url };
+        using var message = new HttpRequestMessage {
+            Content    = content,
+            Method     = method,
+            RequestUri = url,
+        };
 
-        if (headers != null)
-        {
+        if (headers != null) {
             foreach (var h in headers) message.Headers.Add(h.Key, h.Value);
         }
 
@@ -82,8 +85,7 @@ public class S3WebClient : IDisposable
         bool               header  = true,
         DateTimeOffset?    time    = null,
         TimeSpan?          expires = null) {
-        if (message.RequestUri == null)
-        {
+        if (message.RequestUri == null) {
             throw new NullReferenceException();
         }
 
@@ -96,12 +98,9 @@ public class S3WebClient : IDisposable
         const string algorithm = "AWS4-HMAC-SHA256";
 
         var hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-        if (!header)
-        {
+        if (!header) {
             hash = "UNSIGNED-PAYLOAD";
-        }
-        else if (message.Content != null)
-        {
+        } else if (message.Content != null) {
             var payload = await message.Content.ReadAsByteArrayAsync();
             hash = payload.Sha256().ToHex();
         }
@@ -109,8 +108,7 @@ public class S3WebClient : IDisposable
         var scope      = $"{date}/{_options.Region}/s3/aws4_request";
         var credential = $"{_options.AccessKey}/{scope}";
 
-        if (header)
-        {
+        if (header) {
             message.Headers.Add("x-amz-date", timestamp);
             message.Headers.Add("x-amz-content-sha256", hash);
         }
@@ -120,8 +118,7 @@ public class S3WebClient : IDisposable
 
         foreach (var h in message.Headers) hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
 
-        if (message.Content?.Headers != null)
-        {
+        if (message.Content?.Headers != null) {
             foreach (var h in message.Content.Headers) hd[h.Key.ToLowerInvariant()] = h.Value.First().Trim();
         }
 #pragma warning restore CA1308 // Normalize strings to uppercase
@@ -129,10 +126,8 @@ public class S3WebClient : IDisposable
         var signed  = string.Join(";", hd.Select(h => h.Key));
         var headers = string.Join("", hd.Select(h => $"{h.Key}:{h.Value}\n"));
 
-        if (!header)
-        {
-            message.RequestUri = message.RequestUri.AddQueryParameters(new Dictionary<string, string>
-            {
+        if (!header) {
+            message.RequestUri = message.RequestUri.AddQueryParameters(new Dictionary<string, string> {
                 ["X-Amz-Algorithm"]     = algorithm,
                 ["X-Amz-Credential"]    = credential,
                 ["X-Amz-Date"]          = timestamp,
@@ -143,9 +138,8 @@ public class S3WebClient : IDisposable
 
         var uri = Uri.EscapeDataString(message.RequestUri.AbsolutePath).Replace("%2F", "/");
         var query = string.Join("&",
-                                message.RequestUri!.ToQueryKeyValuePairs()
-                                       .OrderBy(q => q.Key)
-                                       .Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
+            message.RequestUri!.ToQueryKeyValuePairs().OrderBy(q => q.Key).Select(q =>
+                $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"));
 
         var canonical = $"{message.Method}\n{uri}\n{query}\n{headers}\n{signed}\n{hash}";
 
@@ -155,14 +149,11 @@ public class S3WebClient : IDisposable
 
         var signature = CalculateSignature(@string, date);
 
-        if (header)
-        {
-            var authorization =
-                $"Credential={credential},SignedHeaders={string.Join(";", signed)},Signature={signature}";
+        if (header) {
+            var authorization
+                = $"Credential={credential},SignedHeaders={string.Join(";", signed)},Signature={signature}";
             message.Headers.Authorization = new AuthenticationHeaderValue("AWS4-HMAC-SHA256", authorization);
-        }
-        else
-        {
+        } else {
             message.RequestUri = message.RequestUri.AddQueryParameter("X-Amz-Signature", signature);
         }
     }

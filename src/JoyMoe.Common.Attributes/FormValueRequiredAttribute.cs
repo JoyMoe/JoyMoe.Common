@@ -22,16 +22,14 @@ public sealed class FormValueRequiredAttribute : ActionMethodSelectorAttribute
         if (string.Equals(ctx.Request.Method, "GET", StringComparison.InvariantCultureIgnoreCase) ||
             string.Equals(ctx.Request.Method, "HEAD", StringComparison.InvariantCultureIgnoreCase) ||
             string.Equals(ctx.Request.Method, "DELETE", StringComparison.InvariantCultureIgnoreCase) ||
-            string.Equals(ctx.Request.Method, "TRACE", StringComparison.InvariantCultureIgnoreCase))
-        {
+            string.Equals(ctx.Request.Method, "TRACE", StringComparison.InvariantCultureIgnoreCase)) {
             return false;
         }
 
         if (string.IsNullOrEmpty(ctx.Request.ContentType)) return false;
 
         if (!ctx.Request.ContentType.StartsWith("application/x-www-form-urlencoded",
-                                                StringComparison.InvariantCultureIgnoreCase))
-        {
+                StringComparison.InvariantCultureIgnoreCase)) {
             return false;
         }
 

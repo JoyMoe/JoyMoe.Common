@@ -33,8 +33,7 @@ public class QCloudStorage : IObjectStorage
 
         var target = Path.GetTempFileName();
 
-        if (string.IsNullOrWhiteSpace(target))
-        {
+        if (string.IsNullOrWhiteSpace(target)) {
             throw new IOException();
         }
 
@@ -63,9 +62,8 @@ public class QCloudStorage : IObjectStorage
         content.Headers.ContentMD5    = data.Md5();
         data.Seek(0, SeekOrigin.Begin);
 
-        await _client.PutAsync(new Uri(url),
-                               content,
-                               new Dictionary<string, string> { ["x-cos-acl"] = everyone ? "public-read" : "private" });
+        await _client.PutAsync(new Uri(url), content,
+            new Dictionary<string, string> { ["x-cos-acl"] = everyone ? "public-read" : "private" });
     }
 
     public async Task<string> GetPublicUrlAsync(string path, TimeSpan? expires = null, CancellationToken ct = default) {
@@ -91,17 +89,15 @@ public class QCloudStorage : IObjectStorage
 
         var uri = await GetUrlAsync(string.Empty, true, ct);
 
-        var arguments = new ObjectStorageFrontendUploadArguments
-        {
+        var arguments = new ObjectStorageFrontendUploadArguments {
             Action = uri,
-            Data =
-            {
+            Data = {
                 ["key"]              = path,
                 ["acl"]              = everyone ? "public-read" : "private",
                 ["q-sign-algorithm"] = "sha1",
                 ["q-ak"]             = Options.SecretId,
-                ["q-key-time"]       = keyTime
-            }
+                ["q-key-time"]       = keyTime,
+            },
         };
 
         arguments.Data["policy"] = @$"{{
@@ -116,8 +112,7 @@ public class QCloudStorage : IObjectStorage
         Options.BucketName
     }""}},";
 
-        if (contentLength.HasValue)
-        {
+        if (contentLength.HasValue) {
             arguments.Data["policy"] += @$"
     [""content-length-range"", 0, {
         contentLength

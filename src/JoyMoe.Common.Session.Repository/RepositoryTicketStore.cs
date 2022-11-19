@@ -31,14 +31,13 @@ public class RepositoryTicketStore<TUser, TSession, TRepository> : ITicketStore
 
         var now = DateTimeOffset.UtcNow;
 
-        var entity = new TSession
-        {
+        var entity = new TSession {
             User             = await manager.GetUserAsync(ticket.Principal),
             Type             = ticket.AuthenticationScheme,
             Value            = SerializeToBytes(ticket),
             ExpirationDate   = ticket.Properties.ExpiresUtc?.UtcDateTime,
             CreationDate     = ticket.Properties.IssuedUtc?.UtcDateTime ?? now,
-            ModificationDate = now
+            ModificationDate = now,
         };
 
         await repository.AddAsync(entity);

@@ -8,8 +8,7 @@ public class GenericControllerAttribute : Attribute, IControllerModelConvention
 {
     public void Apply(ControllerModel controller) {
         if (!controller.ControllerType.IsGenericType ||
-            controller.ControllerType.GetGenericTypeDefinition() != typeof(GenericController<,,>))
-        {
+            controller.ControllerType.GetGenericTypeDefinition() != typeof(GenericController<,,>)) {
             return;
         }
 

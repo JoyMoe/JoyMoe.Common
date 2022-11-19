@@ -21,28 +21,24 @@ public class SnakeCaseNamingPolicy : JsonNamingPolicy
         var builder          = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
         var previousCategory = default(UnicodeCategory?);
 
-        for (var currentIndex = 0; currentIndex < name.Length; currentIndex++)
-        {
+        for (var currentIndex = 0; currentIndex < name.Length; currentIndex++) {
             var currentChar = name[currentIndex];
-            if (currentChar == '_')
-            {
+            if (currentChar == '_') {
                 builder.Append('_');
                 previousCategory = null;
                 continue;
             }
 
             var currentCategory = char.GetUnicodeCategory(currentChar);
-            switch (currentCategory)
-            {
+            switch (currentCategory) {
                 case UnicodeCategory.UppercaseLetter:
                 case UnicodeCategory.TitlecaseLetter:
                     if (previousCategory == UnicodeCategory.SpaceSeparator ||
                         previousCategory == UnicodeCategory.LowercaseLetter ||
-                        previousCategory != null &&
-                        currentIndex > 0 &&
-                        currentIndex + 1 < name.Length &&
-                        char.IsLower(name[currentIndex + 1]))
-                    {
+                        (previousCategory != null &&
+                         currentIndex > 0 &&
+                         currentIndex + 1 < name.Length &&
+                         char.IsLower(name[currentIndex + 1]))) {
                         builder.Append('_');
                     }
 

@@ -33,8 +33,7 @@ public class S3Storage : IObjectStorage
 
         var target = Path.GetTempFileName();
 
-        if (string.IsNullOrWhiteSpace(target))
-        {
+        if (string.IsNullOrWhiteSpace(target)) {
             throw new IOException();
         }
 
@@ -60,9 +59,8 @@ public class S3Storage : IObjectStorage
         using var content = new StreamContent(data);
         content.Headers.ContentType = new MediaTypeHeaderValue(mime);
 
-        await _client.PutAsync(new Uri(url),
-                               content,
-                               new Dictionary<string, string> { ["x-amz-acl"] = everyone ? "public-read" : "private" });
+        await _client.PutAsync(new Uri(url), content,
+            new Dictionary<string, string> { ["x-amz-acl"] = everyone ? "public-read" : "private" });
     }
 
     public async Task<string> GetPublicUrlAsync(string path, TimeSpan? expires = null, CancellationToken ct = default) {
@@ -88,17 +86,15 @@ public class S3Storage : IObjectStorage
 
         var uri = await GetUrlAsync(string.Empty, true, ct);
 
-        var arguments = new ObjectStorageFrontendUploadArguments
-        {
+        var arguments = new ObjectStorageFrontendUploadArguments {
             Action = uri,
-            Data =
-            {
+            Data = {
                 ["key"]              = path,
                 ["acl"]              = everyone ? "public-read" : "private",
                 ["x-amz-algorithm"]  = "AWS4-HMAC-SHA256",
                 ["x-amz-credential"] = $"{Options.AccessKey}/{date}/{Options.Region}/s3/aws4_request",
-                ["x-amz-date"]       = timestamp
-            }
+                ["x-amz-date"]       = timestamp,
+            },
         };
 
         arguments.Data["policy"] = @$"{{
@@ -113,8 +109,7 @@ public class S3Storage : IObjectStorage
         Options.BucketName
     }""}},";
 
-        if (contentLength.HasValue)
-        {
+        if (contentLength.HasValue) {
             arguments.Data["policy"] += @$"
     [""content-length-range"", 0, {
         contentLength

@@ -22,16 +22,14 @@ public static class RfcHealthCheckWriter
         writer.WriteString("status", result.Status.ToRfcStatusString());
 
         writer.WriteStartObject("details");
-        foreach (var (key, entry) in result.Entries)
-        {
+        foreach (var (key, entry) in result.Entries) {
             writer.WriteStartObject(key);
 
             writer.WriteString("status", entry.Status.ToRfcStatusString());
             writer.WriteString("description", entry.Description);
 
             writer.WriteStartObject("data");
-            foreach (var (s, value) in entry.Data)
-            {
+            foreach (var (s, value) in entry.Data) {
                 writer.WritePropertyName(s);
                 JsonSerializer.Serialize(writer, value, value?.GetType() ?? typeof(object));
             }

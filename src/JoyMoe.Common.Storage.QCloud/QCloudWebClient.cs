@@ -64,10 +64,13 @@ public class QCloudWebClient : IDisposable
         HttpContent?                content = null) {
         method ??= HttpMethod.Get;
 
-        using var message = new HttpRequestMessage { Content = content, Method = method, RequestUri = url };
+        using var message = new HttpRequestMessage {
+            Content    = content,
+            Method     = method,
+            RequestUri = url,
+        };
 
-        if (headers != null)
-        {
+        if (headers != null) {
             foreach (var h in headers) message.Headers.Add(h.Key, h.Value);
         }
 
@@ -81,25 +84,22 @@ public class QCloudWebClient : IDisposable
         bool               header  = true,
         DateTimeOffset?    time    = null,
         TimeSpan?          expires = null) {
-        if (message.RequestUri == null)
-        {
+        if (message.RequestUri == null) {
             throw new NullReferenceException();
         }
 
         message.Headers.Host = message.RequestUri.Host;
 
         time ??= DateTimeOffset.UtcNow;
-        var keyTime = $"{time.Value.ToUnixTimeSeconds()};{time.Value.Add(expires ?? TimeSpan.FromSeconds(7200)).ToUnixTimeSeconds()}";
+        var keyTime
+            = $"{time.Value.ToUnixTimeSeconds()};{time.Value.Add(expires ?? TimeSpan.FromSeconds(7200)).ToUnixTimeSeconds()}";
 
         var uri = Uri.UnescapeDataString(message.RequestUri!.AbsolutePath);
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
-        var parameters = message.RequestUri!.ToQueryKeyValuePairs()
-                                .OrderBy(q => q.Key)
-                                .Select(q => new KeyValuePair<string, string>(
-                                            Uri.EscapeDataString(q.Key.ToLowerInvariant()),
-                                            Uri.EscapeDataString(q.Value)))
-                                .ToList();
+        var parameters = message.RequestUri!.ToQueryKeyValuePairs().OrderBy(q => q.Key).Select(q =>
+            new KeyValuePair<string, string>(Uri.EscapeDataString(q.Key.ToLowerInvariant()),
+                Uri.EscapeDataString(q.Value))).ToList();
 #pragma warning restore CA1308 // Normalize strings to uppercase
 
         var list  = string.Join(";", parameters.Select(q => q.Key));
@@ -108,15 +108,12 @@ public class QCloudWebClient : IDisposable
 #pragma warning disable CA1308 // Normalize strings to uppercase
         var hd = new SortedDictionary<string, string>();
 
-        foreach (var h in message.Headers)
-        {
+        foreach (var h in message.Headers) {
             hd[Uri.EscapeDataString(h.Key.ToLowerInvariant())] = Uri.EscapeDataString(h.Value.First().Trim());
         }
 
-        if (message.Content?.Headers != null)
-        {
-            foreach (var h in message.Content.Headers)
-            {
+        if (message.Content?.Headers != null) {
+            foreach (var h in message.Content.Headers) {
                 hd[Uri.EscapeDataString(h.Key.ToLowerInvariant())] = Uri.EscapeDataString(h.Value.First().Trim());
             }
         }
@@ -135,24 +132,20 @@ public class QCloudWebClient : IDisposable
 
         var signature = CalculateSignature(@string, keyTime);
 
-        if (header)
-        {
-            var authorization =
-                $"q-sign-algorithm=sha1&q-ak={_options.SecretId}&q-sign-time={keyTime}&q-key-time={keyTime}&q-header-list={signed}&q-url-param-list={list}&q-signature={signature}";
+        if (header) {
+            var authorization
+                = $"q-sign-algorithm=sha1&q-ak={_options.SecretId}&q-sign-time={keyTime}&q-key-time={keyTime}&q-header-list={signed}&q-url-param-list={list}&q-signature={signature}";
             message.Headers.Remove("Authorization");
             message.Headers.TryAddWithoutValidation("Authorization", authorization);
-        }
-        else
-        {
-            message.RequestUri = message.RequestUri.AddQueryParameters(new Dictionary<string, string>
-            {
+        } else {
+            message.RequestUri = message.RequestUri.AddQueryParameters(new Dictionary<string, string> {
                 ["q-sign-algorithm"] = "sha1",
                 ["q-ak"]             = _options.SecretId,
                 ["q-sign-time"]      = keyTime,
                 ["q-key-time"]       = keyTime,
                 ["q-header-list"]    = signed,
                 ["q-url-param-list"] = list,
-                ["q-signature"]      = signature
+                ["q-signature"]      = signature,
             });
         }
 

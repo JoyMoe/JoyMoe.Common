@@ -9,14 +9,13 @@ namespace JoyMoe.Common.Data.Dapper.Tests;
 
 public class SqlMapperTests
 {
-    private static readonly Student Student = new()
-    {
+    private static readonly Student Student = new() {
         Id               = 1,
         FirstName        = "Carolyne",
         LastName         = "Sophia",
         Timestamp        = Guid.NewGuid(),
         CreationDate     = DateTimeOffset.UtcNow,
-        ModificationDate = DateTimeOffset.UtcNow
+        ModificationDate = DateTimeOffset.UtcNow,
     };
 
     [Fact]
@@ -25,16 +24,9 @@ public class SqlMapperTests
 
         const string sql = "SELECT * FROM [Students] WHERE ([Id] = 1)";
 
-        conn.Mocks.When(cmd => cmd.CommandText == sql)
-            .ReturnsTable(CreateMockTable()
-                             .AddRow(Student.Id,
-                                     Student.FirstName,
-                                     Student.LastName,
-                                     Student.Grade,
-                                     Student.Timestamp,
-                                     Student.CreationDate,
-                                     Student.ModificationDate,
-                                     Student.DeletionDate));
+        conn.Mocks.When(cmd => cmd.CommandText == sql).ReturnsTable(CreateMockTable().AddRow(Student.Id,
+            Student.FirstName, Student.LastName, Student.Grade, Student.Timestamp, Student.CreationDate,
+            Student.ModificationDate, Student.DeletionDate));
 
         var result = (await conn.QueryAsync<Student>(s => s.Id == 1)).ToArray();
         Assert.Single(result);
@@ -45,8 +37,8 @@ public class SqlMapperTests
     public async Task InsertRecord() {
         var conn = new MockDbConnection();
 
-        const string sql =
-            "INSERT INTO [Students] ([Grade], [Id], [FirstName], [LastName], [Timestamp], [CreationDate], [ModificationDate], [DeletionDate]) VALUES (@Grade, @Id, @FirstName, @LastName, @Timestamp, @CreationDate, @ModificationDate, @DeletionDate)";
+        const string sql
+            = "INSERT INTO [Students] ([Grade], [Id], [FirstName], [LastName], [Timestamp], [CreationDate], [ModificationDate], [DeletionDate]) VALUES (@Grade, @Id, @FirstName, @LastName, @Timestamp, @CreationDate, @ModificationDate, @DeletionDate)";
 
         conn.Mocks.When(cmd => cmd.CommandText == sql && cmd.Parameters.Count() == 8).ReturnsRow(1);
 
@@ -58,8 +50,8 @@ public class SqlMapperTests
     public async Task UpdateRecord() {
         var conn = new MockDbConnection();
 
-        const string sql =
-            "UPDATE [Students] SET [Grade] = @Grade, [FirstName] = @FirstName, [LastName] = @LastName, [Timestamp] = @Timestamp, [CreationDate] = @CreationDate, [ModificationDate] = @ModificationDate, [DeletionDate] = @DeletionDate WHERE [Id] = @Id";
+        const string sql
+            = "UPDATE [Students] SET [Grade] = @Grade, [FirstName] = @FirstName, [LastName] = @LastName, [Timestamp] = @Timestamp, [CreationDate] = @CreationDate, [ModificationDate] = @ModificationDate, [DeletionDate] = @DeletionDate WHERE [Id] = @Id";
 
         conn.Mocks.When(cmd => cmd.CommandText == sql && cmd.Parameters.Count() == 8).ReturnsRow(1);
 
@@ -80,13 +72,9 @@ public class SqlMapperTests
     }
 
     private MockTable CreateMockTable() {
-        return MockTable.WithColumns(nameof(Tests.Student.Id),
-                                     nameof(Tests.Student.FirstName),
-                                     nameof(Tests.Student.LastName),
-                                     nameof(Tests.Student.Grade),
-                                     nameof(Tests.Student.Timestamp),
-                                     nameof(Tests.Student.CreationDate),
-                                     nameof(Tests.Student.ModificationDate),
-                                     nameof(Tests.Student.DeletionDate));
+        return MockTable.WithColumns(nameof(Tests.Student.Id), nameof(Tests.Student.FirstName),
+            nameof(Tests.Student.LastName), nameof(Tests.Student.Grade), nameof(Tests.Student.Timestamp),
+            nameof(Tests.Student.CreationDate), nameof(Tests.Student.ModificationDate),
+            nameof(Tests.Student.DeletionDate));
     }
 }

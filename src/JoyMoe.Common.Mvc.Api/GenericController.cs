@@ -12,9 +12,10 @@ namespace JoyMoe.Common.Mvc.Api;
 [ApiController]
 [GenericController]
 [Route("api/[controller]")]
-public class GenericController<TEntity, TRequest, TResponse> : ControllerBase where TEntity : class, IDataEntity
-                                                                              where TRequest : class, IIdentifier
-                                                                              where TResponse : class, IIdentifier
+public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
+    where TEntity : class, IDataEntity
+    where TRequest : class, IIdentifier
+    where TResponse : class, IIdentifier
 {
     private readonly IRepository<TEntity>                   _repository;
     private readonly IGenericControllerInterceptor<TEntity> _interceptor;
@@ -154,8 +155,7 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase wh
     }
 
     private CursorPaginationResponse<long, TResponse> _mapResponse(CursorPaginationResponse<long, TEntity> result) {
-        if (typeof(TEntity) != typeof(TResponse))
-        {
+        if (typeof(TEntity) != typeof(TResponse)) {
             ICollection<TResponse>? data = null;
 
             if (result.Data != null) data = _mapResponse(result.Data);
@@ -180,13 +180,11 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase wh
 
     private ActionResult<CursorPaginationResponse<long, TResponse>> _mapResponse(
         ActionResult<CursorPaginationResponse<long, TEntity>> result) {
-        if (result.Result == null)
-        {
+        if (result.Result == null) {
             return new ActionResult<CursorPaginationResponse<long, TResponse>>(_mapResponse(result.Value!));
         }
 
-        if (result.Result is not ObjectResult { Value: CursorPaginationResponse<long, TEntity> entities } or)
-        {
+        if (result.Result is not ObjectResult { Value: CursorPaginationResponse<long, TEntity> entities } or) {
             return result.Result;
         }
 

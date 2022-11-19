@@ -60,8 +60,7 @@ public static class AsyncEnumerableExtensions
 
         var result = new Dictionary<TKey, TElement>(comparer);
 
-        await foreach (var item in source.WithCancellation(ct))
-        {
+        await foreach (var item in source.WithCancellation(ct)) {
             result.TryAdd(keyConverter(item), elementConverter(item));
         }
 

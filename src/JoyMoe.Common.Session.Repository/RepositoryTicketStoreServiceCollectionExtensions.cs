@@ -38,9 +38,10 @@ public static class RepositoryTicketStoreServiceCollectionExtensions
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddRepositoryTicketStore<TUser, TSession, TRepository>(
-        this IServiceCollection services) where TSession : TicketStoreSession<TUser>, new()
-                                          where TRepository : IRepository<TSession>
-                                          where TUser : class {
+        this IServiceCollection services)
+        where TSession : TicketStoreSession<TUser>, new()
+        where TRepository : IRepository<TSession>
+        where TUser : class {
         services.TryAddSingleton<ITicketStore, RepositoryTicketStore<TUser, TSession, TRepository>>();
         services.TryAddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, SessionStoreOptions>();
 

@@ -41,8 +41,7 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         predicate = FilteringQuery(predicate);
 
         Dictionary<string, string?>? orderings = null;
-        if (!string.IsNullOrWhiteSpace(sort?.GetColumn().Member.Name))
-        {
+        if (!string.IsNullOrWhiteSpace(sort?.GetColumn().Member.Name)) {
             orderings = new Dictionary<string, string?> { [sort.GetColumn().Member.Name] = OrderingToString(ordering) };
         }
 
@@ -69,24 +68,17 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
         var property = Expression.Property(parameter, key.Member.Name);
 
         Expression<Func<TEntity, bool>>? filtering = null;
-        if (cursor.HasValue)
-        {
+        if (cursor.HasValue) {
             var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
             filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
         }
 
         var entities = await Connection.QueryAsync(predicate.And(filtering),
-                                                   new Dictionary<string, string?>
-                                                   {
-                                                       [key.Member.Name] = OrderingToString(ordering)
-                                                   },
-                                                   size + 1);
+            new Dictionary<string, string?> { [key.Member.Name] = OrderingToString(ordering) }, size + 1);
         var data = entities.ToArray();
 
-        return new CursorPaginationResponse<TKey, TEntity>
-        {
-            Next = data.Length > size ? converter(data.Last()) : null,
-            Data = data.Length > size ? data[..size] : data
+        return new CursorPaginationResponse<TKey, TEntity> {
+            Next = data.Length > size ? converter(data.Last()) : null, Data = data.Length > size ? data[..size] : data,
         };
     }
 
@@ -104,31 +96,25 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
 
         var count = await CountAsync(predicate, ct);
 
-        if (page.HasValue)
-        {
+        if (page.HasValue) {
             offset = (page - 1) * size;
-        }
-        else if (offset.HasValue)
-        {
+        } else if (offset.HasValue) {
             page = offset / size + 1;
-        }
-        else
-        {
+        } else {
             page   = 1;
             offset = 0;
         }
 
         var entities = await Connection.QueryAsync(predicate,
-                                                   new Dictionary<string, string?>
-                                                   {
-                                                       [key.Member.Name] = OrderingToString(ordering)
-                                                   },
-                                                   size,
-                                                   offset.Value);
+            new Dictionary<string, string?> { [key.Member.Name] = OrderingToString(ordering) }, size, offset.Value);
 
         var data = entities.ToArray();
 
-        return new OffsetPaginationResponse<TEntity> { Total = count, Page = page.Value, Data = data };
+        return new OffsetPaginationResponse<TEntity> {
+            Total = count,
+            Page  = page.Value,
+            Data  = data,
+        };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(
@@ -190,8 +176,7 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
     public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default) {
         await BeginTransactionAsync();
 
-        if (await OnBeforeRemoveAsync(entity, ct))
-        {
+        if (await OnBeforeRemoveAsync(entity, ct)) {
             RowsAffected += await Connection.DeleteAsync(entity, Transaction);
             return;
         }
@@ -202,12 +187,9 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
     public override async Task<int> CommitAsync(CancellationToken ct = default) {
         if (Transaction == null) return 0;
 
-        try
-        {
+        try {
             await Transaction.CommitAsync(ct);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             await Transaction.RollbackAsync(ct);
 
             throw new TransactionAbortedException(ex.Message, ex);
@@ -230,11 +212,10 @@ public class DapperRepository<TEntity> : RepositoryBase<TEntity> where TEntity :
     }
 
     private string OrderingToString(Ordering ordering) {
-        return ordering switch
-        {
+        return ordering switch {
             Ordering.Descending => "DESC",
             Ordering.Ascending  => "ASC",
-            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null),
         };
     }
 }

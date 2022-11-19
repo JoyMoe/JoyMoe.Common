@@ -7,8 +7,7 @@ public static class ExpressionExtensions
 {
     public static MemberExpression GetColumn<TEntity, TKey>(this Expression<Func<TEntity, TKey>> selector)
         where TEntity : class {
-        if (selector.Body is not MemberExpression key)
-        {
+        if (selector.Body is not MemberExpression key) {
             throw new ArgumentNullException(nameof(selector));
         }
 
@@ -62,8 +61,7 @@ public static class ExpressionExtensions
         }
 
         public override Expression? Visit(Expression node) {
-            if (node == _oldValue)
-            {
+            if (node == _oldValue) {
                 return _newValue;
             }
 

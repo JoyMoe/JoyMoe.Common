@@ -11,8 +11,9 @@ using LinqToDB;
 
 namespace JoyMoe.Common.Data.LinqToDB;
 
-public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> where TContext : DataContext
-                                                                            where TEntity : class
+public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
+    where TContext : DataContext
+    where TEntity : class
 {
     protected TContext                Context      { get; }
     protected DataContextTransaction? Transaction  { get; set; }
@@ -41,11 +42,10 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
 
         var query = BuildQuery(Context, predicate);
 
-        query = ordering switch
-        {
+        query = ordering switch {
             Ordering.Descending when sort != null => query.OrderByDescending(sort),
             Ordering.Ascending when sort != null => query.OrderBy(sort),
-            _ => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null),
         };
 
         var enumerable = query.AsAsyncEnumerable().WithCancellation(ct);
@@ -71,27 +71,23 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
         var property = Expression.Property(parameter, key.Member.Name);
 
         Expression<Func<TEntity, bool>>? filtering = null;
-        if (cursor.HasValue)
-        {
+        if (cursor.HasValue) {
             var than = Expression.LessThanOrEqual(property, Expression.Constant(cursor));
             filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
         }
 
         var query = BuildQuery(Context, predicate.And(filtering));
 
-        query = ordering switch
-        {
+        query = ordering switch {
             Ordering.Descending => query.OrderByDescending(selector),
             Ordering.Ascending  => query.OrderBy(selector),
-            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null),
         };
 
         var data = await query.Take(size + 1).ToArrayAsync(ct);
 
-        return new CursorPaginationResponse<TKey, TEntity>
-        {
-            Next = data.Length > size ? converter(data.Last()) : null,
-            Data = data.Length > size ? data[..size] : data
+        return new CursorPaginationResponse<TKey, TEntity> {
+            Next = data.Length > size ? converter(data.Last()) : null, Data = data.Length > size ? data[..size] : data,
         };
     }
 
@@ -109,30 +105,28 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
 
         var count = await query.CountAsync(ct);
 
-        query = ordering switch
-        {
+        query = ordering switch {
             Ordering.Descending => query.OrderByDescending(selector),
             Ordering.Ascending  => query.OrderBy(selector),
-            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null)
+            _                   => throw new ArgumentOutOfRangeException(nameof(ordering), ordering, null),
         };
 
-        if (page.HasValue)
-        {
+        if (page.HasValue) {
             offset = (page - 1) * size;
-        }
-        else if (offset.HasValue)
-        {
+        } else if (offset.HasValue) {
             page = offset / size + 1;
-        }
-        else
-        {
+        } else {
             page   = 1;
             offset = 0;
         }
 
         var data = await query.Skip(offset.Value).Take(size).ToArrayAsync(ct);
 
-        return new OffsetPaginationResponse<TEntity> { Total = count, Page = page.Value, Data = data };
+        return new OffsetPaginationResponse<TEntity> {
+            Total = count,
+            Page  = page.Value,
+            Data  = data,
+        };
     }
 
     public override async Task<TEntity?> FirstOrDefaultAsync(
@@ -194,8 +188,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
     public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default) {
         await BeginTransactionAsync();
 
-        if (await OnBeforeRemoveAsync(entity, ct))
-        {
+        if (await OnBeforeRemoveAsync(entity, ct)) {
             RowsAffected += await Context.DeleteAsync(entity, token: ct);
             return;
         }
@@ -206,12 +199,9 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity> wher
     public override async Task<int> CommitAsync(CancellationToken ct = default) {
         if (Transaction == null) return 0;
 
-        try
-        {
+        try {
             await Transaction.CommitTransactionAsync(ct);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             await Transaction.RollbackTransactionAsync(ct);
 
             throw new TransactionAbortedException(ex.Message, ex);

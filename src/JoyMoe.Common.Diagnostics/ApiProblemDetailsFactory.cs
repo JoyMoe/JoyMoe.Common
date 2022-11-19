@@ -25,13 +25,12 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         string?     instance   = null) {
         statusCode ??= 500;
 
-        var problemDetails = new ProblemDetails
-        {
+        var problemDetails = new ProblemDetails {
             Status   = statusCode,
             Title    = title,
             Type     = type,
             Detail   = detail,
-            Instance = instance
+            Instance = instance,
         };
 
         ApplyProblemDetailsDefaults(httpContext, problemDetails, statusCode.Value);
@@ -49,16 +48,14 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
         string?              instance   = null) {
         statusCode ??= 422;
 
-        var problemDetails = new ValidationProblemDetails(modelStateDictionary)
-        {
+        var problemDetails = new ValidationProblemDetails(modelStateDictionary) {
             Status   = statusCode,
             Type     = type,
             Detail   = detail,
-            Instance = instance
+            Instance = instance,
         };
 
-        if (title != null)
-        {
+        if (title != null) {
             // For validation problem details, don't overwrite the default title with null.
             problemDetails.Title = title;
         }
@@ -71,8 +68,7 @@ public class ApiProblemDetailsFactory : ProblemDetailsFactory
     private void ApplyProblemDetailsDefaults(HttpContext httpContext, ProblemDetails problemDetails, int statusCode) {
         problemDetails.Status ??= statusCode;
 
-        if (_options.ClientErrorMapping.TryGetValue(statusCode, out var clientErrorData))
-        {
+        if (_options.ClientErrorMapping.TryGetValue(statusCode, out var clientErrorData)) {
             problemDetails.Title ??= clientErrorData.Title;
             problemDetails.Type  ??= clientErrorData.Link;
         }

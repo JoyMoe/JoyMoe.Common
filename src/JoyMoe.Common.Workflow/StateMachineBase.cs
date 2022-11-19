@@ -34,8 +34,7 @@ public abstract class StateMachineBase<TI> : AutomatonymousStateMachine<TI>, IDi
     protected virtual void Dispose(bool disposing) {
         if (_disposed) return;
 
-        if (disposing)
-        {
+        if (disposing) {
             _eventObserver?.Dispose();
             _stateObserver?.Dispose();
         }

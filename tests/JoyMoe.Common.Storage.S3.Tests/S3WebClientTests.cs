@@ -16,12 +16,11 @@ public class S3WebClientTests
     private const string Credential = "Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request";
     private const string Endpoint   = "examplebucket.s3.amazonaws.com";
 
-    private readonly S3WebClient _client = new(new S3StorageOptions
-    {
+    private readonly S3WebClient _client = new(new S3StorageOptions {
         AccessKey  = "AKIAIOSFODNN7EXAMPLE",
         SecretKey  = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
         Region     = "us-east-1",
-        BucketName = "examplebucket"
+        BucketName = "examplebucket",
     });
 
     private readonly DateTimeOffset _time = new(2013, 05, 24, 00, 00, 00, TimeSpan.Zero);
@@ -53,16 +52,13 @@ public class S3WebClientTests
         var result = await _client.GetAsync(uri, new Dictionary<string, string> { ["Range"] = "bytes=0-9" }, _time);
         Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
-        mock.Protected()
-            .Verify("SendAsync",
-                    Times.Exactly(1),
-                    ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get &&
-                                                         req.Headers.FindFirstValue("x-amz-date") ==
-                                                         "20130524T000000Z" &&
-                                                         req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
-                                                         req.Headers.Authorization!.Parameter ==
-                                                         $"{Credential},SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
-                    ItExpr.IsAny<CancellationToken>());
+        mock.Protected().Verify("SendAsync", Times.Exactly(1),
+            ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get &&
+                                                 req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
+                                                 req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
+                                                 req.Headers.Authorization!.Parameter ==
+                                                 $"{Credential},SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
+            ItExpr.IsAny<CancellationToken>());
     }
 
     [Fact]
@@ -77,45 +73,35 @@ public class S3WebClientTests
         content.Headers.ContentLength = null;
         content.Headers.ContentType   = null;
 
-        var result = await _client.PutAsync(uri,
-                                            content,
-                                            new Dictionary<string, string>
-                                            {
-                                                ["x-amz-storage-class"] = "REDUCED_REDUNDANCY",
-                                                ["Date"]                = "Fri, 24 May 2013 00:00:00 GMT"
-                                            },
-                                            _time);
+        var result = await _client.PutAsync(uri, content,
+            new Dictionary<string, string> {
+                ["x-amz-storage-class"] = "REDUCED_REDUNDANCY", ["Date"] = "Fri, 24 May 2013 00:00:00 GMT",
+            }, _time);
         Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
-        mock.Protected()
-            .Verify("SendAsync",
-                    Times.Exactly(1),
-                    ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Put &&
-                                                         req.Headers.FindFirstValue("x-amz-content-sha256") ==
-                                                         "44ce7dd67c959e0d3524ffac1771dfbba87d2b6b4b4e99e42034a8b803f8b072" &&
-                                                         req.Headers.FindFirstValue("x-amz-date") ==
-                                                         "20130524T000000Z" &&
-                                                         req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
-                                                         req.Headers.Authorization!.Parameter ==
-                                                         $"{Credential},SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
-                    ItExpr.IsAny<CancellationToken>());
+        mock.Protected().Verify("SendAsync", Times.Exactly(1),
+            ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Put &&
+                                                 req.Headers.FindFirstValue("x-amz-content-sha256") ==
+                                                 "44ce7dd67c959e0d3524ffac1771dfbba87d2b6b4b4e99e42034a8b803f8b072" &&
+                                                 req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
+                                                 req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
+                                                 req.Headers.Authorization!.Parameter ==
+                                                 $"{Credential},SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
+            ItExpr.IsAny<CancellationToken>());
     }
 
     private static Mock<HttpMessageHandler> CreateMockHandler() {
         var mock = new Mock<HttpMessageHandler>(MockBehavior.Default);
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-        var response = new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK, Content = new StringContent("Hello World!")
+        var response = new HttpResponseMessage {
+            StatusCode = HttpStatusCode.OK, Content = new StringContent("Hello World!"),
         };
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
         mock.Protected()
-            .Setup<Task<HttpResponseMessage>>("SendAsync",
-                                              ItExpr.IsAny<HttpRequestMessage>(),
-                                              ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(response);
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
+                 ItExpr.IsAny<CancellationToken>()).ReturnsAsync(response);
 
         return mock;
     }

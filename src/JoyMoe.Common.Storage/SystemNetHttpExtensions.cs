@@ -12,12 +12,9 @@ public static class HttpHeadersExtensions
             ? $"{Uri.EscapeDataString(pair.Key)}"
             : $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}";
 
-        if (query.Length == 0)
-        {
+        if (query.Length == 0) {
             query = kv;
-        }
-        else
-        {
+        } else {
             query += $"&{kv}";
         }
 
@@ -47,13 +44,9 @@ public static class HttpHeadersExtensions
     }
 
     public static IEnumerable<KeyValuePair<string, string>> ToQueryKeyValuePairs(this Uri uri) {
-        return uri.Query.TrimStart('?')
-                  .Split('&')
-                  .Where(s => s.Trim().Length > 0)
-                  .Select(s => s.Split('='))
-                  .Select(sp => sp.Length == 2
-                              ? new KeyValuePair<string, string>(Uri.UnescapeDataString(sp[0]),
-                                                                 Uri.UnescapeDataString(sp[1]))
-                              : new KeyValuePair<string, string>(Uri.UnescapeDataString(sp[0]), ""));
+        return uri.Query.TrimStart('?').Split('&').Where(s => s.Trim().Length > 0).Select(s => s.Split('=')).Select(
+            sp => sp.Length == 2
+                ? new KeyValuePair<string, string>(Uri.UnescapeDataString(sp[0]), Uri.UnescapeDataString(sp[1]))
+                : new KeyValuePair<string, string>(Uri.UnescapeDataString(sp[0]), ""));
     }
 }

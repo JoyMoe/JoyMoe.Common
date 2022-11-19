@@ -20,8 +20,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         Expression<Func<T, bool>>?                 predicate,
         [EnumeratorCancellation] CancellationToken ct = default) {
         var q = ConvertPredicate(predicate);
-        await foreach (var item in ((IRepository<TEntity>)this).ListAsync(q, ct))
-        {
+        await foreach (var item in ((IRepository<TEntity>)this).ListAsync(q, ct)) {
             yield return item;
         }
     }
@@ -165,8 +164,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
         var now = DateTimeOffset.UtcNow;
 
-        if (entity is ITimestamp stamp)
-        {
+        if (entity is ITimestamp stamp) {
             stamp.CreationDate     = now;
             stamp.ModificationDate = now;
         }
@@ -214,8 +212,7 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
     #region Helpers
 
     protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate) {
-        if (IgnoreQueryFilters)
-        {
+        if (IgnoreQueryFilters) {
             IgnoreQueryFilters = false;
 
             return predicate;

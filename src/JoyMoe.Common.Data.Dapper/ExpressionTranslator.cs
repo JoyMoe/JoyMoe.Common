@@ -37,16 +37,13 @@ public class ExpressionTranslator : ExpressionVisitor
     protected override Expression VisitMethodCall(MethodCallExpression m) {
         _sb.Append('(');
 
-        switch (m.Method.Name)
-        {
+        switch (m.Method.Name) {
             case "Contains":
-                if (m.Object?.NodeType == ExpressionType.MemberAccess && m.Object?.Type == typeof(string))
-                {
+                if (m.Object?.NodeType == ExpressionType.MemberAccess && m.Object?.Type == typeof(string)) {
                     goto case "StringContains";
                 }
 
-                if (m.Object != null)
-                {
+                if (m.Object != null) {
                     Visit(m.Arguments[0]);
 
                     // ISSUE: https://github.com/StackExchange/Dapper/issues/150
@@ -57,8 +54,7 @@ public class ExpressionTranslator : ExpressionVisitor
                     break;
                 }
 
-                if (m.Object == null)
-                {
+                if (m.Object == null) {
                     Visit(m.Arguments[1]);
 
                     // ISSUE: https://github.com/StackExchange/Dapper/issues/150
@@ -95,58 +91,46 @@ public class ExpressionTranslator : ExpressionVisitor
 
             case "CompareString":
             case "Equals":
-                if (m.Object?.NodeType == ExpressionType.MemberAccess)
-                {
+                if (m.Object?.NodeType == ExpressionType.MemberAccess) {
                     // a.Equals(b)
 
                     if (m.Arguments.Count == 2 &&
                         m.Arguments[1] is ConstantExpression ce &&
                         ce.Type == typeof(StringComparison) &&
-                        ce.Value?.ToString()?.EndsWith("IgnoreCase") == true)
-                    {
+                        ce.Value?.ToString()?.EndsWith("IgnoreCase") == true) {
                         _sb.Append("UPPER(");
                         Visit(m.Object);
                         _sb.Append(") = UPPER(");
                         Visit(m.Arguments[0]);
                         _sb.Append(')');
-                    }
-                    else if (m.Arguments.Count == 2 || m.Arguments.Count == 1)
-                    {
+                    } else if (m.Arguments.Count == 2 || m.Arguments.Count == 1) {
                         Visit(m.Object);
                         _sb.Append(" = ");
                         Visit(m.Arguments[0]);
-                    }
-                    else
-                    {
+                    } else {
                         goto default;
                     }
 
                     break;
                 }
 
-                if (m.Object == null)
-                {
+                if (m.Object == null) {
                     // string.Equals(a, b)
 
                     if (m.Arguments.Count == 3 &&
                         m.Arguments[2] is ConstantExpression ce &&
                         ce.Type == typeof(StringComparison) &&
-                        ce.Value?.ToString()?.EndsWith("IgnoreCase") == true)
-                    {
+                        ce.Value?.ToString()?.EndsWith("IgnoreCase") == true) {
                         _sb.Append("UPPER(");
                         Visit(m.Arguments[0]);
                         _sb.Append(") = UPPER(");
                         Visit(m.Arguments[1]);
                         _sb.Append(')');
-                    }
-                    else if (m.Arguments.Count == 3 || m.Arguments.Count == 2)
-                    {
+                    } else if (m.Arguments.Count == 3 || m.Arguments.Count == 2) {
                         Visit(m.Arguments[0]);
                         _sb.Append(" = ");
                         Visit(m.Arguments[1]);
-                    }
-                    else
-                    {
+                    } else {
                         goto default;
                     }
 
@@ -167,8 +151,7 @@ public class ExpressionTranslator : ExpressionVisitor
     }
 
     protected override Expression VisitUnary(UnaryExpression u) {
-        switch (u.NodeType)
-        {
+        switch (u.NodeType) {
             case ExpressionType.Not:
                 _sb.Append(" NOT ");
                 Visit(u.Operand);
@@ -189,8 +172,7 @@ public class ExpressionTranslator : ExpressionVisitor
 
         Visit(b.Left);
 
-        switch (b.NodeType)
-        {
+        switch (b.NodeType) {
             case ExpressionType.And:
             case ExpressionType.AndAlso:
                 _sb.Append(" AND ");
@@ -239,15 +221,13 @@ public class ExpressionTranslator : ExpressionVisitor
     }
 
     protected override Expression VisitConstant(ConstantExpression c) {
-        if (c.Value == null)
-        {
+        if (c.Value == null) {
             _sb.Append("NULL");
 
             return c;
         }
 
-        switch (Type.GetTypeCode(c.Value.GetType()))
-        {
+        switch (Type.GetTypeCode(c.Value.GetType())) {
             case TypeCode.Boolean:
                 _sb.Append((bool)c.Value ? "TRUE" : "FALSE");
                 break;
@@ -273,13 +253,11 @@ public class ExpressionTranslator : ExpressionVisitor
     }
 
     protected override Expression VisitMember(MemberExpression m) {
-        if (m.Expression == null)
-        {
+        if (m.Expression == null) {
             throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
         }
 
-        if (m.NodeType == ExpressionType.MemberAccess && m.Expression.NodeType != ExpressionType.Parameter)
-        {
+        if (m.NodeType == ExpressionType.MemberAccess && m.Expression.NodeType != ExpressionType.Parameter) {
             var item = Expression.Lambda<Func<object>>(Expression.Convert(m, typeof(object))).Compile().Invoke();
 
             Visit(Expression.Constant(item));
@@ -287,8 +265,7 @@ public class ExpressionTranslator : ExpressionVisitor
             return m;
         }
 
-        if (m.Expression.NodeType == ExpressionType.Parameter)
-        {
+        if (m.Expression.NodeType == ExpressionType.Parameter) {
             _adapter.AppendColumnName(_sb, m.Member.Name);
             return m;
         }
@@ -301,13 +278,10 @@ public class ExpressionTranslator : ExpressionVisitor
     private void AppendParameter(object item) {
         _sb.AppendFormat("@__p{0}", _values.Count);
 
-        if (item is string @string)
-        {
+        if (item is string @string) {
             @string = $"{_stringConstantPrefix}{@string}{_stringConstantSuffix}";
             _values.Add(@string);
-        }
-        else
-        {
+        } else {
             _values.Add(item);
         }
 

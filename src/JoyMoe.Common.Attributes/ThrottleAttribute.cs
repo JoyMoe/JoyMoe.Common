@@ -53,25 +53,18 @@ public class ThrottleAttribute : ActionFilterAttribute
         ctx.Response.Headers.Add("X-RateLimit-Reset", reset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
         ctx.Response.Headers.Add("X-RateLimit-Remaining", (Times - times).ToString(CultureInfo.InvariantCulture));
 
-        if (times < Times)
-        {
-            if (times == 1)
-            {
+        if (times < Times) {
+            if (times == 1) {
                 var expiration = DateTimeOffset.UtcNow.AddSeconds(Seconds);
 
                 cache.SetString(timesKey, "1", new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
 
-                cache.SetString(resetKey,
-                                expiration.ToString(CultureInfo.InvariantCulture),
-                                new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
-            }
-            else
-            {
+                cache.SetString(resetKey, expiration.ToString(CultureInfo.InvariantCulture),
+                    new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
+            } else {
                 cache.SetString(timesKey, times.ToString(CultureInfo.InvariantCulture));
             }
-        }
-        else
-        {
+        } else {
             context.Result = new StatusCodeResult((int)HttpStatusCode.TooManyRequests);
         }
 

@@ -28,14 +28,13 @@ namespace Dapper.Contrib
 
         private static readonly ISqlAdapter DefaultAdapter = new SqlServerAdapter();
 
-        private static readonly Dictionary<string, ISqlAdapter> AdapterDictionary = new(6)
-        {
+        private static readonly Dictionary<string, ISqlAdapter> AdapterDictionary = new(6) {
             ["sqlconnection"]    = new SqlServerAdapter(),
             ["sqlceconnection"]  = new SqlCeServerAdapter(),
             ["npgsqlconnection"] = new PostgresAdapter(),
             ["sqliteconnection"] = new SQLiteAdapter(),
             ["mysqlconnection"]  = new MySqlAdapter(),
-            ["fbconnection"]     = new FbAdapter()
+            ["fbconnection"]     = new FbAdapter(),
         };
 
         public static Task<IEnumerable<T>> QueryAsync<T>(
@@ -51,11 +50,9 @@ namespace Dapper.Contrib
 
             var (sb, parameters) = BuildQuery(predicate, adapter);
 
-            if (orderings != null)
-            {
+            if (orderings != null) {
                 sb.Append(" ORDER BY ");
-                foreach (var (column, modifier) in orderings)
-                {
+                foreach (var (column, modifier) in orderings) {
                     adapter.AppendColumnName(sb, column);
                     if (!string.IsNullOrWhiteSpace(modifier)) sb.AppendFormat(" {0}", modifier);
                 }
@@ -105,10 +102,8 @@ namespace Dapper.Contrib
 
             sb.Remove(0, 8);
 
-            return connection.QueryFirstOrDefaultAsync<TResult>($"SELECT COUNT(*) {sb}",
-                                                                parameters,
-                                                                transaction,
-                                                                timeout);
+            return connection.QueryFirstOrDefaultAsync<TResult>($"SELECT COUNT(*) {sb}", parameters, transaction,
+                timeout);
         }
 
         private static (StringBuilder, DynamicParameters?) BuildQuery<T>(
@@ -140,17 +135,14 @@ namespace Dapper.Contrib
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
 
-            if (type.IsArray)
-            {
+            if (type.IsArray) {
                 type = type.GetElementType();
-            }
-            else if (type.IsGenericType)
-            {
+            } else if (type.IsGenericType) {
                 var typeInfo = type.GetTypeInfo();
-                var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(
-                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
-                    typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+                var implementsGenericIEnumerableOrIsGenericIEnumerable
+                    = typeInfo.ImplementedInterfaces.Any(ti =>
+                          ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                      typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable) type = type.GetGenericArguments()[0];
             }
@@ -165,16 +157,14 @@ namespace Dapper.Contrib
             adapter.AppendColumnName(sb, name);
 
             sb.Append(" (");
-            for (var i = 0; i < allProperties.Count; i++)
-            {
+            for (var i = 0; i < allProperties.Count; i++) {
                 var property = allProperties[i];
                 adapter.AppendColumnName(sb, property.Name);
                 if (i < allProperties.Count - 1) sb.Append(", ");
             }
 
             sb.Append(") VALUES (");
-            for (var i = 0; i < allProperties.Count; i++)
-            {
+            for (var i = 0; i < allProperties.Count; i++) {
                 var property = allProperties[i];
                 sb.AppendFormat("@{0}", property.Name);
                 if (i < allProperties.Count - 1) sb.Append(", ");
@@ -194,24 +184,20 @@ namespace Dapper.Contrib
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
 
-            if (type.IsArray)
-            {
+            if (type.IsArray) {
                 type = type.GetElementType();
-            }
-            else if (type.IsGenericType)
-            {
+            } else if (type.IsGenericType) {
                 var typeInfo = type.GetTypeInfo();
-                var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(
-                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
-                    typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+                var implementsGenericIEnumerableOrIsGenericIEnumerable
+                    = typeInfo.ImplementedInterfaces.Any(ti =>
+                          ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                      typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable) type = type.GetGenericArguments()[0];
             }
 
             var keyProperties = KeyPropertiesCache(type!);
-            if (keyProperties.Count == 0)
-            {
+            if (keyProperties.Count == 0) {
                 throw new ArgumentException("Entity must have at least one [Key]");
             }
 
@@ -222,8 +208,7 @@ namespace Dapper.Contrib
             sb.Append(" SET ");
 
             var versionProperty = VersionPropertyCache(type!);
-            if (versionProperty != null)
-            {
+            if (versionProperty != null) {
                 adapter.AppendColumnName(sb, versionProperty.Name);
                 sb.AppendFormat(" = \'{0}\', ", Guid.NewGuid());
 
@@ -233,8 +218,7 @@ namespace Dapper.Contrib
             var allProperties   = TypePropertiesCache(type!);
             var nonIdProperties = allProperties.Except(keyProperties).ToList();
 
-            for (var i = 0; i < nonIdProperties.Count; i++)
-            {
+            for (var i = 0; i < nonIdProperties.Count; i++) {
                 var property = nonIdProperties[i];
                 adapter.AppendColumnNameEqualsValue(sb, property.Name);
                 if (i < nonIdProperties.Count - 1) sb.Append(", ");
@@ -242,17 +226,14 @@ namespace Dapper.Contrib
 
             sb.Append(" WHERE ");
 
-            for (var i = 0; i < keyProperties.Count; i++)
-            {
+            for (var i = 0; i < keyProperties.Count; i++) {
                 var property = keyProperties[i];
                 adapter.AppendColumnNameEqualsValue(sb, property.Name);
                 if (i < keyProperties.Count - 1) sb.Append(" AND ");
             }
 
-            return await connection.ExecuteAsync(sb.ToString(),
-                                                 entityToUpdate,
-                                                 commandTimeout: timeout,
-                                                 transaction: transaction);
+            return await connection.ExecuteAsync(sb.ToString(), entityToUpdate, commandTimeout: timeout,
+                transaction: transaction);
         }
 
         public static async Task<int> DeleteAsync<T>(
@@ -264,24 +245,20 @@ namespace Dapper.Contrib
             var type = typeof(T);
             adapter ??= GetFormatter(connection);
 
-            if (type.IsArray)
-            {
+            if (type.IsArray) {
                 type = type.GetElementType();
-            }
-            else if (type.IsGenericType)
-            {
+            } else if (type.IsGenericType) {
                 var typeInfo = type.GetTypeInfo();
-                var implementsGenericIEnumerableOrIsGenericIEnumerable =
-                    typeInfo.ImplementedInterfaces.Any(
-                        ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
-                    typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+                var implementsGenericIEnumerableOrIsGenericIEnumerable
+                    = typeInfo.ImplementedInterfaces.Any(ti =>
+                          ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>)) ||
+                      typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
                 if (implementsGenericIEnumerableOrIsGenericIEnumerable) type = type.GetGenericArguments()[0];
             }
 
             var keyProperties = KeyPropertiesCache(type!);
-            if (keyProperties.Count == 0)
-            {
+            if (keyProperties.Count == 0) {
                 throw new ArgumentException("Entity must have at least one [Key]");
             }
 
@@ -291,8 +268,7 @@ namespace Dapper.Contrib
             adapter.AppendColumnName(sb, name);
             sb.Append(" WHERE ");
 
-            for (var i = 0; i < keyProperties.Count; i++)
-            {
+            for (var i = 0; i < keyProperties.Count; i++) {
                 var property = keyProperties[i];
                 adapter.AppendColumnNameEqualsValue(sb, property.Name);
                 if (i < keyProperties.Count - 1) sb.Append(" AND ");
@@ -307,11 +283,9 @@ namespace Dapper.Contrib
             var allProperties = TypePropertiesCache(type);
             var keyProperties = allProperties.Where(p => p.HasCustomAttribute<KeyAttribute>(true)).ToList();
 
-            if (keyProperties.Count == 0)
-            {
-                var idProperty =
-                    allProperties.FirstOrDefault(
-                        p => string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
+            if (keyProperties.Count == 0) {
+                var idProperty = allProperties.FirstOrDefault(p =>
+                    string.Equals(p.Name, "id", StringComparison.InvariantCultureIgnoreCase));
                 if (idProperty != null) keyProperties.Add(idProperty);
             }
 
@@ -351,12 +325,9 @@ namespace Dapper.Contrib
 
             var tableAttrName = type.GetCustomAttribute<TableAttribute>(false)?.Name;
 
-            if (tableAttrName != null)
-            {
+            if (tableAttrName != null) {
                 name = tableAttrName;
-            }
-            else
-            {
+            } else {
                 name = KeyPropertiesCache(type).Count == 1 ? type.Name.Pluralize() : type.Name;
                 if (type.IsInterface && name.StartsWith("I")) name = name.Substring(1);
             }
