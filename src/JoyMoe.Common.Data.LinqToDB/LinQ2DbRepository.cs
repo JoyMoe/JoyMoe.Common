@@ -200,7 +200,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
 
         var table = Context.GetTable<TEntity>().TableName(nameof(TEntity).Pluralize());
 
-        return predicate != null ? table.CreateQuery<TEntity>(predicate) : table;
+        return predicate != null ? table.Where(predicate) : table;
     }
 
     private async Task BeginTransactionAsync(CancellationToken ct) {
