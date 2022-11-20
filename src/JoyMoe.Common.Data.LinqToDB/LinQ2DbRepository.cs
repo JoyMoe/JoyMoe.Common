@@ -15,7 +15,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     protected DataConnectionTransaction? Transaction  { get; set; }
     protected int                        RowsAffected { get; set; }
 
-    public string TableName => nameof(TEntity).Pluralize();
+    public string TableName { get; } = typeof(TEntity).Name.Pluralize();
 
     public LinQ2DbRepository(TContext context) {
         Context = context;
@@ -198,7 +198,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     private IQueryable<TEntity> BuildQuery(Expression<Func<TEntity, bool>>? predicate) {
         predicate = FilteringQuery(predicate);
 
-        var table = Context.GetTable<TEntity>().TableName(nameof(TEntity).Pluralize());
+        var table = Context.GetTable<TEntity>().TableName(TableName);
 
         return predicate != null ? table.Where(predicate) : table;
     }
