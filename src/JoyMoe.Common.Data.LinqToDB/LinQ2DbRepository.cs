@@ -12,6 +12,8 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     where TContext : DataConnection
     where TEntity : class
 {
+    private ITable<TEntity>? _map;
+
     protected TContext                   Context      { get; }
     protected DataConnectionTransaction? Transaction  { get; set; }
     protected int                        RowsAffected { get; set; }
@@ -212,17 +214,20 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         return rows;
     }
 
-    private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate) {
+    private IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate) {
+        if (_map != null) return predicate != null ? _map.Where(predicate) : _map;
+
         var field = typeof(TContext)
                    .GetProperties(BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance)
                    .FirstOrDefault(f => f.PropertyType == typeof(ITable<TEntity>));
 
-        if (field?.GetValue(context) is not ITable<TEntity> table)
-        {
-           throw new InvalidOperationException($"Relation map for {typeof(TEntity)} not found");
+        if (field?.GetValue(context) is not ITable<TEntity> table) {
+            throw new InvalidOperationException($"Relation map for {typeof(TEntity)} not found");
         }
-        
-        return predicate != null ? table.Where(predicate) : table;
+
+        _map = table.TableName(field.Name);
+
+        return predicate != null ? _map.Where(predicate) : _map;
     }
 
     private async Task BeginTransactionAsync(CancellationToken ct) {
