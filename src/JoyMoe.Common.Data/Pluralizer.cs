@@ -1,5 +1,3 @@
-
-
 // ReSharper disable once CheckNamespace
 namespace System;
 
@@ -28,7 +26,7 @@ public static class Pluralizer
             !text.EndsWith("iy", StringComparison.OrdinalIgnoreCase) &&
             !text.EndsWith("oy", StringComparison.OrdinalIgnoreCase) &&
             !text.EndsWith("uy", StringComparison.OrdinalIgnoreCase)) {
-            return text.Substring(0, text.Length - 1) + "ies";
+            return text[..^1] + "ies";
         }
 
         if (text.EndsWith("us", StringComparison.OrdinalIgnoreCase)) {
@@ -47,11 +45,11 @@ public static class Pluralizer
         }
 
         if (text.EndsWith("f", StringComparison.OrdinalIgnoreCase) && text.Length > 1) {
-            return text.Substring(0, text.Length - 1) + "ves";
+            return text[..^1] + "ves";
         }
 
         if (text.EndsWith("fe", StringComparison.OrdinalIgnoreCase) && text.Length > 2) {
-            return text.Substring(0, text.Length - 2) + "ves";
+            return text[..^2] + "ves";
         }
 
         return text + "s";

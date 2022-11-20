@@ -18,9 +18,7 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
     public override async IAsyncEnumerable<TEntity> ListAsync(
         Expression<Func<TEntity, bool>>?           predicate,
         [EnumeratorCancellation] CancellationToken ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        var enumerable = BuildQuery(Context, predicate).AsAsyncEnumerable().WithCancellation(ct);
+        var enumerable = BuildQuery(predicate).AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var entity in enumerable) yield return entity;
     }
@@ -30,9 +28,7 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
         Expression<Func<TEntity, TKey>>?           sort,
         Ordering                                   ordering = Ordering.Descending,
         [EnumeratorCancellation] CancellationToken ct       = default) {
-        predicate = FilteringQuery(predicate);
-
-        var query = BuildQuery(Context, predicate);
+        var query = BuildQuery(predicate);
 
         query = ordering switch {
             Ordering.Descending when sort != null => query.OrderByDescending(sort),
@@ -54,8 +50,6 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
         CancellationToken                ct        = default) {
         var converter = selector.Compile();
 
-        predicate = FilteringQuery(predicate);
-
         var key = selector.GetColumn();
 
         var parameter = predicate == null ? Expression.Parameter(typeof(TEntity)) : predicate.Parameters[0];
@@ -68,7 +62,7 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
             filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
         }
 
-        var query = BuildQuery(Context, predicate.And(filtering));
+        var query = BuildQuery(predicate.And(filtering));
 
         query = ordering switch {
             Ordering.Descending => query.OrderByDescending(selector),
@@ -91,9 +85,7 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
         int                              size      = 20,
         Ordering                         ordering  = Ordering.Descending,
         CancellationToken                ct        = default) {
-        predicate = FilteringQuery(predicate);
-
-        var query = BuildQuery(Context, predicate);
+        var query = BuildQuery(predicate);
 
         var count = await query.CountAsync(ct);
 
@@ -124,41 +116,31 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
     public override async Task<TEntity?> FirstOrDefaultAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).FirstOrDefaultAsync(ct);
+        return await BuildQuery(predicate).FirstOrDefaultAsync(ct);
     }
 
     public override async Task<TEntity?> SingleOrDefaultAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).SingleOrDefaultAsync(ct);
+        return await BuildQuery(predicate).SingleOrDefaultAsync(ct);
     }
 
     public override async Task<bool> AnyAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).AnyAsync(ct);
+        return await BuildQuery(predicate).AnyAsync(ct);
     }
 
     public override async Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).CountAsync(ct);
+        return await BuildQuery(predicate).CountAsync(ct);
     }
 
     public override async Task<long> LongCountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).LongCountAsync(ct);
+        return await BuildQuery(predicate).LongCountAsync(ct);
     }
 
     public override async Task AddAsync(TEntity entity, CancellationToken ct = default) {
@@ -188,7 +170,11 @@ public class EntityFrameworkCoreRepository<TContext, TEntity> : RepositoryBase<T
         return await Context.SaveChangesAsync(ct);
     }
 
-    private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate) {
-        return predicate != null ? context.Set<TEntity>().Where(predicate) : context.Set<TEntity>();
+    private IQueryable<TEntity> BuildQuery(Expression<Func<TEntity, bool>>? predicate) {
+        predicate = FilteringQuery(predicate);
+
+        var table = Context.Set<TEntity>();
+
+        return predicate != null ? table.Where(predicate) : table;
     }
 }

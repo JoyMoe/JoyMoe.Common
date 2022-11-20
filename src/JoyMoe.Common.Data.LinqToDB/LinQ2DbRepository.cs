@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Transactions;
 using JoyMoe.Common.Abstractions;
@@ -12,11 +11,11 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     where TContext : DataConnection
     where TEntity : class
 {
-    private ITable<TEntity>? _map;
-
     protected TContext                   Context      { get; }
     protected DataConnectionTransaction? Transaction  { get; set; }
     protected int                        RowsAffected { get; set; }
+
+    public string TableName => nameof(TEntity).Pluralize();
 
     public LinQ2DbRepository(TContext context) {
         Context = context;
@@ -25,9 +24,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     public override async IAsyncEnumerable<TEntity> ListAsync(
         Expression<Func<TEntity, bool>>?           predicate,
         [EnumeratorCancellation] CancellationToken ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        var enumerable = BuildQuery(Context, predicate).AsAsyncEnumerable().WithCancellation(ct);
+        var enumerable = BuildQuery(predicate).AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var entity in enumerable) yield return entity;
     }
@@ -37,9 +34,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         Expression<Func<TEntity, TKey>>?           sort,
         Ordering                                   ordering = Ordering.Descending,
         [EnumeratorCancellation] CancellationToken ct       = default) {
-        predicate = FilteringQuery(predicate);
-
-        var query = BuildQuery(Context, predicate);
+        var query = BuildQuery(predicate);
 
         query = ordering switch {
             Ordering.Descending when sort != null => query.OrderByDescending(sort),
@@ -61,8 +56,6 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         CancellationToken                ct        = default) {
         var converter = selector.Compile();
 
-        predicate = FilteringQuery(predicate);
-
         var key = selector.GetColumn();
 
         var parameter = predicate == null ? Expression.Parameter(typeof(TEntity)) : predicate.Parameters[0];
@@ -75,7 +68,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
             filtering = Expression.Lambda<Func<TEntity, bool>>(than, parameter);
         }
 
-        var query = BuildQuery(Context, predicate.And(filtering));
+        var query = BuildQuery(predicate.And(filtering));
 
         query = ordering switch {
             Ordering.Descending => query.OrderByDescending(selector),
@@ -98,9 +91,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         int                              size      = 20,
         Ordering                         ordering  = Ordering.Descending,
         CancellationToken                ct        = default) {
-        predicate = FilteringQuery(predicate);
-
-        var query = BuildQuery(Context, predicate);
+        var query = BuildQuery(predicate);
 
         var count = await query.CountAsync(ct);
 
@@ -131,41 +122,31 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     public override async Task<TEntity?> FirstOrDefaultAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).FirstOrDefaultAsync(ct);
+        return await BuildQuery(predicate).FirstOrDefaultAsync(ct);
     }
 
     public override async Task<TEntity?> SingleOrDefaultAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).SingleOrDefaultAsync(ct);
+        return await BuildQuery(predicate).SingleOrDefaultAsync(ct);
     }
 
     public override async Task<bool> AnyAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).AnyAsync(ct);
+        return await BuildQuery(predicate).AnyAsync(ct);
     }
 
     public override async Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).CountAsync(ct);
+        return await BuildQuery(predicate).CountAsync(ct);
     }
 
     public override async Task<long> LongCountAsync(
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default) {
-        predicate = FilteringQuery(predicate);
-
-        return await BuildQuery(Context, predicate).LongCountAsync(ct);
+        return await BuildQuery(predicate).LongCountAsync(ct);
     }
 
     public override async Task AddAsync(TEntity entity, CancellationToken ct = default) {
@@ -173,7 +154,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
 
         await OnBeforeAddAsync(entity, ct);
 
-        RowsAffected += await Context.InsertAsync(entity, token: ct);
+        RowsAffected += await Context.InsertAsync(entity, tableName: TableName, token: ct);
     }
 
     public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default) {
@@ -181,18 +162,18 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
 
         await OnBeforeUpdateAsync(entity, ct);
 
-        RowsAffected += await Context.UpdateAsync(entity, token: ct);
+        RowsAffected += await Context.UpdateAsync(entity, tableName: TableName, token: ct);
     }
 
     public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default) {
         await BeginTransactionAsync(ct);
 
         if (await OnBeforeRemoveAsync(entity, ct)) {
-            RowsAffected += await Context.DeleteAsync(entity, token: ct);
+            RowsAffected += await Context.DeleteAsync(entity, tableName: TableName, token: ct);
             return;
         }
 
-        RowsAffected += await Context.UpdateAsync(entity, token: ct);
+        RowsAffected += await Context.UpdateAsync(entity, tableName: TableName, token: ct);
     }
 
     public override async Task<int> CommitAsync(CancellationToken ct = default) {
@@ -214,20 +195,12 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
         return rows;
     }
 
-    private IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate) {
-        if (_map != null) return predicate != null ? _map.Where(predicate) : _map;
+    private IQueryable<TEntity> BuildQuery(Expression<Func<TEntity, bool>>? predicate) {
+        predicate = FilteringQuery(predicate);
 
-        var field = typeof(TContext)
-                   .GetProperties(BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance)
-                   .FirstOrDefault(f => f.PropertyType == typeof(ITable<TEntity>));
+        var table = Context.GetTable<TEntity>().TableName(nameof(TEntity).Pluralize());
 
-        if (field?.GetValue(context) is not ITable<TEntity> table) {
-            throw new InvalidOperationException($"Relation map for {typeof(TEntity)} not found");
-        }
-
-        _map = table.TableName(field.Name);
-
-        return predicate != null ? _map.Where(predicate) : _map;
+        return predicate != null ? table.CreateQuery<TEntity>(predicate) : table;
     }
 
     private async Task BeginTransactionAsync(CancellationToken ct) {
