@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Transactions;
 using JoyMoe.Common.Abstractions;
@@ -212,7 +213,16 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
     }
 
     private static IQueryable<TEntity> BuildQuery(TContext context, Expression<Func<TEntity, bool>>? predicate) {
-        return predicate != null ? context.GetTable<TEntity>().Where(predicate) : context.GetTable<TEntity>();
+        var field = typeof(TContext)
+                   .GetProperties(BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance)
+                   .FirstOrDefault(f => f.PropertyType == typeof(ITable<TEntity>));
+
+        if (field?.GetValue(context) is not ITable<TEntity> table)
+        {
+           throw new InvalidOperationException($"Relation map for {typeof(TEntity)} not found");
+        }
+        
+        return predicate != null ? table.Where(predicate) : table;
     }
 
     private async Task BeginTransactionAsync(CancellationToken ct) {
