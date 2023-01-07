@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
 {

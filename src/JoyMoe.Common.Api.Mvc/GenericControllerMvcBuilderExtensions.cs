@@ -1,5 +1,5 @@
 using AutoMapper;
-using JoyMoe.Common.Mvc.Api;
+using JoyMoe.Common.Api.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace

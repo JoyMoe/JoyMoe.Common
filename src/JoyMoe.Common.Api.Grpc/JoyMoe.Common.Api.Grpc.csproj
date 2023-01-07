@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Chino Chang</Authors>
+    <Description>JoyMoe.Common gRPC interceptors for Asp.Net Core</Description>
+    <PackageTags>grpc</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Grpc.AspNetCore.Server" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Api\JoyMoe.Common.Api.csproj" />
+  </ItemGroup>
+
+</Project>

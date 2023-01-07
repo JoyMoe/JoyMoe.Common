@@ -1,10 +1,13 @@
 using System.Linq.Expressions;
+using System.Net;
 using AutoMapper;
+using FluentValidation;
 using JoyMoe.Common.Abstractions;
 using JoyMoe.Common.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 [ApiController]
 [GenericController]
@@ -14,14 +17,18 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     where TRequest : class, IIdentifier
     where TResponse : class, IIdentifier
 {
+    private readonly IServiceProvider _provider;
+
     private readonly IRepository<TEntity>                   _repository;
     private readonly IGenericControllerInterceptor<TEntity> _interceptor;
     private readonly IMapper                                _mapper;
 
     public GenericController(
+        IServiceProvider                       provider,
         IRepository<TEntity>                   repository,
         IGenericControllerInterceptor<TEntity> interceptor,
         IMapper                                mapper) {
+        _provider    = provider;
         _repository  = repository;
         _interceptor = interceptor;
         _mapper      = mapper;
@@ -31,8 +38,6 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     public async Task<ActionResult<CursorPaginationResponse<long, TResponse>>> Query(
         [FromQuery] long? cursor,
         [FromQuery] int   size = 10) {
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
-
         var result = await _interceptor.Query(HttpContext, User, predicate => _query(cursor, size, predicate));
 
         return _mapResponse(result);
@@ -47,8 +52,6 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TResponse>> Find(long id) {
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
-
         var result = await _interceptor.Find(HttpContext, User, () => _find(id));
 
         return _mapResponse(result);
@@ -63,10 +66,9 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<TResponse>> Create([FromBody] TRequest? request) {
-        if (request == null) return BadRequest();
-
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+    public async Task<ActionResult<TResponse>> Create([FromBody] TRequest request) {
+        var validation = await ValidateAsync(request);
+        if (validation != null) return validation;
 
         request.Id = default;
 
@@ -86,10 +88,9 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TResponse>> Update(long id, [FromBody] TRequest? request) {
-        if (request == null) return BadRequest();
-
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+    public async Task<ActionResult<TResponse>> Update(long id, [FromBody] TRequest request) {
+        var validation = await ValidateAsync(request);
+        if (validation != null) return validation;
 
         if (id != request.Id) return BadRequest();
 
@@ -110,8 +111,6 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Remove(long id) {
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
-
         var entity = await _repository.FindAsync(e => e.Id, id);
 
         if (entity == null) return NotFound();
@@ -125,6 +124,25 @@ public class GenericController<TEntity, TRequest, TResponse> : ControllerBase
         if (await _repository.CommitAsync() == 0) return Problem();
 
         return NoContent();
+    }
+
+    private async Task<ActionResult<TResponse>?> ValidateAsync(TRequest request) {
+        var validator = _provider.GetService<IValidator<TRequest>>();
+        if (validator == null) return null;
+
+        var results = await validator.ValidateAsync(request);
+        if (results.IsValid || !results.Errors.Any()) return null;
+
+        await foreach (var (k, v) in Validation.ValidateAsync(validator, request)) {
+            Response.Headers.Add(k, v);
+        }
+
+        if (!Response.Headers.ContainsKey("errors")) return null;
+
+        return StatusCode((int)HttpStatusCode.UnprocessableEntity, new {
+            error             = "invalid_request", //
+            error_description = "The request is invalid.",
+        });
     }
 
     private TEntity _mapRequest(TRequest request) {

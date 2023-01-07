@@ -2,7 +2,7 @@ using AutoMapper;
 using JoyMoe.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 public class GenericControllerBuilder
 {

@@ -3,7 +3,7 @@ using JoyMoe.Common.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 public class GenericControllerTypeBuilder<TEntity, TRequest, TResponse> : GenericControllerBuilder
     where TEntity : class, IDataEntity

@@ -4,7 +4,7 @@ using JoyMoe.Common.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 public class GenericControllerInterceptor<TEntity> : IGenericControllerInterceptor<TEntity>
     where TEntity : class, IDataEntity

@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
     <Description>JoyMoe.Common generic REST API controller for Asp.Net Core MVC</Description>
-    <PackageTags>api;pagination;rest;mvc</PackageTags>
+    <PackageTags>api;rest;mvc</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,9 +16,11 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
+    <PackageReference Include="FluentValidation" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\JoyMoe.Common.Api\JoyMoe.Common.Api.csproj" />
     <ProjectReference Include="..\JoyMoe.Common.Data\JoyMoe.Common.Data.csproj" />
   </ItemGroup>
 

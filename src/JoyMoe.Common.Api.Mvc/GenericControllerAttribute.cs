@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
-namespace JoyMoe.Common.Mvc.Api;
+namespace JoyMoe.Common.Api.Mvc;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class GenericControllerAttribute : Attribute, IControllerModelConvention
