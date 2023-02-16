@@ -1,4 +1,5 @@
 // ReSharper disable once CheckNamespace
+
 namespace JoyMoe.Common.Storage;
 
 public static class Helper

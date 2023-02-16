@@ -85,8 +85,11 @@ public class QCloudWebClient : IDisposable
         message.Headers.Host = message.RequestUri.Host;
 
         time ??= DateTimeOffset.UtcNow;
-        var keyTime
-            = $"{time.Value.ToUnixTimeSeconds()};{time.Value.Add(expires ?? TimeSpan.FromSeconds(7200)).ToUnixTimeSeconds()}";
+        var keyTime = $"{
+            time.Value.ToUnixTimeSeconds()
+        };{
+            time.Value.Add(expires ?? TimeSpan.FromSeconds(7200)).ToUnixTimeSeconds()
+        }";
 
         var uri = Uri.UnescapeDataString(message.RequestUri!.AbsolutePath);
 
@@ -127,8 +130,19 @@ public class QCloudWebClient : IDisposable
         var signature = CalculateSignature(@string, keyTime);
 
         if (header) {
-            var authorization
-                = $"q-sign-algorithm=sha1&q-ak={_options.SecretId}&q-sign-time={keyTime}&q-key-time={keyTime}&q-header-list={signed}&q-url-param-list={list}&q-signature={signature}";
+            var authorization = $"q-sign-algorithm=sha1&q-ak={
+                _options.SecretId
+            }&q-sign-time={
+                keyTime
+            }&q-key-time={
+                keyTime
+            }&q-header-list={
+                signed
+            }&q-url-param-list={
+                list
+            }&q-signature={
+                signature
+            }";
             message.Headers.Remove("Authorization");
             message.Headers.TryAddWithoutValidation("Authorization", authorization);
         } else {

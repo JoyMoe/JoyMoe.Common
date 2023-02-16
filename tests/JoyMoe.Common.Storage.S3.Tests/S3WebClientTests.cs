@@ -33,7 +33,9 @@ public class S3WebClientTests
         await _client.PrepareRequestAsync(request, false, _time);
 
         Assert.Equal(
-            $"https://{Endpoint}/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404",
+            $"https://{
+                Endpoint
+            }/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404",
             request.RequestUri.ToString());
     }
 
@@ -52,7 +54,9 @@ public class S3WebClientTests
                                                  req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
                                                  req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
                                                  req.Headers.Authorization!.Parameter ==
-                                                 $"{Credential},SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
+                                                 $"{
+                                                     Credential
+                                                 },SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -81,7 +85,9 @@ public class S3WebClientTests
                                                  req.Headers.FindFirstValue("x-amz-date") == "20130524T000000Z" &&
                                                  req.Headers.Authorization!.Scheme == "AWS4-HMAC-SHA256" &&
                                                  req.Headers.Authorization!.Parameter ==
-                                                 $"{Credential},SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
+                                                 $"{
+                                                     Credential
+                                                 },SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"),
             ItExpr.IsAny<CancellationToken>());
     }
 

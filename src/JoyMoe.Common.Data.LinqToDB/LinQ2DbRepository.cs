@@ -154,7 +154,7 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
 
         await OnBeforeAddAsync(entity, ct);
 
-        RowsAffected += await Context.InsertAsync(entity, tableName: TableName, token: ct);
+        RowsAffected += await Context.InsertAsync(entity, TableName, token: ct);
     }
 
     public override async Task UpdateAsync(TEntity entity, CancellationToken ct = default) {
@@ -162,18 +162,18 @@ public class LinQ2DbRepository<TContext, TEntity> : RepositoryBase<TEntity>
 
         await OnBeforeUpdateAsync(entity, ct);
 
-        RowsAffected += await Context.UpdateAsync(entity, tableName: TableName, token: ct);
+        RowsAffected += await Context.UpdateAsync(entity, TableName, token: ct);
     }
 
     public override async Task RemoveAsync(TEntity entity, CancellationToken ct = default) {
         await BeginTransactionAsync(ct);
 
         if (await OnBeforeRemoveAsync(entity, ct)) {
-            RowsAffected += await Context.DeleteAsync(entity, tableName: TableName, token: ct);
+            RowsAffected += await Context.DeleteAsync(entity, TableName, token: ct);
             return;
         }
 
-        RowsAffected += await Context.UpdateAsync(entity, tableName: TableName, token: ct);
+        RowsAffected += await Context.UpdateAsync(entity, TableName, token: ct);
     }
 
     public override async Task<int> CommitAsync(CancellationToken ct = default) {
