@@ -10,9 +10,9 @@ public abstract class Comparator : Operand
 
     public abstract ExpressionType ExpressionType { get; }
 
-    public override Expression ToExpression(Container container) {
-        var left  = Left!.ToExpression(container);
-        var right = Right.ToExpression(container);
+    public override Expression ToExpression(Container ctx) {
+        var left  = Left!.ToExpression(ctx);
+        var right = Right.ToExpression(ctx);
 
         return Expression.MakeBinary(ExpressionType, left, Expression.Convert(right, left.Type));
     }

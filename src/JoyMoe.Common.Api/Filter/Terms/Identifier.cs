@@ -7,8 +7,8 @@ public class Identifier : Identity<string>
 {
     public Identifier(TextPosition position, string? value) : base(position, value) { }
 
-    public override Expression ToExpression(Container container) {
-        if (!container.TryGetParameter(Value, out var value)) {
+    public override Expression ToExpression(Container ctx) {
+        if (!ctx.TryGetParameter(Value, out var value)) {
             throw new ParseException($"Unknown parameter: {Value}", Position);
         }
 

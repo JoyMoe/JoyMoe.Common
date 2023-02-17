@@ -12,7 +12,7 @@ public class Not : UnaryOperand
 
     public Not(TextPosition position, Term right) : base(position, right) { }
 
-    public override Expression ToExpression(Container container) {
-        return Expression.Not(Right.ToExpression(container));
+    public override Expression ToExpression(Container ctx) {
+        return Expression.Not(Right.ToExpression(ctx));
     }
 }

@@ -12,9 +12,9 @@ public class Both : Operand
 
     public Both(TextPosition position, Term left, Term right) : base(position, left, right) { }
 
-    public override Expression ToExpression(Container container) {
+    public override Expression ToExpression(Container ctx) {
         // TODO: Currently, we do not support ranking for both operands.
 
-        return Expression.AndAlso(Left!.ToExpression(container), Right.ToExpression(container));
+        return Expression.AndAlso(Left!.ToExpression(ctx), Right.ToExpression(ctx));
     }
 }

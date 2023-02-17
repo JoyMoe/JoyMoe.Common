@@ -12,7 +12,7 @@ public abstract class Term
         Position = position;
     }
 
-    public abstract Expression ToExpression(Container container);
+    public abstract Expression ToExpression(Container ctx);
 
     public static And And(Term left, Term right) {
         return new And(left.Position, left, right);

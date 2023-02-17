@@ -12,7 +12,7 @@ public class Or : Operand
 
     public Or(TextPosition position, Term left, Term right) : base(position, left, right) { }
 
-    public override Expression ToExpression(Container container) {
-        return Expression.OrElse(Left!.ToExpression(container), Right.ToExpression(container));
+    public override Expression ToExpression(Container ctx) {
+        return Expression.OrElse(Left!.ToExpression(ctx), Right.ToExpression(ctx));
     }
 }

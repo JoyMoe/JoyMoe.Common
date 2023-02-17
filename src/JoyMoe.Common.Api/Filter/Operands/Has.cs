@@ -14,32 +14,75 @@ public class Has : Operand
 
     public Has(TextPosition position, Term left, Term right) : base(position, left, right) { }
 
-    public override Expression ToExpression(Container container) {
-        var expression = Left!.ToExpression(container);
-        var element    = expression.Type.GetElementType();
+    public override Expression ToExpression(Container ctx) {
+        var left  = Left!.ToExpression(ctx);
+        var right = Right.ToExpression(ctx);
 
-        if (typeof(IEnumerable).IsAssignableFrom(expression.Type)) {
-            var contains = typeof(IEnumerable<>).MakeGenericType(element!)
-                                                .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                                                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                                                .MakeGenericMethod(element!);
+        if (typeof(string).IsAssignableFrom(left.Type)) {
+            var contains = left.Type switch {
+                _ when right.Type == typeof(char) => ctx.GetMethod(typeof(string), "Contains", new[] { typeof(char) }),
+                _ => ctx.GetMethod(typeof(string), "Contains", new[] { typeof(string) }),
+            };
 
-            return Expression.Call(contains, expression, Right.ToExpression(container));
+            if (right.Type != typeof(char)) {
+                right = Expression.Call(right, "ToString", null);
+            }
+
+            return Expression.Call(left, contains!, right);
         }
 
-        if (typeof(IDictionary).IsAssignableFrom(expression.Type)) {
-            var contains = typeof(IEnumerable<>).MakeGenericType(element!)
-                                                .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                                                .Single(x => x.Name == "ContainsKey" && x.GetParameters().Length == 2)
-                                                .MakeGenericMethod(element!);
+        var instance = left;
+        var index    = right;
+        var type     = instance.Type.GetElementType() ?? instance.Type.GenericTypeArguments.FirstOrDefault();
 
-            return Expression.Call(contains, expression, Right.ToExpression(container));
+        if (Left is Accessor accessor) {
+            var inner = accessor.Left!.ToExpression(ctx);
+            if (typeof(IDictionary).IsAssignableFrom(inner.Type)) {
+                instance = inner;
+                index    = accessor.Right.ToExpression(ctx);
+                type     = instance.Type.GenericTypeArguments.FirstOrDefault();
+            }
         }
 
-        if (typeof(string).IsAssignableFrom(expression.Type)) {
-            var contains = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+        if (type == null) {
+            throw new ParseException("Cannot infer type for operand ':'", Position);
+        }
 
-            return Expression.Call(expression, contains!, Right.ToExpression(container));
+        if (type == typeof(string)) {
+            index = Expression.Call(index, "ToString", null);
+        } else {
+            index = Expression.Convert(index, type);
+        }
+
+        if (typeof(IDictionary).IsAssignableFrom(instance.Type)) {
+            var dictionary = typeof(IDictionary<,>).MakeGenericType(instance.Type.GenericTypeArguments);
+            var contains = ctx.GetMethod(dictionary, "ContainsKey",
+                new[] { instance.Type.GenericTypeArguments.First() }, BindingFlags.Instance | BindingFlags.Public);
+
+            var expression = Expression.Call(instance, contains!, index);
+
+            if (instance.Equals(left) || Right is Text { Value: "*" }) {
+                return expression;
+            }
+
+            if (left.Type == typeof(string)) {
+                right = Expression.Call(right, "ToString", null);
+            } else {
+                right = Expression.Convert(right, left.Type);
+            }
+
+            var equal = Expression.Equal(left, right);
+
+            return Expression.AndAlso(expression, equal);
+        }
+
+        if (typeof(IEnumerable).IsAssignableFrom(instance.Type)) {
+            var contains = ctx.GetMethod(typeof(Enumerable), "Contains", new[] { type },
+                () => typeof(Enumerable).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                                        .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                                        .MakeGenericMethod(type));
+
+            return Expression.Call(contains!, instance, index);
         }
 
         throw new ParseException("Unsupported operand ':'", Position);

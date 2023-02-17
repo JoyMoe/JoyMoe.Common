@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 
@@ -7,6 +8,8 @@ namespace JoyMoe.Common.Api.Filter;
 
 public class Container
 {
+    private static Dictionary<string, MethodInfo> MethodCache = new();
+
     private Term Term { get; }
 
     private Dictionary<string, Expression> Expressions { get; } = new();
@@ -53,12 +56,43 @@ public class Container
         return false;
     }
 
+    public MethodInfo? GetMethod(
+        Type          type,
+        string        name,
+        Type[]?       types,
+        BindingFlags? flag = null) {
+        return GetMethod(type, name, types, () => {
+            flag ??= BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
+
+            return types == null
+                ? type.GetMethod(name, flag.Value)
+                : type.GetMethod(name, flag.Value, null, types, null);
+        });
+    }
+
+    public MethodInfo? GetMethod(
+        Type               type,
+        string             name,
+        IEnumerable<Type>? types,
+        Func<MethodInfo?>  getter) {
+        var typ       = types?.Aggregate("", (s, i) => s = $"{s}{i.Name},");
+        var qualified = $"{type.FullName}.{name}({typ})";
+
+        if (MethodCache.TryGetValue(qualified, out var method)) {
+            return method;
+        }
+
+        method = getter();
+
+        if (method == null) return null;
+
+        MethodCache.Add(qualified, method);
+
+        return method;
+    }
+
     public LambdaExpression Build() {
         var body = Term.ToExpression(this);
-        // var replaced = Replacer.Replace(body, Parameters);
-        // if (replaced == null) {
-        //     throw new ParseException("Invalid expression", new TextPosition());
-        // }
 
         return Expression.Lambda(body, Parameters.Values);
     }

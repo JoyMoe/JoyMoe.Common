@@ -12,8 +12,8 @@ public class Function : Operand
         Parameters = right;
     }
 
-    public override Expression ToExpression(Container container) {
-        if (Left is Identifier identifier && container.TryGetExpression(identifier.Value, out var expression)) {
+    public override Expression ToExpression(Container ctx) {
+        if (Left is Identifier identifier && ctx.TryGetExpression(identifier.Value, out var expression)) {
             return expression;
         }
 
@@ -21,10 +21,10 @@ public class Function : Operand
             throw new ParseException("Invalid call", Position);
         }
 
-        var instance = accessor.Left!.ToExpression(container);
+        var instance = accessor.Left!.ToExpression(ctx);
         var method   = text.Value!;
 
-        return Expression.Call(instance, method, null, Parameters?.Select(p => p.ToExpression(container)).ToArray());
+        return Expression.Call(instance, method, null, Parameters?.Select(p => p.ToExpression(ctx)).ToArray());
     }
 
     public override string ToString() {
