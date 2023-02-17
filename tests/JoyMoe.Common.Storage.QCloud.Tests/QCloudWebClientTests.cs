@@ -32,9 +32,8 @@ public class QCloudWebClientTests
         _client.SetHttpClient(client);
 
         var time = new DateTimeOffset(2019, 05, 16, 06, 55, 53, TimeSpan.Zero);
-        var uri = new Uri($"http://{
-            Endpoint
-        }/exampleobject(%E8%85%BE%E8%AE%AF%E4%BA%91)?response-content-type=application%2Foctet-stream&response-cache-control=max-age%3D600");
+        var uri = new Uri(
+            $"http://{Endpoint}/exampleobject(%E8%85%BE%E8%AE%AF%E4%BA%91)?response-content-type=application%2Foctet-stream&response-cache-control=max-age%3D600");
         var result = await _client.GetAsync(uri,
             new Dictionary<string, string> { ["Date"] = "Thu, 16 May 2019 06:55:53 GMT" }, time);
         Assert.Equal("Hello World!", result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
