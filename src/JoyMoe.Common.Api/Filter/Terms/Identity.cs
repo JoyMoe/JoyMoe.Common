@@ -1,11 +1,18 @@
+using System.Linq.Expressions;
+using Parlot;
+
 namespace JoyMoe.Common.Api.Filter.Terms;
 
 public abstract class Identity<T> : Term
 {
     public virtual T? Value { get; }
 
-    public Identity(T? value) {
+    public Identity(TextPosition position, T? value) : base(position) {
         Value = value;
+    }
+
+    public override Expression ToExpression(Container container) {
+        return Expression.Constant(Value);
     }
 
     public override bool Equals(object? obj) {

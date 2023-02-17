@@ -1,14 +1,16 @@
+using Parlot;
+
 namespace JoyMoe.Common.Api.Filter.Terms;
 
 public abstract class Operand : Term
 {
     public virtual string? DisplayName { get; }
 
-    public virtual Term Left { get; }
+    public virtual Term? Left { get; }
 
     public virtual Term Right { get; }
 
-    public Operand(Term left, Term right) {
+    public Operand(TextPosition position, Term? left, Term right) : base(position) {
         Left  = left;
         Right = right;
     }
@@ -25,7 +27,7 @@ public abstract class Operand : Term
     }
 
     public override int GetHashCode() {
-        return DisplayName?.GetHashCode() ?? 0 + Left.GetHashCode() + Right.GetHashCode();
+        return DisplayName?.GetHashCode() ?? 0 + Left?.GetHashCode() ?? 0 + Right.GetHashCode();
     }
 
     public override string ToString() {

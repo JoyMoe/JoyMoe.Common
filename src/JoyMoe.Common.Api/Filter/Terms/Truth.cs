@@ -1,6 +1,8 @@
+using Parlot;
+
 namespace JoyMoe.Common.Api.Filter.Terms;
 
 public class Truth : Identity<bool>
 {
-    public Truth(bool value) : base(value) { }
+    public Truth(TextPosition position, bool value) : base(position, value) { }
 }

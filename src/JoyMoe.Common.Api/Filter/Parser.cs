@@ -32,7 +32,7 @@ public class Parser
                 _scanner.SkipWhiteSpaceOrNewLine();
 
                 var position = _scanner.Cursor.Position;
-                var next     = ParseSequence() ?? throw new ParseException("Expected sequence after 'AND'", position);
+                var next     = ParseSequence() ?? throw new ParseException("Expect sequence after 'AND'", position);
 
                 expression &= next;
             } else {
@@ -51,6 +51,7 @@ public class Parser
         if (expression == null) return null;
 
         while (!_scanner.Cursor.Eof) {
+            var position = _scanner.Cursor.Position;
             _scanner.SkipWhiteSpaceOrNewLine();
 
             var next = ParseFactor();
@@ -58,7 +59,7 @@ public class Parser
                 return expression;
             }
 
-            expression = new Both(expression, next);
+            expression = new Both(position, expression, next);
         }
 
         return expression;
@@ -78,7 +79,7 @@ public class Parser
                 _scanner.SkipWhiteSpaceOrNewLine();
 
                 var position = _scanner.Cursor.Position;
-                var next     = ParseTerm() ?? throw new ParseException("Expected term after 'OR'", position);
+                var next     = ParseTerm() ?? throw new ParseException("Expect term after 'OR'", position);
 
                 expression |= next;
             } else {
@@ -94,11 +95,12 @@ public class Parser
      */
     private Term? ParseTerm() {
         if (_scanner.ReadChar('-') ||
-            (_scanner.ReadText(Not.Name, StringComparison.InvariantCultureIgnoreCase) && _scanner.SkipWhiteSpaceOrNewLine())) {
+            (_scanner.ReadText(Not.Name, StringComparison.InvariantCultureIgnoreCase) &&
+             _scanner.SkipWhiteSpaceOrNewLine())) {
             var inner = ParseSimple();
 
             if (inner == null) {
-                throw new ParseException("Expected expression after '-'", _scanner.Cursor.Position);
+                throw new ParseException("Expect expression after '-'", _scanner.Cursor.Position);
             }
 
             return !inner;
@@ -133,6 +135,7 @@ public class Parser
 
         _scanner.SkipWhiteSpaceOrNewLine();
 
+        var position = _scanner.Cursor.Position;
         if (_scanner.ReadText(LessThanOrEqual.Name, out var op) ||
             _scanner.ReadChar(LessThan.Name[0], out op) ||
             _scanner.ReadText(GreaterThanOrEqual.Name, out op) ||
@@ -141,25 +144,25 @@ public class Parser
             _scanner.ReadChar(Equal.Name[0], out op) ||
             _scanner.ReadChar(Has.Name[0], out op)) {
             if (expression is Text text) {
-                expression = new Identifier(text.Value);
+                expression = new Identifier(expression.Position, text.Value);
             }
 
             _scanner.SkipWhiteSpaceOrNewLine();
 
-            var position = _scanner.Cursor.Position;
-            var next     = ParseArg();
+            var current = _scanner.Cursor.Position;
+            var next    = ParseArg();
             if (next == null) {
-                throw new ParseException($"Expected arg after '{op.GetText()}'", position);
+                throw new ParseException($"Expect arg after '{op.GetText()}'", current);
             }
 
             expression = op.GetText() switch {
-                LessThanOrEqual.Name    => new LessThanOrEqual(expression, next),
-                LessThan.Name           => new LessThan(expression, next),
-                GreaterThanOrEqual.Name => new GreaterThanOrEqual(expression, next),
-                GreaterThan.Name        => new GreaterThan(expression, next),
-                NotEqual.Name           => new NotEqual(expression, next),
-                Equal.Name              => new Equal(expression, next),
-                Has.Name                => new Has(expression, next),
+                LessThanOrEqual.Name    => new LessThanOrEqual(position, expression, next),
+                LessThan.Name           => new LessThan(position, expression, next),
+                GreaterThanOrEqual.Name => new GreaterThanOrEqual(position, expression, next),
+                GreaterThan.Name        => new GreaterThan(position, expression, next),
+                NotEqual.Name           => new NotEqual(position, expression, next),
+                Equal.Name              => new Equal(position, expression, next),
+                Has.Name                => new Has(position, expression, next),
                 _                       => throw new NotSupportedException(),
             };
         }
@@ -175,7 +178,7 @@ public class Parser
             var expression = ParseExpression();
 
             if (!_scanner.ReadChar(')')) {
-                throw new ParseException("Expected ')'", _scanner.Cursor.Position);
+                throw new ParseException("Expect ')'", _scanner.Cursor.Position);
             }
 
             return expression;
@@ -199,14 +202,16 @@ public class Parser
         var expression = ParseValue();
         if (expression == null) return null;
 
+        var position = _scanner.Cursor.Position;
         while (_scanner.ReadChar(Accessor.Name[0])) {
-            var position = _scanner.Cursor.Position;
-            var next     = ParseValue();
+            var current = _scanner.Cursor.Position;
+            var next    = ParseValue();
             if (next == null) {
-                throw new ParseException("Expected value", position);
+                throw new ParseException("Expect value", current);
             }
 
-            expression = new Accessor(expression, next);
+            expression = new Accessor(position, expression, next);
+            position   = _scanner.Cursor.Position;
         }
 
         return expression;
@@ -224,8 +229,9 @@ public class Parser
             return null;
         }
 
-        name = new Identifier(text.Value);
+        name = new Identifier(name.Position, text.Value);
 
+        var position = _scanner.Cursor.Position;
         while (_scanner.ReadChar(Accessor.Name[0])) {
             var next = ParseText();
             if (next is not Text selector) {
@@ -233,17 +239,18 @@ public class Parser
                 return null;
             }
 
-            name = new Accessor(name, new Identifier(selector.Value));
+            name     = new Accessor(position, name, new Identifier(next.Position, selector.Value));
+            position = _scanner.Cursor.Position;
         }
 
         if (_scanner.ReadChar('(')) {
             var expression = ParseList();
 
             if (!_scanner.ReadChar(')')) {
-                throw new ParseException("Expected ')'", _scanner.Cursor.Position);
+                throw new ParseException("Expect ')'", _scanner.Cursor.Position);
             }
 
-            return new Function(name, expression);
+            return new Function(start, name, expression);
         }
 
         _scanner.Cursor.ResetPosition(start);
@@ -258,8 +265,9 @@ public class Parser
     private Term? ParseValue() {
         if (MeetKeyword()) return null;
 
+        var start = _scanner.Cursor.Position;
         if (_scanner.ReadQuotedString(out var @string)) {
-            return new Text(@string.GetText()[1..^1]);
+            return new Text(start, @string.GetText()[1..^1]);
         }
 
         return ParseText();
@@ -287,18 +295,18 @@ public class Parser
 
             if (_scanner.ReadChar('e')) {
                 if (!_scanner.ReadInteger(out var exponent)) {
-                    throw new ParseException("Expected exponent", _scanner.Cursor.Position);
+                    throw new ParseException("Expect exponent", _scanner.Cursor.Position);
                 }
 
-                return new Number(@decimal * (decimal)Math.Pow(10, double.Parse(exponent.Span)));
+                return new Number(start, @decimal * (decimal)Math.Pow(10, double.Parse(exponent.Span)));
             }
 
             if (_scanner.ReadChar('s')) {
                 if (negative) {
-                    throw new ParseException("Expected positive duration", _scanner.Cursor.Position);
+                    throw new ParseException("Expect positive duration", _scanner.Cursor.Position);
                 }
 
-                return new Duration(TimeSpan.FromSeconds((double)@decimal));
+                return new Duration(start, TimeSpan.FromSeconds((double)@decimal));
             }
 
             if (number.Span.IndexOf('.') == -1) {
@@ -307,10 +315,10 @@ public class Parser
                     @long = -@long;
                 }
 
-                return new Integer(@long);
+                return new Integer(start, @long);
             }
 
-            return new Number(@decimal);
+            return new Number(start, @decimal);
         }
 
         if (_scanner.ReadInteger(out var integer)) {
@@ -319,21 +327,21 @@ public class Parser
                 @long = -@long;
             }
 
-            return new Integer(@long);
+            return new Integer(start, @long);
         }
 
         _scanner.Cursor.ResetPosition(start);
 
         if (_scanner.ReadText("true", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Truth(true);
+            return new Truth(start, true);
         }
 
         if (_scanner.ReadText("false", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Truth(false);
+            return new Truth(start, false);
         }
 
         if (_scanner.ReadText("null", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Text(null);
+            return new Text(start, null);
         }
 
         if (_scanner.ReadWhile(static x => !new[] {
@@ -343,7 +351,7 @@ public class Parser
                                                Accessor.Name[0], ',',
                                            }.Contains(x) &&
                                            !Character.IsWhiteSpace(x), out var text)) {
-            return new Text(text.GetText());
+            return new Text(start, text.GetText());
         }
 
         _scanner.Cursor.ResetPosition(start);
@@ -366,7 +374,7 @@ public class Parser
             var position = _scanner.Cursor.Position;
             var next     = ParseArg();
             if (next == null) {
-                throw new ParseException("Expected arg", position);
+                throw new ParseException("Expect arg", position);
             }
 
             list.Add(next);
@@ -410,7 +418,7 @@ public class Parser
             if (_scanner.ReadNonWhiteSpace(out var result)) {
                 if (DateTimeOffset.TryParseExact(result.Span, "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK", null,
                         DateTimeStyles.AdjustToUniversal, out var date)) {
-                    return new Timestamp(date);
+                    return new Timestamp(start, date);
                 }
             }
         }

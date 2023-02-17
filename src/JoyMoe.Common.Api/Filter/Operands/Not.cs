@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using JoyMoe.Common.Api.Filter.Terms;
+using Parlot;
 
 namespace JoyMoe.Common.Api.Filter.Operands;
 
@@ -8,5 +10,9 @@ public class Not : UnaryOperand
 
     public override string DisplayName => Name;
 
-    public Not(Term right) : base(right) { }
+    public Not(TextPosition position, Term right) : base(position, right) { }
+
+    public override Expression ToExpression(Container container) {
+        return Expression.Not(Right.ToExpression(container));
+    }
 }
