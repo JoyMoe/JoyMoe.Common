@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using JoyMoe.Common.Api.Filter.Operands;
+using JoyMoe.Common.Api.Filter.Operations;
 using Parlot;
 
 namespace JoyMoe.Common.Api.Filter.Terms;
@@ -8,7 +8,7 @@ public abstract class Term
 {
     public TextPosition Position { get; }
 
-    public Term(TextPosition position) {
+    protected Term(TextPosition position) {
         Position = position;
     }
 

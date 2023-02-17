@@ -2,9 +2,9 @@ using System.Linq.Expressions;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 
-namespace JoyMoe.Common.Api.Filter.Operands;
+namespace JoyMoe.Common.Api.Filter.Operations;
 
-public class Equal : Comparator
+public class Equal : ComparisonOperation
 {
     public const string Name = "=";
 

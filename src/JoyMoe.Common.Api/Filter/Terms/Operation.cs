@@ -1,8 +1,9 @@
+using System.Linq.Expressions;
 using Parlot;
 
 namespace JoyMoe.Common.Api.Filter.Terms;
 
-public abstract class Operand : Term
+public abstract class Operation : Term
 {
     public virtual string? DisplayName { get; }
 
@@ -10,9 +11,17 @@ public abstract class Operand : Term
 
     public virtual Term Right { get; }
 
-    public Operand(TextPosition position, Term? left, Term right) : base(position) {
+    public Operation(TextPosition position, Term? left, Term right) : base(position) {
         Left  = left;
         Right = right;
+    }
+
+    protected Expression Convert(Expression right, Type type) {
+        if (type == typeof(string)) {
+            return Expression.Call(right, "ToString", null);
+        }
+
+        return Expression.Convert(right, type);
     }
 
     public override bool Equals(object? obj) {
@@ -20,7 +29,7 @@ public abstract class Operand : Term
             return false;
         }
 
-        return obj is Operand other &&
+        return obj is Operation other &&
                DisplayName == other.DisplayName &&
                Equals(Left, other.Left) &&
                Equals(Right, other.Right);

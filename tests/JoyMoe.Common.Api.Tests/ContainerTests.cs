@@ -1,5 +1,5 @@
 ﻿using JoyMoe.Common.Api.Filter;
-using JoyMoe.Common.Api.Filter.Operands;
+using JoyMoe.Common.Api.Filter.Operations;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 using Xunit;
@@ -8,6 +8,35 @@ namespace JoyMoe.Common.Api.Tests;
 
 public class ContainerTests
 {
+    [Fact]
+    public void TranslateExample1() {
+        var position = new TextPosition(0, 0, 0);
+
+        var term = new And(position,
+            new And(position, new Both(position, new Text(position, "a"), new Text(position, "b")),
+                new Text(position, "c")), new Text(position, "d"));
+
+        var expression = Container.Build(term).Bind("q", typeof(string)).Build();
+        var func       = (Func<string, bool>)expression.Compile();
+
+        Assert.True(func("a b c d"));
+        Assert.False(func("a b c"));
+    }
+
+    [Fact]
+    public void TranslateExample2() {
+        var position = new TextPosition(0, 0, 0);
+
+        var term = new Both(position, new Both(position, new Text(position, "New"), new Text(position, "York")),
+            new Or(position, new Text(position, "Giants"), new Text(position, "Yankees")));
+
+        var expression = Container.Build(term).Bind("q", typeof(string)).Build();
+        var func       = (Func<string, bool>)expression.Compile();
+
+        Assert.True(func("New York Giants"));
+        Assert.False(func("New Giants Yankees"));
+    }
+
     [Fact]
     public void TranslateExample3() {
         var position = new TextPosition(0, 0, 0);
@@ -60,6 +89,7 @@ public class ContainerTests
         var func       = (Func<string, int, bool>)expression.Compile();
 
         Assert.True(func("hello world", 9));
+        Assert.False(func("hello world", 10));
     }
 
     [Fact]
@@ -130,6 +160,7 @@ public class ContainerTests
         var func       = (Func<string, bool>)expression.Compile();
 
         Assert.True(func("hello world"));
+        Assert.False(func("foo"));
     }
 
     public class MyVector4

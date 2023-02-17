@@ -1,11 +1,11 @@
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 
-namespace JoyMoe.Common.Api.Filter.Operands;
+namespace JoyMoe.Common.Api.Filter.Operations;
 
-public abstract class UnaryOperand : Operand
+public abstract class UnaryOperation : Operation
 {
-    public UnaryOperand(TextPosition position, Term right) : base(position, null, right) { }
+    public UnaryOperation(TextPosition position, Term right) : base(position, null, right) { }
 
     public override string ToString() {
         var name = DisplayName ?? GetType().ToString();

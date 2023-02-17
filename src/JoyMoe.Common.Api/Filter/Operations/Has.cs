@@ -4,9 +4,9 @@ using System.Reflection;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 
-namespace JoyMoe.Common.Api.Filter.Operands;
+namespace JoyMoe.Common.Api.Filter.Operations;
 
-public class Has : Operand
+public class Has : Operation
 {
     public const string Name = ":";
 
@@ -25,7 +25,7 @@ public class Has : Operand
             };
 
             if (right.Type != typeof(char)) {
-                right = Expression.Call(right, "ToString", null);
+                right = Convert(right, typeof(string));
             }
 
             return Expression.Call(left, contains!, right);
@@ -48,11 +48,7 @@ public class Has : Operand
             throw new ParseException("Cannot infer type for operand ':'", Position);
         }
 
-        if (type == typeof(string)) {
-            index = Expression.Call(index, "ToString", null);
-        } else {
-            index = Expression.Convert(index, type);
-        }
+        index = Convert(index, type);
 
         if (typeof(IDictionary).IsAssignableFrom(instance.Type)) {
             var dictionary = typeof(IDictionary<,>).MakeGenericType(instance.Type.GenericTypeArguments);
@@ -65,11 +61,7 @@ public class Has : Operand
                 return expression;
             }
 
-            if (left.Type == typeof(string)) {
-                right = Expression.Call(right, "ToString", null);
-            } else {
-                right = Expression.Convert(right, left.Type);
-            }
+            right = Convert(right, left.Type);
 
             var equal = Expression.Equal(left, right);
 

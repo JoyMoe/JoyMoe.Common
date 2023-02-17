@@ -4,9 +4,9 @@ using System.Reflection;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 
-namespace JoyMoe.Common.Api.Filter.Operands;
+namespace JoyMoe.Common.Api.Filter.Operations;
 
-public class Accessor : Operand
+public class Accessor : Operation
 {
     public const string Name = ".";
 
