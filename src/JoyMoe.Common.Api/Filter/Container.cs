@@ -43,7 +43,7 @@ public class Container
             return Expressions.TryGetValue(name, out expression);
         }
 
-        expression = default;
+        expression = null;
         return false;
     }
 
@@ -52,7 +52,7 @@ public class Container
             return Parameters.TryGetValue(name, out parameter);
         }
 
-        parameter = default;
+        parameter = null;
         return false;
     }
 

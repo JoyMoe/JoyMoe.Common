@@ -12,7 +12,7 @@ public class Has : Operation
 
     public override string DisplayName => "HAS";
 
-    public Has(TextPosition position, Term left, Term right) : base(position, left, right) { }
+    internal Has(Term left, Term right) : base(left.Position, left, right) { }
 
     public override Expression ToExpression(Container ctx) {
         var left  = Left!.ToExpression(ctx);

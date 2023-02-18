@@ -1,4 +1,3 @@
-using System.Globalization;
 using JoyMoe.Common.Api.Filter.Operations;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
@@ -51,7 +50,6 @@ public class Parser
         if (expression == null) return null;
 
         while (!_scanner.Cursor.Eof) {
-            var position = _scanner.Cursor.Position;
             _scanner.SkipWhiteSpaceOrNewLine();
 
             var next = ParseFactor();
@@ -59,7 +57,7 @@ public class Parser
                 return expression;
             }
 
-            expression = new Both(position, expression, next);
+            expression += next;
         }
 
         return expression;
@@ -135,7 +133,6 @@ public class Parser
 
         _scanner.SkipWhiteSpaceOrNewLine();
 
-        var position = _scanner.Cursor.Position;
         if (_scanner.ReadText(LessThanOrEqual.Name, out var op) ||
             _scanner.ReadChar(LessThan.Name[0], out op) ||
             _scanner.ReadText(GreaterThanOrEqual.Name, out op) ||
@@ -144,7 +141,7 @@ public class Parser
             _scanner.ReadChar(Equal.Name[0], out op) ||
             _scanner.ReadChar(Has.Name[0], out op)) {
             if (expression is Text text) {
-                expression = new Identifier(expression.Position, text.Value);
+                expression = Term.Identifier(expression.Position, text.Value);
             }
 
             _scanner.SkipWhiteSpaceOrNewLine();
@@ -156,13 +153,13 @@ public class Parser
             }
 
             expression = op.GetText() switch {
-                LessThanOrEqual.Name    => new LessThanOrEqual(position, expression, next),
-                LessThan.Name           => new LessThan(position, expression, next),
-                GreaterThanOrEqual.Name => new GreaterThanOrEqual(position, expression, next),
-                GreaterThan.Name        => new GreaterThan(position, expression, next),
-                NotEqual.Name           => new NotEqual(position, expression, next),
-                Equal.Name              => new Equal(position, expression, next),
-                Has.Name                => new Has(position, expression, next),
+                LessThanOrEqual.Name    => Term.LessThanOrEqual(expression, next),
+                LessThan.Name           => Term.LessThan(expression, next),
+                GreaterThanOrEqual.Name => Term.GreaterThanOrEqual(expression, next),
+                GreaterThan.Name        => Term.GreaterThan(expression, next),
+                NotEqual.Name           => Term.NotEqual(expression, next),
+                Equal.Name              => Term.Equal(expression, next),
+                Has.Name                => Term.Has(expression, next),
                 _                       => throw new NotSupportedException(),
             };
         }
@@ -202,7 +199,6 @@ public class Parser
         var expression = ParseValue();
         if (expression == null) return null;
 
-        var position = _scanner.Cursor.Position;
         while (_scanner.ReadChar(Accessor.Name[0])) {
             var current = _scanner.Cursor.Position;
             var next    = ParseValue();
@@ -210,8 +206,7 @@ public class Parser
                 throw new ParseException("Expect value", current);
             }
 
-            expression = new Accessor(position, expression, next);
-            position   = _scanner.Cursor.Position;
+            expression = Term.Accessor(expression, next);
         }
 
         return expression;
@@ -229,9 +224,8 @@ public class Parser
             return null;
         }
 
-        name = new Identifier(name.Position, text.Value);
+        name = Term.Identifier(name.Position, text.Value);
 
-        var position = _scanner.Cursor.Position;
         while (_scanner.ReadChar(Accessor.Name[0])) {
             var next = ParseText();
             if (next is not Text selector) {
@@ -239,8 +233,7 @@ public class Parser
                 return null;
             }
 
-            name     = new Accessor(position, name, new Identifier(next.Position, selector.Value));
-            position = _scanner.Cursor.Position;
+            name = Term.Accessor(name, Term.Identifier(next.Position, selector.Value));
         }
 
         if (_scanner.ReadChar('(')) {
@@ -250,7 +243,7 @@ public class Parser
                 throw new ParseException("Expect ')'", _scanner.Cursor.Position);
             }
 
-            return new Function(start, name, expression);
+            return Term.Function(name, expression);
         }
 
         _scanner.Cursor.ResetPosition(start);
@@ -267,7 +260,7 @@ public class Parser
 
         var start = _scanner.Cursor.Position;
         if (_scanner.ReadQuotedString(out var @string)) {
-            return new Text(start, @string.GetText()[1..^1]);
+            return Term.Text(start, @string.Span[1..^1]);
         }
 
         return ParseText();
@@ -288,17 +281,13 @@ public class Parser
 
         var negative = _scanner.ReadChar('-');
         if (_scanner.ReadDecimal(out var number)) {
-            var @decimal = decimal.Parse(number.Span, provider: CultureInfo.InvariantCulture);
-            if (negative) {
-                @decimal = -@decimal;
-            }
-
             if (_scanner.ReadChar('e')) {
+                var inverse = _scanner.ReadChar('-');
                 if (!_scanner.ReadInteger(out var exponent)) {
                     throw new ParseException("Expect exponent", _scanner.Cursor.Position);
                 }
 
-                return new Number(start, @decimal * (decimal)Math.Pow(10, double.Parse(exponent.Span)));
+                return Term.Number(start, number.Span, negative, exponent.Span, inverse);
             }
 
             if (_scanner.ReadChar('s')) {
@@ -306,42 +295,32 @@ public class Parser
                     throw new ParseException("Expect positive duration", _scanner.Cursor.Position);
                 }
 
-                return new Duration(start, TimeSpan.FromSeconds((double)@decimal));
+                return Term.Duration(start, number.Span);
             }
 
             if (number.Span.IndexOf('.') == -1) {
-                var @long = long.Parse(number.Span);
-                if (negative) {
-                    @long = -@long;
-                }
-
-                return new Integer(start, @long);
+                return Term.Integer(start, number.Span, negative);
             }
 
-            return new Number(start, @decimal);
+            return Term.Number(start, number.Span, negative);
         }
 
         if (_scanner.ReadInteger(out var integer)) {
-            var @long = long.Parse(integer.Span);
-            if (negative) {
-                @long = -@long;
-            }
-
-            return new Integer(start, @long);
+            return Term.Integer(start, integer.Span, negative);
         }
 
         _scanner.Cursor.ResetPosition(start);
 
         if (_scanner.ReadText("true", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Truth(start, true);
+            return Term.Truth(start, true);
         }
 
         if (_scanner.ReadText("false", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Truth(start, false);
+            return Term.Truth(start, false);
         }
 
         if (_scanner.ReadText("null", StringComparison.InvariantCultureIgnoreCase)) {
-            return new Text(start, null);
+            return Term.Null(start);
         }
 
         if (_scanner.ReadWhile(static x => !new[] {
@@ -351,7 +330,7 @@ public class Parser
                                                Accessor.Name[0], ',',
                                            }.Contains(x) &&
                                            !Character.IsWhiteSpace(x), out var text)) {
-            return new Text(start, text.GetText());
+            return Term.Text(start, text.Span);
         }
 
         _scanner.Cursor.ResetPosition(start);
@@ -415,11 +394,8 @@ public class Parser
             _scanner.ReadChar('T')) {
             _scanner.Cursor.ResetPosition(start);
 
-            if (_scanner.ReadNonWhiteSpace(out var result)) {
-                if (DateTimeOffset.TryParseExact(result.Span, "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK", null,
-                        DateTimeStyles.AdjustToUniversal, out var date)) {
-                    return new Timestamp(start, date);
-                }
+            if (_scanner.ReadNonWhiteSpace(out var result) && Term.Timestamp(start, result.Span, out var timestamp)) {
+                return timestamp;
             }
         }
 

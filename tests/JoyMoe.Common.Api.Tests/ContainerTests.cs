@@ -1,5 +1,4 @@
 ﻿using JoyMoe.Common.Api.Filter;
-using JoyMoe.Common.Api.Filter.Operations;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 using Xunit;
@@ -12,9 +11,10 @@ public class ContainerTests
     public void TranslateExample1() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new And(position,
-            new And(position, new Both(position, new Text(position, "a"), new Text(position, "b")),
-                new Text(position, "c")), new Text(position, "d"));
+        // a b AND c AND d
+        var term = (Term.Text(position, "a") + Term.Text(position, "b")) &
+                   Term.Text(position, "c") &
+                   Term.Text(position, "d");
 
         var expression = Container.Build(term).Bind("q", typeof(string)).Build();
         var func       = (Func<string, bool>)expression.Compile();
@@ -27,8 +27,9 @@ public class ContainerTests
     public void TranslateExample2() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Both(position, new Both(position, new Text(position, "New"), new Text(position, "York")),
-            new Or(position, new Text(position, "Giants"), new Text(position, "Yankees")));
+        // New York Giants OR Yankees
+        var term = (Term.Text(position, "New") + Term.Text(position, "York")) +
+                   (Term.Text(position, "Giants") | Term.Text(position, "Yankees"));
 
         var expression = Container.Build(term).Bind("q", typeof(string)).Build();
         var func       = (Func<string, bool>)expression.Compile();
@@ -41,13 +42,9 @@ public class ContainerTests
     public void TranslateExample3() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Or(position, new LessThan(position, //
-            new Identifier(position, "a"),                 //
-            new Integer(position, 10)                      //
-        ), new GreaterThanOrEqual(position,                //
-            new Identifier(position, "a"),                 //
-            new Integer(position, 100)                     //
-        ));
+        // a < 10 OR a >= 100
+        var term = Term.LessThan(Term.Identifier(position, "a"), Term.Integer(position, 10)) |
+                   Term.GreaterThanOrEqual(Term.Identifier(position, "a"), Term.Integer(position, 100));
 
         var expression = Container.Build(term).Bind("a", typeof(long)).Build();
         var expected   = new Func<long, bool>(a => a is < 10 or >= 100);
@@ -61,10 +58,10 @@ public class ContainerTests
     public void TranslateExample4() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Accessor(position,
-            new Accessor(position,
-                new Accessor(position, new Identifier(position, "expr"), new Text(position, "type_map")),
-                new Integer(position, 1L)), new Text(position, "type"));
+        // expr.type_map.1.type
+        var term = Term.Accessor(
+            Term.Accessor(Term.Accessor(Term.Identifier(position, "expr"), Term.Text(position, "type_map")),
+                Term.Integer(position, 1L)), Term.Text(position, "type"));
 
         var expression = Container.Build(term).Bind("expr", typeof(MyVector4)).Build();
         var func       = (Func<MyVector4, string>)expression.Compile();
@@ -79,11 +76,10 @@ public class ContainerTests
     public void TranslateExample5() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new And(position,
-            new Function(position,
-                new Accessor(position, new Identifier(position, "msg"), new Identifier(position, "endsWith")),
-                new List<Term> { new Text(position, "world") }),
-            new LessThan(position, new Identifier(position, "retries"), new Integer(position, 10L)));
+        // (msg.endsWith('world') AND retries < 10)
+        var term = Term.Function(Term.Accessor(Term.Identifier(position, "msg"), Term.Identifier(position, "endsWith")),
+                       new List<Term> { Term.Text(position, "world") }) &
+                   Term.LessThan(Term.Identifier(position, "retries"), Term.Integer(position, 10L));
 
         var expression = Container.Build(term).Bind("msg", typeof(string)).Bind("retries", typeof(int)).Build();
         var func       = (Func<string, int, bool>)expression.Compile();
@@ -96,7 +92,7 @@ public class ContainerTests
     public void TranslateArrayHas() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Has(position, new Identifier(position, "r"), new Integer(position, 42));
+        var term = Term.Has(Term.Identifier(position, "r"), Term.Integer(position, 42));
 
         var expression = Container.Build(term).Bind("r", typeof(int[])).Build();
         var func       = (Func<int[], bool>)expression.Compile();
@@ -109,7 +105,7 @@ public class ContainerTests
     public void TranslateDictionaryHas() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Has(position, new Identifier(position, "m"), new Integer(position, 42));
+        var term = Term.Has(Term.Identifier(position, "m"), Term.Integer(position, 42));
 
         var expression = Container.Build(term).Bind("m", typeof(Dictionary<string, bool>)).Build();
         var func       = (Func<Dictionary<string, bool>, bool>)expression.Compile();
@@ -122,9 +118,9 @@ public class ContainerTests
     public void TranslateDictionaryHasWithAccessor() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Has(position,                                                          //
-            new Accessor(position, new Identifier(position, "m"), new Text(position, "foo")), //
-            new Integer(position, 42)                                                         //
+        var term = Term.Has(                                                           //
+            Term.Accessor(Term.Identifier(position, "m"), Term.Text(position, "foo")), //
+            Term.Integer(position, 42)                                                 //
         );
 
         var expression = Container.Build(term).Bind("m", typeof(Dictionary<string, int>)).Build();
@@ -138,9 +134,9 @@ public class ContainerTests
     public void TranslateDictionaryHasWithAccessorMatch() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Has(position,                                                          //
-            new Accessor(position, new Identifier(position, "m"), new Text(position, "foo")), //
-            new Text(position, "*")                                                           //
+        var term = Term.Has(                                                           //
+            Term.Accessor(Term.Identifier(position, "m"), Term.Text(position, "foo")), //
+            Term.Text(position, "*")                                                   //
         );
 
         var expression = Container.Build(term).Bind("m", typeof(Dictionary<string, int>)).Build();
@@ -154,12 +150,51 @@ public class ContainerTests
     public void TranslateStringHas() {
         var position = new TextPosition(0, 0, 0);
 
-        var term = new Has(position, new Identifier(position, "msg"), new Text(position, "hello"));
+        var term = Term.Has(Term.Identifier(position, "msg"), Term.Text(position, "hello"));
 
         var expression = Container.Build(term).Bind("msg", typeof(string)).Build();
         var func       = (Func<string, bool>)expression.Compile();
 
         Assert.True(func("hello world"));
+        Assert.False(func("foo"));
+    }
+
+    [Fact]
+    public void TranslateMatch() {
+        var position = new TextPosition(0, 0, 0);
+
+        var term = Term.Match(Term.Identifier(position, "msg"), Term.Text(position, "oo"));
+
+        var expression = Container.Build(term).Bind("msg", typeof(string)).Build();
+        var func       = (Func<string, bool>)expression.Compile();
+
+        Assert.True(func("foobar"));
+        Assert.False(func("bar"));
+    }
+    
+    [Fact]
+    public void TranslatePrefixMatch() {
+        var position = new TextPosition(0, 0, 0);
+
+        var term = Term.Equal(Term.Identifier(position, "msg"), Term.Text(position, "foo*"));
+
+        var expression = Container.Build(term).Bind("msg", typeof(string)).Build();
+        var func       = (Func<string, bool>)expression.Compile();
+
+        Assert.True(func("foobar"));
+        Assert.False(func("bar"));
+    }
+
+    [Fact]
+    public void TranslateSuffixMatch() {
+        var position = new TextPosition(0, 0, 0);
+
+        var term = Term.Equal(Term.Identifier(position, "msg"), Term.Text(position, "*bar"));
+
+        var expression = Container.Build(term).Bind("msg", typeof(string)).Build();
+        var func       = (Func<string, bool>)expression.Compile();
+
+        Assert.True(func("foobar"));
         Assert.False(func("foo"));
     }
 

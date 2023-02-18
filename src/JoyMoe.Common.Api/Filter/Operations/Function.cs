@@ -8,16 +8,16 @@ public class Function : Operation
 {
     public List<Term>? Parameters { get; }
 
-    public Function(TextPosition position, Term left, List<Term>? right) : base(position, left, left) {
+    internal Function(Term left, List<Term>? right) : base(left.Position, null, left) {
         Parameters = right;
     }
 
     public override Expression ToExpression(Container ctx) {
-        if (Left is Identifier identifier && ctx.TryGetExpression(identifier.Value, out var expression)) {
+        if (Right is Identifier identifier && ctx.TryGetExpression(identifier.Value, out var expression)) {
             return expression;
         }
 
-        if (Left is not Accessor { Right: Identifier text } accessor) {
+        if (Right is not Accessor { Right: Identifier text } accessor) {
             throw new ParseException("Invalid call", Position);
         }
 
@@ -28,6 +28,6 @@ public class Function : Operation
     }
 
     public override string ToString() {
-        return $"{Left}({string.Join(", ", Parameters?.Select(p => p.ToString()) ?? Array.Empty<string>())})";
+        return $"{Right}({string.Join(", ", Parameters?.Select(p => p.ToString()) ?? Array.Empty<string>())})";
     }
 }

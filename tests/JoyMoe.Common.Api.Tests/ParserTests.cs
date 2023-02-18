@@ -59,14 +59,14 @@ public class ParserTests
         var timestamp = DateTimeOffset.Parse("2012-04-21T15:30:00Z");
 
         var position = new TextPosition(0, 0, 0);
-        Assert.Equal(new Text(position, "String"), parser.Parse("String"));
-        Assert.Equal(new Truth(position, true), parser.Parse("true"));
-        Assert.Equal(new Integer(position, 30), parser.Parse("30"));
-        Assert.Equal(new Number(position, 2997000000), parser.Parse("2.997e9"));
-        Assert.Equal(new Duration(position, TimeSpan.FromSeconds(20)), parser.Parse("20s"));
-        Assert.Equal(new Duration(position, TimeSpan.FromSeconds(1.2)), parser.Parse("1.2s"));
-        Assert.Equal(new Timestamp(position, timestamp), parser.Parse("2012-04-21T15:30:00Z"));
-        Assert.Equal(new Timestamp(position, timestamp), parser.Parse("2012-04-21T11:30:00-04:00"));
+        Assert.Equal(Term.Text(position, "String"), parser.Parse("String"));
+        Assert.Equal(Term.Truth(position, true), parser.Parse("true"));
+        Assert.Equal(Term.Integer(position, 30), parser.Parse("30"));
+        Assert.Equal(Term.Number(position, 2997000000), parser.Parse("2.997e9"));
+        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(20)), parser.Parse("20s"));
+        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(1.2)), parser.Parse("1.2s"));
+        Assert.Equal(Term.Timestamp(position, timestamp), parser.Parse("2012-04-21T15:30:00Z"));
+        Assert.Equal(Term.Timestamp(position, timestamp), parser.Parse("2012-04-21T11:30:00-04:00"));
     }
 
     [Theory]

@@ -12,8 +12,8 @@ public class Accessor : Operation
 
     public override string DisplayName => Name;
 
-    public Accessor(TextPosition position, Term left, Term right) : base(position,
-        left is Text name ? new Identifier(left.Position, name.Value) : left, right) { }
+    internal Accessor(Term left, Term right) : base(left.Position,
+        left is Text name ? Identifier(left.Position, name.Value) : left, right) { }
 
     public override Expression ToExpression(Container ctx) {
         var expression = Left!.ToExpression(ctx);

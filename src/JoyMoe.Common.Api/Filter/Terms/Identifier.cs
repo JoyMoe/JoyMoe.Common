@@ -5,7 +5,7 @@ namespace JoyMoe.Common.Api.Filter.Terms;
 
 public class Identifier : Identity<string>
 {
-    public Identifier(TextPosition position, string? value) : base(position, value) { }
+    internal Identifier(TextPosition position, string? value) : base(position, value) { }
 
     public override Expression ToExpression(Container ctx) {
         if (!ctx.TryGetParameter(Value, out var value)) {

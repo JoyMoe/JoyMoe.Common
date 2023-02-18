@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using JoyMoe.Common.Api.Filter.Terms;
-using Parlot;
 
 namespace JoyMoe.Common.Api.Filter.Operations;
 
@@ -10,7 +9,7 @@ public class NotEqual : ComparisonOperation
 
     public override string DisplayName => "NE";
 
-    public NotEqual(TextPosition position, Term left, Term right) : base(position, left, right) { }
+    internal NotEqual(Term left, Term right) : base(left, right) { }
 
     public override ExpressionType ExpressionType => ExpressionType.NotEqual;
 }
