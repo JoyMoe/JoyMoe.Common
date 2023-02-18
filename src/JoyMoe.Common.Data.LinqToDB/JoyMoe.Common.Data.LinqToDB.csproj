@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common repository for linq2db</Description>
+    <Description>Repository pattern for linq2db</Description>
     <PackageTags>linq2db;LinqToDB;repository;timestamp</PackageTags>
   </PropertyGroup>
 

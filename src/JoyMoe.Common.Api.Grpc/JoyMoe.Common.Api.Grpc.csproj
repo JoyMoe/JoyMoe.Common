@@ -6,8 +6,8 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common gRPC interceptors for Asp.Net Core</Description>
-    <PackageTags>grpc</PackageTags>
+    <Description>Useful gRPC interceptors for Asp.Net Core</Description>
+    <PackageTags>api;grpc</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

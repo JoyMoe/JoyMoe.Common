@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common repository for Database</Description>
+    <Description>Repository pattern for datalayer</Description>
     <PackageTags>database;datasource;repository;timestamp</PackageTags>
   </PropertyGroup>
 

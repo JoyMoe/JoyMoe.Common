@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common QClous OSS client</Description>
+    <Description>QClous OSS client</Description>
     <PackageTags>tencent;qcloud;object;storage;oss</PackageTags>
   </PropertyGroup>
 

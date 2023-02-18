@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common Cached Ticket Store for Asp.Net Core</Description>
+    <Description>Cached Ticket Store for Asp.Net Core</Description>
     <PackageTags>session;store;ticket</PackageTags>
   </PropertyGroup>
 

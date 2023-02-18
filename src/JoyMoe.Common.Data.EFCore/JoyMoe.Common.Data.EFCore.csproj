@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common repository for Entity Framework Core</Description>
+    <Description>Repository pattern for Entity Framework Core</Description>
     <PackageTags>ef;efcore;entity-framework-core;Entity;Framework;Core;repository;timestamp</PackageTags>
   </PropertyGroup>
 

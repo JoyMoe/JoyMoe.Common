@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common common API helpers</Description>
+    <Description>AIP compatible API helpers</Description>
     <PackageTags>aip;aip-160;api;filtering;query</PackageTags>
   </PropertyGroup>
 

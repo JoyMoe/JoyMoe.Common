@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <Authors>Chino Chang</Authors>
-    <Description>JoyMoe.Common generic REST API controller for Asp.Net Core MVC</Description>
+    <Description>Generic REST API controller for Asp.Net Core MVC</Description>
     <PackageTags>api;rest;mvc</PackageTags>
   </PropertyGroup>
 
