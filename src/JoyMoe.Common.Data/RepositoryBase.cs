@@ -156,21 +156,22 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         Expression<Func<TEntity, bool>>? predicate,
         CancellationToken                ct = default);
 
-    public virtual Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
-        var now = DateTime.UtcNow;
-
-        if (entity is IConcurrency concurrency) {
-            concurrency.Timestamp = Guid.NewGuid();
+    public virtual async Task OnBeforeAddAsync(TEntity entity, CancellationToken ct = default) {
+        if (EnableConcurrencyGeneration) {
+            await RepositoryTraits.ConcurrencyTrait.OnBeforeUpdateAsync(entity, ct);
         }
 
-        if (entity is ITimestamp stamp) {
-            stamp.CreationDate     = now;
-            stamp.ModificationDate = now;
+        if (EnableCanonicalNameGeneration) {
+            await RepositoryTraits.CanonicalNameTrait.OnBeforeAddAsync(entity, ct);
         }
 
-        if (entity is ISoftDelete soft) soft.DeletionDate = null;
+        if (EnableTimestampGeneration) {
+            await RepositoryTraits.TimestampTrait.OnBeforeAddAsync(entity, ct);
+        }
 
-        return Task.CompletedTask;
+        if (EnableSoftDelete) {
+            if (entity is ISoftDelete soft) soft.DeletionDate = null;
+        }
     }
 
     public abstract Task AddAsync(TEntity entity, CancellationToken ct = default);
@@ -181,34 +182,34 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
         return Task.WhenAny(tasks);
     }
 
-    public virtual Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default) {
-        if (entity is IConcurrency concurrency) {
-            concurrency.Timestamp = Guid.NewGuid();
+    public virtual async Task OnBeforeUpdateAsync(TEntity entity, CancellationToken ct = default) {
+        if (EnableConcurrencyGeneration) {
+            await RepositoryTraits.ConcurrencyTrait.OnBeforeUpdateAsync(entity, ct);
         }
 
-        if (entity is ITimestamp stamp) {
-            stamp.ModificationDate = DateTime.UtcNow;
+        if (EnableTimestampGeneration) {
+            await RepositoryTraits.TimestampTrait.OnBeforeUpdateAsync(entity, ct);
         }
-
-        return Task.CompletedTask;
     }
 
     public abstract Task UpdateAsync(TEntity entity, CancellationToken ct = default);
 
-    public virtual Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default) {
-        if (entity is not ISoftDelete soft) return Task.FromResult(true);
+    public virtual async Task<bool> OnBeforeRemoveAsync(TEntity entity, CancellationToken ct = default) {
+        if (!EnableSoftDelete) return true;
 
-        if (entity is IConcurrency concurrency) {
-            concurrency.Timestamp = Guid.NewGuid();
-        }
-
-        if (entity is ITimestamp stamp) {
-            stamp.ModificationDate = DateTime.UtcNow;
-        }
+        if (entity is not ISoftDelete soft) return true;
 
         soft.DeletionDate = DateTime.UtcNow;
 
-        return Task.FromResult(false);
+        if (EnableConcurrencyGeneration) {
+            await RepositoryTraits.ConcurrencyTrait.OnBeforeUpdateAsync(entity, ct);
+        }
+
+        if (EnableTimestampGeneration) {
+            await RepositoryTraits.TimestampTrait.OnBeforeUpdateAsync(entity, ct);
+        }
+
+        return false;
     }
 
     public abstract Task RemoveAsync(TEntity entity, CancellationToken ct = default);
@@ -225,12 +226,22 @@ public abstract class RepositoryBase<TEntity> : IRepository, IRepository<TEntity
 
     #region Helpers
 
+    protected virtual bool EnableConcurrencyGeneration { get; } = true;
+
+    protected virtual bool EnableCanonicalNameGeneration { get; } = true;
+
+    protected virtual bool EnableTimestampGeneration { get; } = true;
+
+    protected virtual bool EnableSoftDelete { get; } = true;
+
     protected Expression<Func<TEntity, bool>>? FilteringQuery(Expression<Func<TEntity, bool>>? predicate) {
         if (IgnoreQueryFilters) {
             IgnoreQueryFilters = false;
 
             return predicate;
         }
+
+        if (!EnableSoftDelete) return predicate;
 
         if (!typeof(ISoftDelete).IsAssignableFrom(typeof(TEntity))) return predicate;
 
