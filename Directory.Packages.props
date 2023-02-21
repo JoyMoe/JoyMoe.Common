@@ -7,7 +7,7 @@
     <PackageVersion Include="FluentValidation" Version="11.5.0" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.51.0" />
     <PackageVersion Include="linq2db" Version="5.0.0-rc.2" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="7.0.1" />
     <PackageVersion Include="Moq" Version="4.18.4" />
     <PackageVersion Include="Parlot" Version="0.0.24" />
