@@ -8,7 +8,7 @@ namespace JoyMoe.Common.Api.Filter;
 
 public class Container
 {
-    private static Dictionary<string, MethodInfo> MethodCache = new();
+    private static readonly Dictionary<string, MethodInfo> MethodCache = new();
 
     private Term Term { get; }
 

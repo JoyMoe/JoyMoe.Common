@@ -47,7 +47,7 @@ public class GrpcDeprecationInterceptor : Interceptor
     }
 
     private static Task CheckDeprecationAsync(ServerCallContext context, MethodInfo method) {
-        var deprecation = method.GetCustomAttribute<DeprecationAttribute>();
+        var deprecation = method.GetCustomAttribute<DeprecationAttribute>(false);
         if (deprecation == null) return Task.CompletedTask;
 
         var metadata = new Metadata { { "deprecation", deprecation.DeprecationDate?.ToString("R") ?? "true" } };

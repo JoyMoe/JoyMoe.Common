@@ -28,7 +28,7 @@ public static class RepositoryTraits
 
             var type = entity.GetType();
 
-            var attribute = type.GetCustomAttribute<ResourceNameAttribute>();
+            var attribute = type.GetCustomAttribute<ResourceNameAttribute>(false);
             if (attribute == null) throw new InvalidOperationException();
 
             if (!PropertiesCache.TryGetValue(type, out var properties)) {
