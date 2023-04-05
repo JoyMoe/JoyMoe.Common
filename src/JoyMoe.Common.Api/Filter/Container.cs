@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using JoyMoe.Common.Api.Filter.Terms;
-using Parlot;
 
 namespace JoyMoe.Common.Api.Filter;
 
@@ -95,37 +94,5 @@ public class Container
         var body = Term.ToExpression(this);
 
         return Expression.Lambda(body, Parameters.Values);
-    }
-
-    internal class Replacer : ExpressionVisitor
-    {
-        public Dictionary<string, ParameterExpression> Parameters { get; }
-
-        public static Expression? Replace(Expression? expression, Dictionary<string, ParameterExpression> parameters) {
-            if (expression == null) return null;
-
-            var visitor = new Replacer(parameters);
-            return visitor.Visit(expression);
-        }
-
-        private Replacer(Dictionary<string, ParameterExpression> parameters) {
-            Parameters = parameters;
-        }
-
-        public override Expression? Visit(Expression? node) {
-            if (node is not ParameterExpression parameter) {
-                return base.Visit(node);
-            }
-
-            if (string.IsNullOrWhiteSpace(parameter.Name)) {
-                return base.Visit(node);
-            }
-
-            if (!Parameters.TryGetValue(parameter.Name, out var value)) {
-                throw new ParseException($"Unknown parameter: {parameter.Name}", new TextPosition());
-            }
-
-            return value;
-        }
     }
 }

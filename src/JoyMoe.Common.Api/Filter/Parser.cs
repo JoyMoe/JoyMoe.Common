@@ -6,14 +6,18 @@ namespace JoyMoe.Common.Api.Filter;
 
 public class Parser
 {
-    private Scanner _scanner = null!;
+    private readonly Scanner _scanner;
+
+    private Parser(string text) {
+        _scanner = new Scanner(text);
+    }
+
+    public static Parser Read(string text) => new(text);
 
     /**
      * filter : [expression];
      */
-    public Term? Parse(string text) {
-        _scanner = new Scanner(text);
-
+    public Term? Parse() {
         return ParseExpression();
     }
 

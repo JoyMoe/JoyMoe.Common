@@ -1,4 +1,4 @@
-﻿using JoyMoe.Common.Api.Filter;
+using JoyMoe.Common.Api.Filter;
 using JoyMoe.Common.Api.Filter.Terms;
 using Parlot;
 using Xunit;

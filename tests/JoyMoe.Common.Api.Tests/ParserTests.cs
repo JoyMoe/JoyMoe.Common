@@ -9,64 +9,53 @@ public class ParserTests
 {
     [Fact]
     public void ParseExample1() {
-        var parser = new Parser();
-
-        var expression = parser.Parse("a b AND c AND d");
+        var expression = Parser.Read("a b AND c AND d").Parse();
 
         Assert.Equal("AND(AND(BOTH(\"a\", \"b\"), \"c\"), \"d\")", expression?.ToString());
     }
 
     [Fact]
     public void ParseExample2() {
-        var parser = new Parser();
-
-        var expression = parser.Parse("New York Giants OR Yankees");
+        var expression = Parser.Read("New York Giants OR Yankees").Parse();
 
         Assert.Equal("BOTH(BOTH(\"New\", \"York\"), OR(\"Giants\", \"Yankees\"))", expression?.ToString());
     }
 
     [Fact]
     public void ParseExample3() {
-        var parser = new Parser();
-
-        var expression = parser.Parse("a < 10 OR a >= 100");
+        var expression = Parser.Read("a < 10 OR a >= 100").Parse();
 
         Assert.Equal("OR(LT(a, 10), GTE(a, 100))", expression?.ToString());
     }
 
     [Fact]
     public void ParseExample4() {
-        var parser = new Parser();
-
-        var expression = parser.Parse("expr.type_map.1.type");
+        var expression = Parser.Read("expr.type_map.1.type").Parse();
 
         Assert.Equal(".(.(.(expr, \"type_map\"), 1), \"type\")", expression?.ToString());
     }
 
     [Fact]
     public void ParseExample5() {
-        var parser = new Parser();
-
-        var expression = parser.Parse("(msg.endsWith('world') AND retries < 10)");
+        var expression = Parser.Read("(msg.endsWith('world') AND retries < 10)").Parse();
 
         Assert.Equal("AND(.(msg, endsWith)(\"world\"), LT(retries, 10))", expression?.ToString());
     }
 
     [Fact]
     public void ParseValues() {
-        var parser = new Parser();
 
         var timestamp = DateTimeOffset.Parse("2012-04-21T15:30:00Z");
 
         var position = new TextPosition(0, 0, 0);
-        Assert.Equal(Term.Text(position, "String"), parser.Parse("String"));
-        Assert.Equal(Term.Truth(position, true), parser.Parse("true"));
-        Assert.Equal(Term.Integer(position, 30), parser.Parse("30"));
-        Assert.Equal(Term.Number(position, 2997000000), parser.Parse("2.997e9"));
-        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(20)), parser.Parse("20s"));
-        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(1.2)), parser.Parse("1.2s"));
-        Assert.Equal(Term.Timestamp(position, timestamp), parser.Parse("2012-04-21T15:30:00Z"));
-        Assert.Equal(Term.Timestamp(position, timestamp), parser.Parse("2012-04-21T11:30:00-04:00"));
+        Assert.Equal(Term.Text(position, "String"), Parser.Read("String").Parse());
+        Assert.Equal(Term.Truth(position, true), Parser.Read("true").Parse());
+        Assert.Equal(Term.Integer(position, 30), Parser.Read("30").Parse());
+        Assert.Equal(Term.Number(position, 2997000000), Parser.Read("2.997e9").Parse());
+        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(20)), Parser.Read("20s").Parse());
+        Assert.Equal(Term.Duration(position, TimeSpan.FromSeconds(1.2)), Parser.Read("1.2s").Parse());
+        Assert.Equal(Term.Timestamp(position, timestamp), Parser.Read("2012-04-21T15:30:00Z").Parse());
+        Assert.Equal(Term.Timestamp(position, timestamp), Parser.Read("2012-04-21T11:30:00-04:00").Parse());
     }
 
     [Theory]
@@ -99,9 +88,7 @@ public class ParserTests
     [InlineData("annotations:schedule", "HAS(annotations, \"schedule\")")]
     [InlineData("annotations.schedule = \"test\"", "EQ(.(annotations, \"schedule\"), \"test\")")]
     public void ParseMoreVectors(string input, string expected) {
-        var parser = new Parser();
-
-        var expression = parser.Parse(input);
+        var expression = Parser.Read(input).Parse();
 
         Assert.Equal(expected, expression?.ToString());
     }
